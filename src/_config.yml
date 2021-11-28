@@ -1,7 +1,7 @@
 # Book settings
 # Learn more at https://jupyterbook.org/customize/config.html
 
-title: Numerical Methods for Fractional Calculus
+title: "An introduction to fractional calculus: fundamental ideas and numerics"
 author: Fabio Durastante
 copyright: Copyright (c) 2021, Fabio Durastante
 logo: logo.png
@@ -10,12 +10,13 @@ exclude_patterns: [_build, "**.ipynb_checkpoints"]
 # Force re-execution of notebooks on each build.
 # See https://jupyterbook.org/content/execute.html
 execute:
-  execute_notebooks: cache
+  execute_notebooks: force
 
 # Define the name of the latex output file for PDF builds
 latex:
   latex_documents:
     targetname: numethfrac.tex
+  latex_engine: pdflatex
 
 # Add a bibtex file so that we can create citations
 bibtex_bibfiles:
@@ -36,5 +37,9 @@ html:
 sphinx:
   extra_extensions:
     - sphinx_proof
+    - sphinx_jupyterbook_latex
+    - sphinx_togglebutton
   config:
     bibtex_reference_style: author_year
+    jblatex_load_imgconverter: true
+    jblatex_captions_to_parts: true

@@ -3,6 +3,10 @@
 
 format: jb-book
 root: intro
+options:  # The options key will be applied to all chapters, but not sub-sections
+  titlesonly: True
+  numbered: False
+  caption: Lectures
 chapters:
 - file: lecture01
 - file: lecture02

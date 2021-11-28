@@ -1,1 +1,1 @@
-# Lecture 3 : The FFT trick and predictor corrector methods
+# Lecture 3 : Numerical Methods for Fractional ODEs

@@ -1,5 +1,6 @@
-extensions = ["sphinx_jupyterbook_latex"]
-latex_engine = 'xelatex'
+extensions = [  "sphinx_jupyterbook_latex",
+                "sphinx_togglebutton"]
+latex_engine = 'pdflatex'
 latex_elements = {
-    'packages': r'\usepackage{microtype}'
+    'packages': r'\usepackage{microtype,mathtools}'
 }

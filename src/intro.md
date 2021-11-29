@@ -2,19 +2,20 @@
 
 Fractional calculus, i.e., the definition of integrodifferential operators of
 non-integer order, has a long history. It runs parallel to that of modern
-differential calculus. From the first correspondence between Leibniz, John
-Bernoulli, and De l'Hôpital in which it appears as a pure curiosity for which we
-can write formulas, but which is nevertheless removed from the geometric
-interpretation of ordinary derivatives. Up to more modern works by Riemann,
-Hardy, and Littlewood and contemporary efforts to extend and interpret its
-objects {cite}`MR0361633,MillerRoss`. Where the possibility of doing rigorous mathematics and proving results
-within the new theory may be reason enough to invest time in his study, the push
-of the last few years in his study is due, as often happens, to the birth of
-different areas of application outside of mathematics. Consider, for example,
+differential calculus as it started with the first correspondence between
+Leibniz, John Bernoulli, and De l'Hôpital in which it appears as a pure
+formula-generating curiosity far removed from the geometric interpretation of
+ordinary derivatives. Then, it evolved towards more modern works by Riemann,
+Hardy, and Littlewood, finally reaching the contemporary efforts to extend and
+interpret its objects {cite}`MillerRoss,MR0361633`. Where the possibility of
+doing rigorous mathematics and proving results within the new theory may be
+reason enough to invest time in its study, the push of the last few years in
+this endeavor is due, as often happens, to the birth of different areas of
+application outside of mathematics. Consider, for example,
 the modeling of the transport of fluids within highly non-homogeneous media, the
-modeling of non-local phenomena, or the search for evolutionary models of a non-
-Markovian nature. These needs have led to the definition of new operators or to
-the reinterpretation of classical instruments and, at the same time, to the
+modeling of non-local phenomena, or the search for evolutionary models of a
+non-Markovian nature. These needs have led to the definition of new operators or
+to the reinterpretation of classical instruments and, at the same time, to the
 search for numerical methods to simulate these models efficiently and accurately.
 
 The purpose of this course is, on the one hand, to introduce the theoretical and
@@ -27,9 +28,10 @@ operations according to Riemann-Liouville, Caputo, and Riesz. With these
 instruments we will first discuss the formulation of ordinary fractional
 equations and their solution {cite}`DiethelmBook`, then their use in the
 definition of fractional diffusion problems as a fractional partial differential
-equation {cite}`PodlubnyBook`. In the final part, we will briefly touch on some questions concerning
-the definition of the fractional Laplacian and some of its applications within
-modeling for complex networks {cite}`RiascosBook,cnaa017,ArrigoDurastante`.
+equation {cite}`PodlubnyBook`. In the final part, we will briefly touch on some
+questions concerning the definition of the fractional Laplacian and some of its
+applications within modeling for complex networks {cite}`ArrigoDurastante,cnaa017,RiascosBook`.
+
 
 ## How to obtain these notes and run the code
 

@@ -1,0 +1,1189 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+% Math
+\usepackage{nicefrac}
+
+% Tipography stuff
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{fontawesome5}
+\usepackage{soul}
+\usepackage{euler}
+\usepackage{algorithm2e}
+
+% Bibliography
+\usepackage[giveninits,style=authoryear-comp,backend=biber]{biblatex}
+\addbibresource{../fracbiblio.bib}
+\newcommand\unnumbered{\setbeamertemplate{footline}{}}%\addtocounter{framenumber}{-1}
+\renewcommand*{\bibfont}{\normalfont\small}
+
+% Figures
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{calc,arrows,patterns}
+\usepackage{subfig}
+\usepackage{graphicx} % Allows including images
+\usepackage[american]{circuitikz}
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks,linkcolor=,urlcolor=MidnightBlue}
+
+% Code
+\usepackage{minted}
+
+% Block matrices
+\newcommand{\bigzero}{\mbox{\normalfont\Large\bfseries 0}}
+\newcommand{\rvline}{\hspace*{-\arraycolsep}\vline\hspace*{-\arraycolsep}}
+
+
+\author{Fabio Durastante}
+\title{An introduction to fractional calculus}
+\subtitle{Fundamental ideas and numerics}
+\institute{Università di Pisa\\\href{mailto:fabio.durastante@unipi.it}{\faEnvelope\;fabio.durastante@unipi.it}\\\href{https://fdurastante.github.io}{\faFirefox\;fdurastante.github.io}}
+\date{June, 2022}
+
+\newcommand{\de}{{\rm d}}
+
+
+\begin{document}
+
+{\unnumbered
+\begin{frame}[t,plain,noframenumbering]
+\titlepage
+\vspace{-4em}\includegraphics[width=2cm]{frame.png}
+\end{frame}
+}
+
+\section{Subdiffusion equations}
+
+\begin{frame}{Subdiffusion equations}
+At the end of the last lecture we had observed the following behavior:
+
+\begin{center}
+	\includegraphics[width=0.8\columnwidth]{diff_101.png}
+\end{center}
+
+for the solution of:
+\[
+{}_{CA}D^{\alpha}_t u = 0.05 \nabla^2 u, \quad \alpha = 0.3,1.
+\]
+The \alert{visual effect} seemed to be a \textbf{slowing down of the diffusion}.
+\end{frame}
+
+\begin{frame}{Brownian motion~\parencite{MR1809268}}
+\begin{itemize}
+\item Consider a 1D lattice with cell size $\Delta x$,
+\item In discrete time steps of span $\Delta t$ a test particle jumps to one of its neighbour sites,
+\item<2-> The process can be modelled by the master equation
+\[
+W_{j}(t+\Delta t) = \frac{1}{2} W_{j-1}(t) + \frac{1}{2}W_{j+1}(t)
+\]
+\only<10->{
+\item<11-> The master equation defines the \emph{pdf} to be at position $j$ at time $t + \Delta t$ depending on the population of the two adjacent sites $j\pm 1$ at time $t$.
+\item<12-> The prefactor $\nicefrac{1}{2}$ tells us that the \textbf{process is isotropic} with respect to the left/right direction.
+\item<13-> If we let $\Delta t \rightarrow 0$, $\Delta x \rightarrow 0$ and do a \alert{Taylor expansion} in both $\Delta$ and $\Delta x$ we get
+\[
+\begin{split}
+W_j(t+\Delta t) = & W_j(t) + \Delta t \frac{\partial W_j}{\partial t} + O([\Delta t]^2), \qquad \text{ for } \Delta t \rightarrow 0,\\
+W_{j\pm1}(t) = & W(x,t) \pm \Delta x \frac{\partial W}{\partial x} + \frac{(\Delta x)^2}{2} \frac{\partial^2 W}{\partial x^2} + O([\Delta x]^3) , \qquad \text{ for } \Delta x \rightarrow 0,
+\end{split}
+\]	
+}
+\end{itemize}
+
+\only<1-9>{\begin{center}
+\only<2>{\includegraphics[width=0.8\columnwidth]{randomwalk1_01.png}}%\
+\only<3>{\includegraphics[width=0.8\columnwidth]{randomwalk1_02.png}}%\
+\only<4>{\includegraphics[width=0.8\columnwidth]{randomwalk1_03.png}}%\
+\only<5>{\includegraphics[width=0.8\columnwidth]{randomwalk1_04.png}}%\
+\only<6>{\includegraphics[width=0.8\columnwidth]{randomwalk1_05.png}}%\
+\only<7>{\includegraphics[width=0.8\columnwidth]{randomwalk1_06.png}}%\
+\only<8>{\includegraphics[width=0.8\columnwidth]{randomwalk1_07.png}}%\
+\only<9>{\includegraphics[width=0.8\columnwidth]{randomwalk1_08.png}}%\
+\end{center}}
+
+\end{frame}
+
+\begin{frame}{Brownian motion~\parencite{MR1809268}}
+We now substitute the expansions
+\[
+\begin{split}
+W_j(t+\Delta t) = & W_j(t) + \Delta t \frac{\partial W_j}{\partial t} + O([\Delta t]^2), \qquad \text{ for } \Delta t \rightarrow 0,\\
+W_{j\pm1}(t) = & W(x,t) \pm \Delta x \frac{\partial W}{\partial x} + \frac{(\Delta x)^2}{2} \frac{\partial^2 W}{\partial x^2} + O([\Delta x]^3) , \qquad \text{ for } \Delta x \rightarrow 0,
+\end{split}
+\]	
+in
+\[
+W_{j}(t+\Delta t) = \frac{1}{2} W_{j-1}(t) + \frac{1}{2}W_{j+1}(t)
+\]
+obtaining
+\only<1>{
+\[
+W(x,t)+\text{$\Delta $t} \frac{\partial W}{\partial t}+O\left(\text{$\Delta $t}^2\right)=W(x,t)+\frac{1}{2} \text{$\Delta $x}^2 \frac{\partial^2 W}{\partial x^2}+O\left(\text{$\Delta $x}^3\right)
+\]}\only<2>{
+\[
+\frac{\partial W}{\partial t} = \frac{\Delta x^2}{2\Delta t} \frac{\partial^2 W}{\partial x^2} + O\left(\text{$\Delta $x}^3 + \Delta t \right)
+\]}\only<3>{
+\[
+\frac{\partial W}{\partial t} = K_1 \frac{\partial^2 W}{\partial x^2}, \qquad K_1 = \lim_{\substack{\Delta x \rightarrow 0\\\Delta t \rightarrow 0}} \frac{\Delta x^2}{2\Delta t} < \infty.
+\]
+}
+\end{frame}
+
+\begin{frame}{Brownian motion}
+\[
+\frac{\partial W}{\partial t} = K_1 \frac{\partial^2 W}{\partial x^2}
+\]
+Let us call $X$ the random variable measuring the distance covered in two consecutive jumps
+\begin{itemize}
+	\item Assume that the \emph{pdf} of $X$ (appropriately normalised) has existing moments
+	\[
+	\overline{X} = \sum_{i} X_i, \qquad \overline{X^2},
+	\]
+	and mean time-span $\Delta t$ between any two individual jump events.
+	\item<2-> Then the \textbf{central limit theorem} assures that exists
+	\[
+	V = \frac{\overline{X}}{\Delta t}\;\text{(Mean velocity)}\quad K = \frac{\overline{X^2}-\overline{X}^2}{2\Delta t}\;\text{(Diffusion coefficient)}
+	\]
+	and that
+	\[
+	W(x,t) = \frac{1}{2\sqrt{\pi K_1 t}} \exp\left(- \nicefrac{x^2}{4K_1 t}\right).
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Brownian motion: the Fourier domain}
+
+We can rewrite
+\[
+W(x,t) = \frac{1}{2\sqrt{\pi K_1 t}} \exp\left(- \nicefrac{x^2}{4K_1 t}\right).
+\]
+in the \textbf{Fourier domain} as
+\[
+W(k,t) = \exp(-K_1 k^2 t), \qquad W_0(x) = \lim_{t\rightarrow0^+} W(x,t) = \delta(x),
+\]
+that solve the \alert{Fourier transformed diffusion equation}
+\[
+\frac{\partial W}{\partial t} = - K_1 k^2 W(k,t),
+\]
+that is a \textbf{relaxation equation}, for a fixed wavenumber $k$.
+\end{frame}
+
+\begin{frame}{From the discrete to the continuous}
+
+The \alert{\textbf{C}}ontinuous \alert{\textbf{T}}ime \alert{\textbf{R}}andom \alert{\textbf{W}}alk model (CTRW):
+\begin{itemize}
+	\item[\faLightbulb] Both the \textbf{length of a given jump}, and the \textbf{waiting time}
+	elapsing between two successive jumps are drawn from a pdf $\psi(x,t)$
+	\item[\faWalking]<2-> The jump length pdf
+	\[
+	\lambda(x) = \int_{0}^{+\infty} \psi(x,y)\,\textrm{d}t,
+	\]
+	\begin{onlyenv}<2>
+	\begin{exampleblock}{Jump length}
+	$\lambda(x) \textrm{d}x$ produces the probability for a jump length in the interval $(x,x+\textrm{d}x)$.
+	\end{exampleblock}
+	\end{onlyenv}
+	\item[\faClock]<3-> The waiting time pdf
+	\[
+	w(t) = \int_{-\infty}^{+\infty} \psi(x,t)\,\textrm{d}x
+	\]
+	\begin{onlyenv}<3>
+	\begin{exampleblock}{Waiting time}
+		$w(t) \textrm{d}t$ produces the probability for a waiting time in the interval $(t,t+\textrm{d}t)$.
+	\end{exampleblock}
+	\end{onlyenv}
+	\only<4->{
+	\item If the jump length and
+	waiting time are \textbf{independent random variables} then: \[\psi(x,t) = w(t)\lambda(x)\]
+	}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Characterization of CTRW}
+To categorise different CTRW one can look at the quantities
+\[
+T = \int_{0}^{+\infty} t w(t)\,\textrm{d}t, \text{ (Characteristic waiting time)},
+\]
+and 
+\[
+\Sigma^2 = \int_{-\infty}^{+\infty} x^2\lambda(x)\,\textrm{d}x\, \text{ (Jump length variance)},
+\]
+specifically, are they \textbf{finite}? Do they \textbf{diverge}?
+
+\onslide<2->{
+The \alert{master} (Langevin) \alert{equation} for this process is then given by
+\[
+\alert<3>{\eta(x,t)} = \int_{-\infty}^{+\infty} \textrm{d}x' \int_{0}^{+\infty} \textrm{d}t'\,\alert<4>{\eta(x',t')} \psi(x-x',t-t') + \delta(x)\delta(t),
+\]
+\only<3->{Pdf of having arrived at position $x$ at time $t$ -- $\eta(x,t)$ --}\only<4->{ having just arrived at $x'$ at time $t'$ -- $\eta(x',t')$ --}\only<5->{ with initial condition $\delta(x)$.}
+}
+
+\end{frame}
+
+\begin{frame}{Characterization of CTRW}
+Then if we use 
+\[
+\eta(x,t) = \int_{-\infty}^{+\infty} \textrm{d}x' \int_{0}^{+\infty} \textrm{d}t'\,\eta(x',t') \psi(x-x',t-t') + \delta(x)\delta(t),
+\]
+we can write the pdf of being in $x$ at time $t$ as
+\[
+W(x,t) = \int_{0}^{t} \eta(x,t') \Psi(t-t'),\textrm{d}t, \qquad \Psi(t) = 1 - \int_{0}^{t} w(t')\,\textrm{d}t',
+\]
+where the latter is the cumulative probability assigned to the probability of \alert{no jump event} during the time interval  $t-t'$.
+\begin{alertblock}{Fact}
+If both $T$ and $\Sigma^2$ are finite the long-time limit corresponds to Brownian motion, e.g., $w(t) = \tau^{-1} exp(-\nicefrac{t}{\tau})$, $T = \tau$, $\lambda(x) = (4\pi \sigma^2)^{-\nicefrac{1}{2}} \exp(-\nicefrac{x^2}{4\sigma^2})$, $\Sigma^2 = 2 \sigma^2$, we recover the standard diffusion equation.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{The CTRW in the Fourier-Laplace domain}
+
+We take
+\[
+W(x,t) = \int_{0}^{t} \eta(x,t') \Psi(t-t'),\textrm{d}t, \qquad \Psi(t) = 1 - \int_{0}^{t} w(t')\,\textrm{d}t',
+\]
+and rewrite it again in the \textbf{Fourier-Laplace domain} (Fourier for the space variable, Laplace for the time one) as
+\[
+W(k,u) = \frac{1-w(u)}{u} \frac{W_0(k)}{1-\psi(k,u)}, \qquad W_0(k) = \int_{-\infty}^{+\infty} W_0(x) e^{-i 2 \pi k x}\,\textrm{d}x.
+\]
+In the \textbf{Brownian case}
+\[
+w(u) \sim 1 - u\tau + O(\tau^2), \quad \lambda(k) \sim 1 - \sigma^2 k^2 + O(k^4), \quad W_0(x) = \delta(x)
+\]
+then
+\[
+W(k,u) = \frac{1}{u + K_1 k^2}, \quad K_1 = \nicefrac{\sigma^2}{\tau}.
+\]
+
+\end{frame}
+
+\begin{frame}{The case of long rests}
+
+\begin{block}{\faBed\; Long rests}
+The \textbf{characteristic waiting time} $T = \int_{0}^{+\infty} t w(t)\,\textrm{d}t$ \textbf{diverges}, but the jump length variance $\Sigma^2 = \int_{-\infty}^{+\infty} x^2\lambda(x)\,\textrm{d}x$ is finite.
+\end{block}
+
+\begin{itemize}
+	\item<2-> To realize this we can select
+	\[
+	w(t) \sim  A_\alpha \left(\nicefrac{\tau}{t}\right)^{1+\alpha}, \qquad 0 < \alpha < 1,
+	\]
+	\item<3-> For the jump pdf we use again the Gaussian jump length
+	\[
+	\lambda(x) = (4\pi \sigma^2)^{-\nicefrac{1}{2}} \exp(-\nicefrac{x^2}{4\sigma^2}).
+	\]
+	\item<4-> To get the form of the equation we first go to the Laplace domain:
+	\[
+	w(u) \sim 1 - (u\tau)^\alpha,
+	\]
+	\item<5-> and then obtain the expression for $W(k,u)$ in the Fourier-Laplace space
+	\[
+	W(k,u) = \nicefrac{\nicefrac{W_0(k)}{u}}{\left(1 + K_\alpha u^{-\alpha} k^2\right)}.
+	\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The case of long rests}
+
+To get an expression of the equation we use the Laplace transform for fractional integrals:
+\[
+\mathcal{L}\left\lbrace I_{[0,t]}^{-\alpha} W(x,t) \right\rbrace = u^{-\alpha} W(x,u), \qquad \alpha \geq 0,
+\]
+and together with 
+\[
+W(k,u) = \frac{\nicefrac{W_0(k)}{u}}{\left(1 + K_\alpha u^{-\alpha} k^2\right)}.
+\]
+we infer the fractional integral equation\only<2>{, and apply derivative w.r.t. to time}
+\only<1>{\[
+W(x,t) - W_0(x) = I_{[0,t]} K_{\alpha} \frac{\partial^2}{\partial x^2} W(x,t).
+\]}%
+\only<2>{\[
+\frac{\partial}{\partial t} \left( W(x,t) - W_0(x) \right) = \frac{\partial}{\partial t} \left( I_{[0,t]} K_{\alpha} \frac{\partial^2}{\partial x^2} W(x,t) \right).
+\]
+}%
+\only<3->{
+\[
+\frac{\partial W}{\partial t} = {}_{RL}D_{[0,t]}^\alpha K_\alpha \frac{\partial^2}{\partial x^2} W(x,t).
+\]	
+}%
+\only<4>{
+We can compute also the mean squared displacement
+\[
+\langle x^2(t) \rangle = \mathcal{L}^{-1} \left\lbrace \lim_{k \rightarrow 0} - \frac{d^2}{dk^2}W(k,u) \right\rbrace = \frac{2 K_\alpha}{\Gamma(1+\alpha)}t^\alpha. 
+\]
+}
+\end{frame}
+
+\begin{frame}{The case of long rests}
+We have obtained a Fractional Differential Equation:
+\[
+\frac{\partial W}{\partial t} = {}_{RL}D_{[0,t]}^\alpha K_\alpha \frac{\partial^2}{\partial x^2} W(x,t), \qquad 0 < \alpha < 1
+\]
+but this is not the model we started looking at, that was
+\[
+{}_{CA}D_{[0,t]}^\alpha W = K_\alpha \frac{\partial^2}{\partial x^2} W(x,t), \qquad 0 < \alpha < 1
+\]
+\faQuestionCircle\;\alert{Are they related?} \onslide<2->{It turns out that this is indeed the case~\parencite{MR2150232}, the proof involves doing some work in inverting Fourier-Laplace transform.}\vfill
+
+\onslide<3>{We now have an \emph{interpretation} of what a Fractional Derivative with respect to time is. We will come back to this when we will speak about fractional derivative with respect to space.}
+
+\end{frame}
+
+\section{``Exponential'' Fractional Integrators}
+
+\begin{frame}{``Exponential'' Fractional Integrators}
+
+We start from the FDE
+\[
+\begin{cases}
+{}_{CA}D^\alpha_{[t_0,t]} u(t) + \lambda y(t) = f(t), \\
+u(0) = u_0,
+\end{cases} \; \alpha \in \mathbb{R}_{> 0}, \quad \lambda \in \mathbb{R}, \; u(t)\,:[t_0,T] \rightarrow \mathbb{R}.
+\]
+Then we rewrite the solution as
+\[
+u(t) = e_{\alpha,1}(t-t_0;\lambda) u_0 + \int_{t_0}^{t} e_{\alpha,\alpha}(t-s;\lambda) f(s)\,\textrm{d}s, \quad e_{\alpha,\beta} = t^{\beta - 1} E_{\alpha,\beta}(-\lambda t^\alpha),
+\]
+for $E_{\alpha,\beta}(z)$ the Mittag-Leffler (ML) function with two parameters.
+
+\begin{itemize}
+	\item[\faLightbulb]<2-> We can use this formulation to build different PI rules,
+	\item[\faLightbulb]<3-> We can use it to address the problem
+	\[
+	{}_{CA}D^\alpha_{[t_0,t]} U(t) + A y(t) = F(U(t)), \quad U(0) = U_0.
+	\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Evaluation of the ML function}
+For both the approaches we need reliable ways for \textbf{computing} the \textbf{ML function} on both the \textbf{real line} and with \textbf{matrix argument}.  
+\begin{description}
+	\item[Scalar case]<2-> Inversion of the Laplace transform via the \alert{Optimal Parabola Contour} selection algorithm~\parencite{Garrappa},
+	\item[Matrix argument]<3-> To apply algorithm for matrix-function evaluation we may need also the value of the derivative of the ML function, e.g., Schur-Parlett type algorithm~\parencite{MatrixML,HighamML}. 
+\end{description}
+
+\onslide<3->{In general, we expect to mostly need matrix function--times--vector operations:
+\[
+\mathbf{y} = E_{\alpha,\beta}(A) \mathbf{v}, \qquad A \in \mathbb{R}^{n \times n}, \quad \mathbf{y},\mathbf{v} \in \mathbb{R}^n.
+\]
+}\vfill
+
+\onslide<4>{We postpone it to after we have discussed the actual necessities we have.}
+
+\end{frame}
+
+\begin{frame}{PI - ``Exponential'' Fractional Integrators}
+We start from the formula
+\[
+u(t) = e_{\alpha,1}(t-t_0;\lambda) u_0 + \int_{t_0}^{t} e_{\alpha,\alpha}(t-s;\lambda) f(s)\,\textrm{d}s, \quad e_{\alpha,\beta} = t^{\beta - 1} E_{\alpha,\beta}(-\lambda t^\alpha),
+\]
+and select a grid $\{t_i\}_{i=0}^{N}$, then
+\only<1-3>{\[
+u(t_n) = e_{\alpha,1}(t_n - t_0;\lambda) u_0 + \sum_{j=0}^{n-1} \alert<3>{\int_{t_j}^{t_{j+1}} e_{\alpha,\alpha}(t_n - s;\lambda) f(s)\,\textrm{d}s}.
+\]}
+\only<4->{\[
+	u(t_n) = e_{\alpha,1}(t_n - t_0;\lambda) u_0 + \tau^\alpha \sum_{j=0}^{n-1} \int_{0}^{1} e_{\alpha,\alpha}(\nicefrac{(t-t_j)}{\tau} - r;\tau^\alpha \lambda) f(t_j + r\tau)\,\textrm{d}r.
+\]}
+\begin{itemize}
+	\item<2-> In general we have \[e_{\alpha,\beta}(t;\lambda) = \tau^{\beta-1} e_{\alpha,\beta}(\nicefrac{t}{\tau};\tau^\alpha \lambda)\]
+	\item<3-> For $s \in [t_j,t_{j+1}]$ let us consider the \emph{change of variables} $s = t_j + r\tau$, $r \in [0,1]$ 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{PI - ``Exponential'' Fractional Integrators}
+\only<1>{Then a PI rule for
+\[
+u(t_n) = e_{\alpha,1}(t_n - t_0;\lambda) u_0 + \tau^\alpha \sum_{j=0}^{n-1} \int_{0}^{1} e_{\alpha,\alpha}(\nicefrac{(t-t_j)}{\tau} - r;\tau^\alpha \lambda) \alert<1>{f(t_j + r\tau)}\,\textrm{d}r.
+\]}%
+\only<2>{Then the PI rule is
+\[
+u^{(n)} = e_{\alpha,1}(t_n - t_0;\lambda)y_0 + \tau^\alpha \sum_{j=0}^{n-1} \sum_{\ell = 0}^{q} \omega_\ell^{[q;\alpha]}(n-j;\tau^\alpha \lambda) f(t_j + c_\ell\tau).
+\]
+}
+is obtained by selecting $q+1$ \emph{distinct} nodes $0 \leq c_0 < c_1 < \cdots < c_q \leq 1$ and replacing $f(t_j + r\tau)$ with
+\[
+p_j^{[q]}(t_j + r \tau) = \sum_{\ell=0}^{q} L_\ell^{[q]}(r) f(t_j + c_\ell \tau), \quad r \in [0,1], \quad L_\ell^{[q]} \text{ Lagrange basis element of degree }q.
+\]
+\onslide<2>{
+And selecting the weights
+\[
+\omega_\ell^{[q;\alpha]}(n,z) = \int_{0}^{1}e_{\alpha,\alpha}(n-j-r;z) L_\ell^{[q]}(r)\,\textrm{d}r.
+\]
+}
+\end{frame}
+
+\begin{frame}{PI - ``Exponential'' Fractional Integrators}
+
+\begin{alertblock}{Theorem \parencite[Theorem 4.2]{GarrappaPopolizioPIExponential}}
+Let $\alpha > 0$ and $f(t) \in \mathcal{C}^{q+2}([t_0,T])$. The error of a $q$-step exponential PI rule is given by
+\[
+u(t_n) - u^{(n)} = \tau^{q+1} \frac{C_0^{[q]}}{(q+1)!} \int_{t_0}^{t_n} e_{\alpha,\alpha}(t_n-s;\lambda) f^{(q+1)}(s)\,\textrm{d}s + O(\tau^{q+1+\alpha}),
+\]
+where the constant $C_0^{[q]}$ depends only on the nodes $c_\ell$.
+\end{alertblock}
+
+\begin{itemize}
+	\item For $q = 2$, $c_0 = 0$, $c_1 = \nicefrac{1}{2}$ $c_2 = 1$, one finds $C^{[2]}_0 = 0$, thus an interpolatory formula of order $O(\tau^{q+1+\alpha})$. 
+	\item[\faLightbulb] The \textbf{general idea} is to select nodes $c_\ell$ in such way that 
+	\[
+	C_\nu^{[q]} = \int_{0}^{1} \omega_q(r) \xi(1-\nu,1-r)\,\textrm{d}r, \quad \nu \in \mathbb{R},
+	\]
+	for $\xi$ the \emph{Hurwitz zeta function}, are zeroed out in the error expansion for the method.
+\end{itemize}
+
+\end{frame}
+
+\section{The MOL/Matrix case}
+
+\begin{frame}{The MOL/Matrix case}
+Let us go back to the case that sparked our interest in going ``exponential'', that was the MOL problem
+\[
+\begin{cases}
+{}_{CA}D^\alpha_{[0,t]} \mathbf{u}(t) + A\mathbf{u}(t) = \mathbf{g}(t), & t > 0,\\
+\mathbf{u}(0) = \mathbf{u}_0.
+\end{cases}
+\]
+By the variation of constant formula, we have seen that we can express the solution as
+\[
+\mathbf{u}(t) = E_{\alpha,1}(-t^\alpha A) \mathbf{u}_0 + \int_{0}^{t} (t-s)^{\alpha-1} E_{\alpha,\alpha}(-A(t-s)^\alpha)\mathbf{g}(s)\,\textrm{d}s.
+\]
+\begin{itemize}
+	\item<2-> In the general case we then have to apply one of the PI rules to compute the integral term, 
+	\item<3-> If $g(s) = \sum_{k=0}^q s^k \mathbf{v}_k$ for some vectors, we can compute the integral on the right-hand side in \emph{closed form} and obtain
+	\[
+	\mathbf{u}(t) = E_{\alpha,1}(-t^\alpha A)\mathbf{y}_0 + \sum_{k=0}^{q} \Gamma(k+1) t^{\alpha+k} E_{\alpha,\alpha+k+1}(-t^\alpha A)\mathbf{v}_k, \qquad t > 0.
+	\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Matrix functions: the normal case}
+
+If $A$ is a normal matrix, and $f$ is a function existing on the spectrum of $A$, then
+\[
+f(A) = U f(\Lambda) U^H, \quad U^HU= I, \quad \Lambda = \operatorname{diag}(\lambda_1,\ldots,\lambda_n),\; A \mathbf{u}_i = \lambda_i \mathbf{u}_i, \quad U = [\mathbf{u}_1,\ldots,\mathbf{u}_n].
+\]
+This is, e.g., sufficient for the cases in which
+\begin{itemize}
+	\item $A$ is the discretization of a self-adjoint operator,
+	\item $A$ is symmetric.
+\end{itemize}
+$E_{\alpha,\beta}(z)$ is an \textbf{analytic function}, and therefore we can compute it for every possible eigenvalue $\lambda$ in the spectrum of $A$.\vfill
+
+\onslide<2>{What about the \emph{non-normal} and \emph{nond-diagonalizable} case? For diagonalizable matrices, we can use the eigendecomposition at the same way.}
+
+\end{frame}
+
+\begin{frame}{Matrix functions: the Jordan Canonical Form}
+
+\begin{block}{Jordan Canonical Form}
+We recall that any matrix $A \in \mathbb{C}^{n \times n}$ can be expressed in Jordan canonical
+form as
+\begin{equation*}
+Z^{-1} A Z = J = \operatorname{diag}(J_1,\ldots,J_p), \quad \text{ for }
+J_k = J_k(\lambda_k) = \begin{bmatrix}
+\lambda_k & 1 \\
+& \lambda_k & \ddots \\
+& & \ddots & 1 \\
+& & & \lambda_k
+\end{bmatrix} \in \mathbb{C}^{m_k \times m_k},
+\end{equation*}
+where $Z$ is nonsingular and $m_1 + m_2 + \ldots + m_p = n$. If each block in which the eigenvalue $\lambda_k$ appears is of size 1 then $\lambda_k$ is said to be a \textit{semisimple} eigenvalue.
+\end{block}
+\begin{itemize}
+	\item This is a \emph{theoretical object}, it is useful to prove and define \emph{things}, \alert{not to implement \emph{things}}.
+	\item<2-> Now that we have a decomposition of the matrix, we need to introduce a suitable definition of \textbf{being defined on the spectrum}.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Matrix functions: the general case}
+
+Let us denote by $\lambda_1,\ldots,\lambda_s$ the distinct
+eigenvalues of $A$, and by $n_i$ the order of the largest Jordan block in
+which the $\lambda_i$ appears, i.e., the \textit{index} of the eigenvalue
+$\lambda_i$.
+
+\begin{block}{Defined on the spectrum}
+The function $f$ is \textit{defined on the spectrum of} $A$ if the values
+\begin{equation*}
+f^{(j)}(\lambda_i), \qquad j=0,1,\ldots,n_i-1, \quad i = 1,\ldots s,
+\end{equation*}
+exist, where $f^{(j)}$ denotes the $j$th derivative of $f$, with $f^{(0)} = f$.
+\end{block}
+
+\begin{itemize}
+	\item[\faExclamationTriangle]<2-> Again for the ML function and $\alpha > 0$ we have no problem with this. 
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Matrix functions: the general case}
+\begin{block}{Matrix function}
+	Lef $f$ be defined on the spectrum of $A \in \mathbb{C}^{n \times
+		n}$, which is represented in Jordan canonical form as $Z^{-1}AZ = J$,\vspace{-0.5em}
+	\begin{equation*}
+	f(A) = Z f(J) Z^{-1} = Z \operatorname{diag}(f(J_1),\ldots,f(J_p))Z^{-1},
+	\end{equation*}
+	where\vspace{-0.5em}
+	\begin{equation*}
+	f(J_k) = \begin{bmatrix}
+	f(\lambda_k) & f'(\lambda_k) & \ldots & \frac{f^{(m_k-1)}(\lambda_k)}{(m_k-1)!} \\
+	& f(\lambda_k) & \ddots & \vdots \\
+	& & \ddots & f'(\lambda_k) \\
+	& & & f(\lambda_k)
+	\end{bmatrix}.
+	\end{equation*}
+	Moreover, let $f$ be a multivalued function and suppose some eigenvalues occur in more than one Jordan block. If the same choice of branch of $f$ is made in each block, then we say that $f(A)$ is a \textit{primary matrix function}.
+\end{block}
+\end{frame}
+
+\begin{frame}{Matrix functions: computing $f(A)$ and $f(A)\mathbf{v}$}
+To march our scheme for
+\[
+\mathbf{u}(t) = E_{\alpha,1}(-t^\alpha A) \mathbf{u}_0 + \int_{0}^{t} (t-s)^{\alpha-1} E_{\alpha,\alpha}(-A(t-s)^\alpha)\mathbf{g}(s)\,\textrm{d}s.
+\]
+we need to compute operations of the form $f(A)\mathbf{v}$, \emph{nevertheless}, we will have to compute $f(\cdot)$ at least on some \alert{small matrix}.
+
+\begin{block}<2->{Schur decomposition and matrix functions}
+Given a matrix $A$ there exist always a matrix $Q$ such that $Q^*Q = I$, and a upper triangular matrix $T$ such that $A = Q T Q^*$. Then, if $f$ is \alert{defined on the spectrum} of $A$ we can compute $f(A)$ as $f(A) = Q f(T) Q^*$.
+\end{block}
+
+\begin{onslide}<3>
+But how do we compute the matrix function of an upper triangular matrix?
+\end{onslide}
+
+\end{frame}
+
+\subsection{The case of small matrices}
+
+\begin{frame}{Matrix functions: the upper triangular case}
+\begin{description}
+	\item[Assumption] we assume that $T$ is such that each block $T_{i,j}$ has \alert{clustered eigenvalues}, and distinct diagonal blocks have \emph{far enough} eigenvalues. 
+	\item[\faExclamationCircle] If the \textbf{assumption} doesn't hold we look for a block permutation.
+\end{description}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\[
+\begin{bmatrix}
+\begin{matrix}
+\alert<2>{(T_{1,1})_{1,1}} & \alert<2>{(T_{1,1})_{1,2}} \\
+\alert<2>{0} & \alert<2>{(T_{1,1})_{2,2}}
+\end{matrix}
+& \rvline & \mbox{\normalfont\Large \alert<3>{$T_{1,2}$} } \\
+\hline
+\bigzero & \rvline &
+\begin{matrix}
+\alert<2>{(T_{2,2})_{1,1}} & \alert<2>{(T_{2,2})_{1,2}} \\
+\alert<2>{0} & \alert<2>{(T_{2,2})_{2,2}}
+\end{matrix}
+\end{bmatrix}
+\]
+\onslide<1>{\alert{\faExclamationTriangle} Close eigenvalues may lead to severe \emph{accuracy loss}, even far apert eigenvalues can produce more inaccurate answers than expected, see~\parencite{DaviesHighamSchurParlett}.}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\only<2>{
+\begin{itemize}
+	\item<2-> To evaluate $f(T_{ii})$ we use the Taylor series in $\sigma$
+	\[
+	f(T_{i,i}) = \sum_{k=0}^{+\infty} \frac{f^{(k)}}{k!} M^{k},
+	\]
+	for $\sigma = \nicefrac{\operatorname{trace}(T_{i,i})}{m}$, $m = \dim(T_{i,i})$, and $M = T_{i,i} - \sigma I$.
+\end{itemize}}
+\only<3>{For the \alert<3>{off-diagonal blocks} we apply the block-Parlett recurrence
+\begin{algorithm}[H]
+$F_{i,i} = f(T_{i,i})$, $i=1,\ldots,n$\;
+\For{$j=2,\ldots,n$}{
+\For{$i=j-1,j-2,\ldots,1$}{
+	Solve Sylvester equation for $F_{i,j}$:\\ 
+	$T_{i,i} F_{j,j} - F_{i,j} T_{j,j} = F_{i,i} T_{i,j} - T_{i,j} F_{j,j}$\\ $+ \sum_{k=0}^{j-1}(F_{i,k}-T_{k,j} - T_{i,k}F_{k,j})$.
+}
+}
+\end{algorithm}
+}
+\only<4>{
+\begin{exampleblock}{What we need}
+To use the algorithm we have sketched out, we need to be able to compute the derivatives of the ML function sufficiently accurately.
+\end{exampleblock}
+}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Derivatives of the ML function}
+The key observation for this task is
+\[
+\frac{d^k}{d z^k} E_{\alpha,\beta}(z) = \sum_{j=0}^{+\infty} \frac{(j+k)_k z^j}{\Gamma(\alpha j + \alpha k + \beta)} = \frac{k!}{\Gamma(k+1)}\sum_{j=0}^{+\infty} \frac{\Gamma(j+k+1) z^j}{j!\Gamma(\alpha j + \alpha k + \beta)} = k! E_{\alpha,\alpha k + \beta}^{k+1} (z),
+\]
+where
+\[
+E_{\alpha,\beta}^\gamma(z) = \frac{1}{\Gamma(\gamma)} \sum_{j=0}^{+\infty} \frac{\Gamma(1+\gamma)z^j}{j! \Gamma(\alpha j + \beta)},
+\]
+is called the \alert{Prabhakar function}.
+
+\onslide<2>{
+Its \textbf{efficient computation} can be obtained, similarly to the ML function, by means of a \emph{Laplace transform inversion}
+\[
+\mathcal{L} \left\lbrace t^{\beta-1} E_{\alpha,\beta}^\gamma(t^\alpha z) \right\rbrace(s) = \frac{s^{\alpha\gamma-\beta}}{(s^\alpha-t^\alpha z)^\gamma}, \quad \Re(s) > 0, \quad |t^\alpha zs^{-\alpha}| < 1.
+\]
+}
+\end{frame}
+
+\begin{frame}[fragile]{Computing the Prabhakar function~\parencite{Garrappa}}
+
+\only<1>{We select $t = 1$ in\[
+\mathcal{L} \left\lbrace t^{\beta-1} E_{\alpha,\beta}^\gamma(t^\alpha z) \right\rbrace(s) = \frac{s^{\alpha\gamma-\beta}}{(s^\alpha-t^\alpha z)^\gamma}, \quad \Re(s) > 0, \quad |t^\alpha zs^{-\alpha}| < 1.
+\]}\only<2->{Having selected $t=1$ we have
+\[
+\mathcal{L} \left\lbrace E_{\alpha,\beta}^\gamma(z) \right\rbrace(s) = \frac{s^{\alpha\gamma-\beta}}{(s^\alpha-z)^\gamma}, \quad \Re(s) > 0, \quad |zs^{-\alpha}| < 1\only<2>{.}\only<3->{,\; H_k(z;z) = \frac{s^{\alpha-\beta}}{(s^\alpha-z)^{k+1}}.}
+\]
+}
+\begin{columns}
+\begin{column}{0.7\columnwidth}
+\begin{itemize}
+	\item<3-> Since
+	\[
+	\frac{d^k}{d z^k} E_{\alpha,\beta}(z) = k! E_{\alpha,\alpha k + \beta}^{k+1} (z) = \frac{k!}{2\pi i} \int_{\mathcal{C}} e^s H_k(s;z)\textrm{d}s \equiv I_k(z),
+	\]
+	\item<4-> we use the \emph{Optimal Parabolic Contour} we have already discussed in \textbf{Lecture 2} to determine the deformation of the Bromwich line to evaluate
+	\[
+	I_{k}^{[N]} = \frac{k! h}{2\pi i}\sum_{j=-N}^{N} e^{\sigma(u_j)} H_k(\sigma(u_j);z) \sigma'(u_j).
+	\] 
+\end{itemize}
+\end{column}
+\begin{column}{0.3\columnwidth}
+\only<4->{
+\centering 
+\begin{tikzpicture}
+\begin{axis}[
+width=\columnwidth,
+height=\columnwidth,
+axis x line=center,
+axis y line=center,
+xlabel={$\Re(z)$},
+ylabel={$\Im(z)$},
+xticklabels={,,},
+yticklabels={,,},
+xlabel style={below right},
+ylabel style={above left},
+xmin=-5,
+xmax=5,
+ymin=-5,
+ymax=5]
+\addplot[red,domain=-10:10] plot[smooth]({-0.25*x^2+2},{x});
+\addplot[mark=*] coordinates {(2,0)} node[pin=-20:{$\sigma$}]{} ;
+\addplot[mark=x,blue] coordinates {(1,1)};
+\addplot[mark=x,blue] coordinates {(1,-1)};
+\end{axis}
+\end{tikzpicture}
+
+$s = \mu (i u + 1)^2,\; - \infty < u < \infty$
+}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{\faHammer\;An alternative option \parencite{HighamML}}
+
+We needed the ML derivatives to apply Schur-Parlett to non-diagonalizable matrices.
+
+\begin{block}<2->{Diagonalization by perturbation}
+Let $A$ be nonnormal
+\[
+\tilde{A} = A + E
+\]
+for $E$ a suitable perturbation is \emph{likely to be diagonalizable}. \textbf{Diagonalizable matrices are dense in }$\mathbb{C}^{n \times n}$, for a given $A$ and machine precision $\epsilon$ then the best approximate diagonalization can be measured in terms of
+\[
+\sigma(A,\epsilon) = \inf_{E,V} \sigma(A,V,E,\epsilon) = \inf_{E,V} \left\lbrace \kappa_2(V)\epsilon + \|E\|_2 \right\rbrace.
+\]
+\end{block}
+\onslide<3>{We can expect to measure on $f(A)$ by estimating
+\[
+\|f(A+E) - f(A)\| \lesssim \|L_f(A,E)\| \leq \|L_f(A)\|\|E\|,
+\]
+for $L_f(A,E)$ the \alert{Fréchet derivative} of $f$ at $A$ in direction $E$, $\displaystyle \|L_f(A)\| = \max_{\|E\|=1}\left\lbrace \|L_f(A,E)\|\right\rbrace$.
+}
+
+\end{frame}
+
+\begin{frame}{\faHammer\;An alternative option \parencite{HighamML}}
+
+\begin{block}{Fréchet derivative}
+The \textbf{Fréchet derivative} of a matrix function $f: \mathbb{C}^{n \times n} \rightarrow \mathbb{C}^{n \times n}$ at a point $X \in \mathbb{C}^{n \times n}$ is a linear mapping $L : \mathbb{C}^{n \times n} \rightarrow \mathbb{C}^{n \times n}$ $E \mapsto L_f(X,E)$ such that for all $E \in \mathbb{C}^{n \times n}$ we find
+\[
+f(X+E) - f(X) -L(X,E) = o(\|E\|).
+\]
+\end{block}
+\onslide<2->{
+Thus, in our estimate we have
+\[
+\|f(A+E) - f(A)\| \lesssim \|L_f(A,E)\| \leq \|L_f(A)\|\|E\|,
+\]
+and therefore \alert{the change in $f$ induced by $E$ grows as $\|L_f(A)\|_2 \|E\|_2$} and there are many cases in which \alert{$\|L_f(A)\|_2 \gg 1$}.
+}
+\begin{itemize}
+	\item[\faLightbulb]<3-> The idea from \parencite{HighamML} is to use a \emph{structured perturbation}:
+	\begin{quote}
+		``take $E$ to be \emph{upper triangular} standard Gaussian matrix.''
+	\end{quote}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{\faHammer\;An alternative option \parencite{HighamML}}
+
+The idea in few steps
+\begin{enumerate}
+\item<1-> Compute the Schur decomposition $A = Q T Q^*$,
+\item<2-> Consider the perturbed matrices $\tilde{T} = T + E$
+\begin{itemize}
+	\item<3-> $\tilde{T}$ is still upper triangular,
+	\item<3-> Eigenvectors can be compute by back-substitution: $(\tilde{T}-\tilde{t}_{i,i} I) \mathbf{v}_i = 0$, $i=1,\ldots,m$,
+\end{itemize}
+\item<4-> Compute \alert{in precision $u_h$} the diagonalization
+\[
+\tilde{T} = V D V^{-1}, \quad D = \operatorname{diag}(\lambda_i),
+\]
+with \textbf{distinct} $\lambda_i$,
+\item<5-> Form $f(\tilde{T}) = V f(D) V^{-1}$ \alert{in precision $u_h$}
+\end{enumerate}
+
+\begin{block}<6->{What precision do we need?}
+To have $\kappa_1(V) u_h \lesssim u$ we select for $c_m u \approx \min_i|\operatorname{diag}(\tilde{t}_{1,1}I-\tilde{T}_{2,2})|$\vspace{-1em} 
+\[
+u_h \lesssim \frac{c_m u^2}{\max_{i < j}|\tilde{t}_{i,j}| \left( \nicefrac{\max_{i < j} |\tilde{t}_{i,j}|}{c_m u} + 1 \right)^{k-2}}, \quad k = \text{``size of the Jordan block''} \geq 2.
+\]
+\end{block}
+
+\end{frame}
+
+\begin{frame}{From small to large matrices}
+We now know how to compute $E_{\alpha,\beta}(A)$ for a \emph{small matrix} $A$, either with
+\begin{itemize}
+	\item[\faDoorClosed] Classical Schur-Parlett algorithm with Laplace inversion technique for the needed derivative of the ML function~\parencite{MatrixML},
+	\begin{itemize}
+		\item[\faCode] \href{https://it.mathworks.com/matlabcentral/fileexchange/66272-mittag-leffler-function-with-matrix-arguments}{https://it.mathworks.com/matlabcentral/fileexchange/66272-mittag-leffler-function-with-matrix-arguments}
+	\end{itemize}
+	\item[\faDoorClosed] Multiprecision derivative-free Schur-Parlett algorithm~\parencite{HighamML},
+	\begin{itemize}
+		\item[\faCode] \href{https://github.com/Xiaobo-Liu/mp-spalg}{https://github.com/Xiaobo-Liu/mp-spalg}
+	\end{itemize}
+\end{itemize}
+\onslide<2->{What about \emph{large matrices}?}
+\begin{block}<3->{\faLightbulb\;Projection methods for matrix functions}
+We can exploit the \emph{subspace projection} idea, take $V \in \mathbb{R}^{n \times k}$ spanning a given subspace $\mathcal{W}_k$
+\[
+f(A)\mathbf{v} \approx V f(V^T A V) V^T \mathbf{v} \qquad V^T A V \in \mathbb{R}^{k \times k}, \quad k \ll n. 
+\]
+\end{block}
+\end{frame}
+
+\begin{frame}{Krylov Projection Methods}
+\textbf{Different methods} are obtained for \textbf{different} choices of the \textbf{projection spaces} $\mathcal{W}_{k}(A,\mathbf{v})
+$.
+
+\begin{block}<2->{A general framework}
+Given a set of scalars $\left\{ \sigma _{1},\dots,\sigma _{k-1}\right\}
+\subset \overline{\mathbb{C}}$ (the extended complex plane), that are not
+eigenvalues of $A$, let
+\begin{equation*}
+q_{k-1}(z)=\prod\nolimits_{j=1}^{k-1}(\sigma _{j}-z).
+\end{equation*}
+The \alert{rational Krylov} subspace of order $k$ associated with $A$, $\mathbf{v%
+}$ and $q_{k-1}$ is defined by%
+\begin{equation*}
+\mathcal{Q}_{k}(A,\mathbf{v})=\left[ q_{k-1}(A)\right] ^{-1}\mathcal{%
+	K}_{k}(A,\mathbf{v}),
+\qquad \mathcal{K}_{k}(A,\mathbf{v})=\operatorname{Span}\{\mathbf{v},A\mathbf{v}%
+,\ldots ,A^{k-1}\mathbf{v}\}.
+\end{equation*}
+\end{block}
+
+\begin{block}<3->{A matrix expression}
+Given $\left\{ \mu _{1},\dots, \mu _{k-1}\right\} \subset \overline{\mathbb{C}}$
+such that $\sigma _{j}\neq $ $\mu _{j}^{-2}$, we define the matrices
+\begin{equation*}
+C_{j}=\left( \mu _{j}\sigma _{j}A-I\right) (\sigma _{j}I-A)^{-1}, \text{ and } \mathcal{Q}_{k}(A,\mathbf{v})=\operatorname{Span}\{\mathbf{v},C_{1}\mathbf{v}%
+,\ldots ,C_{k-1}\cdots C_2 C_{1}\mathbf{v}\}.
+\end{equation*}
+\end{block}
+
+\end{frame}
+
+\subsection{Krylov Projection Methods}
+
+\begin{frame}{Krylov Projection Methods: special cases}
+
+\begin{block}{A matrix expression}
+	Given $\left\{ \mu _{1},\dots, \mu _{k-1}\right\} \subset \overline{\mathbb{C}}$
+	such that $\sigma _{j}\neq $ $\mu _{j}^{-2}$, we define the matrices
+	\begin{equation*}
+	C_{j}=\left( \mu _{j}\sigma _{j}A-I\right) (\sigma _{j}I-A)^{-1}, \text{ and } \mathcal{Q}_{k}(A,\mathbf{v})=\operatorname{Span}\{\mathbf{v},C_{1}\mathbf{v}%
+	,\ldots ,C_{k-1}\cdots C_2 C_{1}\mathbf{v}\}.
+	\end{equation*}
+\end{block}
+
+\begin{description}
+	\item<1->[Polynomial Krylov] $\mathcal{W}_{k}(A,\mathbf{v})=\mathcal{K}_{k}(A,%
+	\mathbf{v})$ set $\mu _{j}=1$ and $\sigma
+	_{j}=\infty $ for each $j$,
+	\item<2->[Extended Krylov] $\mathcal{W}_{2k-1}(A,\mathbf{v})=\operatorname{Span}\{\mathbf{v}, A^{-1}%
+	\mathbf{v}, A\mathbf{v}, \ldots, A^{-(k-1)}\mathbf{v}, A^{k-1}%
+	\mathbf{v}\},$ set
+	\begin{equation*}
+	(\mu _j,\sigma_j)= \left\lbrace \begin{array}{ll}
+	(1,\infty), & \mbox{for  $j$ even},\\
+	(0,0),  & \mbox{for  $j$  odd.}
+	\end{array}\right.
+	\end{equation*}
+	\item<3->[Shift-And-Invert] $\mathcal{W}_{k}(A,\mathbf{v})=\operatorname{Span}\{\mathbf{v},(\sigma
+	I-A)^{-1}\mathbf{v},\ldots ,(\sigma I-A)^{-(k-1)}\mathbf{v}\},$ take $\mu _{j}=0$ and $\sigma _{j}=\sigma $ for each $j$,
+\end{description}
+
+\end{frame}
+
+\begin{frame}{The ML function~\parencite{MoretNovatiML}}
+
+To estimate the convergence behavior of general projection methods in the non-normal we need the concept of \textbf{field of values} (or \emph{numerical range}.)
+\begin{block}<2->{Field of Values/Numerical Range}
+\begin{columns}
+\begin{column}{0.55\columnwidth}
+Given $A \in \mathbb{C}^{N \times N}$ we denote its \textbf{field of values} as
+\[
+W(A) = \left\lbrace \frac{\langle \mathbf{x},A\mathbf{x}\rangle}{\langle\mathbf{x},\mathbf{x}\rangle}, \quad \mathbf{0} \neq \mathbf{x} \in \mathbb{C}^N \right\rbrace,
+\]
+where $\langle\cdot,\cdot\rangle$ represents the Euclidean inner product.
+\end{column}
+\begin{column}{0.39\columnwidth}
+\centering
+
+\input{fov.tikz}
+\end{column}
+\end{columns}
+\end{block}
+
+\onslide<3>{It has many \textbf{properties}, \emph{e.g.}, $W(A) \subseteq D(0,\|A\|)$ (disk centered on $0$ with radius $\|A\|$), is \emph{compact}, sub-additive $W(A+B)\subseteq W(A) + W(B)$, unitarily invariant $W(UAU^H) = U W(A)U^H$, \emph{etc.} see \parencite{BenziFOV}}.
+\end{frame}
+
+\begin{frame}{The ML function~\parencite{MoretNovatiML}}
+
+\textbf{Assumptions}:
+\begin{itemize}
+	\item[(A1)] We assume that $\exists a > 0$, $\theta \in [0,\nicefrac{\pi}{2})$ such that
+	\[W(A) \subset \Sigma_{\theta,a} = \{ \lambda \in \mathbb{C}\,:\; |\arg(\lambda) - a| \leq \theta \}.\]
+	\item[(A2)] $\beta > 0$, $\alpha \in (0,2)$ be such that $\nicefrac{\alpha \pi}{2} < \pi - \theta$, $\varepsilon > 0$ and
+	\[
+		\frac{\alpha \pi}{2} < \mu \leq \min\{\pi,\alpha\pi\}, \quad \mu < \pi - \theta.
+	\]
+\end{itemize}
+
+\textbf{Method of choice:} we use \alert{polynomial Krylov method} $\mathcal{K}_m(A,\mathbf{v})$:
+\[
+A V_m = V_m H_m + h_{m+1,m} v_{m+1} \mathbf{e}_m^T, \quad \operatorname{Span} V_m = \operatorname{Span}\{\mathbf{v}_i\}_{i=1}^m = \mathcal{K}_m(A,\textbf{v}), \quad H_m = V_m^H A V_m.
+\]
+
+\textbf{We want to bound:}
+\[
+R_m = E_{\alpha,\beta}(-A)\mathbf{v} - V_m E_{\alpha,\beta}(-H_m)\mathbf{e}_1, \quad m \geq 1.
+\]
+
+\end{frame}
+
+\begin{frame}{The ML function~\parencite{MoretNovatiML}}
+
+We first express the error in \emph{integral form}, starting from \parencite[Theorem 1.1]{Podlubny}
+\[
+E_{\alpha,\beta}(z) = \frac{1}{2\alpha \pi i} \int_{C(\varepsilon,\mu) } \frac{\exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}}}{\lambda-z} \,\textrm{d} \lambda, \quad z \in G^-(\varepsilon,\mu),
+\]
+where
+\begin{columns}
+\begin{column}{0.7\columnwidth}
+\begin{itemize}
+	\item $\forall \, \varepsilon > 0$, $0 < \mu < \pi$ 
+	\[
+	C(\varepsilon,\mu) = \bigcup \; \begin{cases}
+	C_1(\varepsilon,\mu) = \{\lambda \,:\; \lambda = \varepsilon \exp(i\varphi), \quad - \mu \leq \varphi \leq \mu \},\\
+	C_2(\varepsilon,\mu) = \{ \lambda\,:\; \lambda = r \exp(\pm i \mu), \quad r \geq \varepsilon \}.
+	\end{cases}
+	\]
+	\item The contour $C(\varepsilon,\mu)$ divides the complex plane into two domains, $G^-(\varepsilon,\mu)$ and $G^+(\varepsilon,\mu)$ lying respectively on the left and on the right of $C(\varepsilon,\mu)$.
+\end{itemize}
+\end{column}
+\begin{column}{0.27\columnwidth}
+\centering
+
+\includegraphics[width=0.6\columnwidth]{cbound.pdf}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{An Expression for the Error}
+From the previous we find
+\[
+E_{\alpha,\beta}(-A) = \frac{1}{2\alpha \pi i} \int_{C(\varepsilon,\mu) } \exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}} (\lambda I + A)^{-1} \,\textrm{d} \lambda, \quad \sigma(-A) \in G^-(\varepsilon,\mu),
+\]
+and together with
+\[
+R_m = E_{\alpha,\beta}(-A)\mathbf{v} - V_m E_{\alpha,\beta}(-H_m)\mathbf{e}_1, \quad m \geq 1,
+\]
+we write
+\[
+R_m = \frac{1}{2\alpha\pi i} \int_{C(\varepsilon,\mu)} \exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}} \delta_m(\lambda),\mathrm{d}\lambda,
+\]
+for 
+\[
+\begin{split}
+\delta_m(\lambda) = &\; (\lambda I + A)^{-1}\mathbf{v} - V_m(\lambda I + H_m)^{-1}\mathbf{e}_1 \\
+= &\; (\lambda I + A)^{-1}\mathbf{v} - V_m(\lambda I + H_m)^{-1}V_m^H \mathbf{v}.
+\end{split} 
+\]
+\end{frame}
+
+\begin{frame}{An Expression for the Error}
+Observe now that
+\[
+\delta_m(\lambda) = (\lambda I + A)^{-1}\mathbf{v} - V_m(\lambda I + H_m)^{-1}V_m^H \mathbf{v} = \Delta_m \mathbf{v},
+\]
+\onslide<2->{By using the \alert{Arnoldi relation, since $\mathbf{v}_{m+1} \perp V_m$:}
+\[
+V_m^H (\lambda I + A) V_m = \lambda I + H_m,
+\]
+}
+\onslide<3->{Therefore we have
+\[
+\Delta_m (\lambda I + A) V_m = 0.
+\]
+}
+\onslide<4->{For an arbitrary $\mathbf{y} \in \mathbb{C}^m$ we have then
+\[
+(\lambda I + A)^{-1}\mathbf{v} - V_m(\lambda I + H_m)^{-1}V_m^H \mathbf{v} = \Delta_m (\mathbf{v} - (\lambda I + A)V_m \mathbf{y}) = \Delta_m p_m(A) \mathbf{v},
+\]	
+where $p_m(z)$ is a \alert{polynomial of degree $\leq m$} with $p_m(-\lambda) = 1$.
+}
+\end{frame}
+
+\begin{frame}{An Expression for the Error}
+We have therefore proved that 
+\[
+\|\delta_m(A)\| \leq \| (\lambda I + A)^{-1} - V_m (\lambda I + H_m)^{-1} V_m^H\| \|p_m(A)\mathbf{v}\|, \forall p_m \in \mathbb{P}_{\leq m}[z] \text{ with } p_m(-\lambda) = 1.
+\]
+By using \parencite[Lemma~2]{MR2486853} we also have the following expression
+\[
+\|\delta_m(\lambda)\| = \frac{\prod_{j=1}^{m} h_{j+1,j}}{|\det(\lambda I + H_m)|} \| (\lambda I + A)^{-1} \mathbf{v}_{m+1}\|.
+\]
+\onslide<2->{To obtain the first bound we call then
+\[
+D(\lambda) = \operatorname{dist}(\lambda,W(-A)) \quad \forall\,\lambda \in C(\varepsilon,\mu).
+\]
+}
+\begin{block}<3->{Representation function}
+Using (A1) and (A2) we can find a function $\nu(\varphi)$ such that
+\[
+\forall\,\lambda = |\lambda| \exp(\pm i \varphi) \in C(\varepsilon,\mu) \quad D(\lambda) \geq \nu(\varphi) |\lambda|, \quad \nu(\varphi) \geq \nu > 0.
+\]
+\end{block}
+
+\end{frame}
+
+\begin{frame}{A First Error Bound}
+\begin{alertblock}{Theorem \parencite[Theorem~3.2]{MoretNovatiML}}
+Let assumptions (A1) and (A2) hold, then for $m \geq 1$ and for every $M > 0$ we have
+\[
+\|R_m\| \leq \frac{\exp(M) \prod_{j=1}^{m} h_{j+1,j} }{\pi \nu^{m+1} M^{m\alpha+\beta-1}} \left( \frac{\mu}{\alpha} + \frac{\exp(-M(|\cos(\nicefrac{\mu}{\alpha})| + 1))}{m\alpha-1+\beta} \right).
+\]
+\end{alertblock}
+
+\onslide<2->{\textbf{Proof.} We use $\|(\lambda I + A)^{-1}\| \leq D(\lambda)^{-1}$ and $W(H_m) \subseteq W(A)$ in the error expression $R_m$
+\only<2>{\[
+\begin{split}
+\| R_m \| = & \left\| \frac{1}{2\alpha\pi i} \int_{C(\varepsilon,\mu)} \exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}} \delta_m(\lambda),\mathrm{d}\lambda \right\| \\
+\leq & \frac{\prod_{j=1}^{m} h_{j+1,j} }{2\pi \alpha} \int_{C(\varepsilon,\mu)} \frac{\left| \exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}} \right| }{D(\lambda)^{m+1}}\,|\mathrm{d}\lambda|.
+\end{split}
+\]
+}%
+\only<3>{
+\[
+\| R_m \| \leq \frac{\prod_{j=1}^{m} h_{j+1,j} }{2\pi \alpha} (I_1 + I_2),
+\]	
+with
+\[
+I_1 = \int_{C_1(\varepsilon,\mu)} \frac{\left| \exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}} \right| }{D(\lambda)^{m+1}}\,|\mathrm{d}\lambda| \leq 2 \varepsilon^{\frac{1-\beta}{\alpha}-m} \int_{0}^{\mu} \frac{\exp(\varepsilon^{\nicefrac{1}{\alpha}} \cos(\nicefrac{\varphi}{\alpha}) )}{\nu(\varphi)^{m+1}}\,\mathrm{d}\varphi,
+\]
+}
+\only<4>{\vspace{-0.3em}
+	\[
+	\| R_m \| \leq \frac{\prod_{j=1}^{m} h_{j+1,j} }{2\pi \alpha} \left( 2 \varepsilon^{\frac{1-\beta}{\alpha}-m} \int_{0}^{\mu} \frac{\exp(\varepsilon^{\nicefrac{1}{\alpha}} \cos(\nicefrac{\varphi}{\alpha}) )}{\nu(\varphi)^{m+1}}\,\mathrm{d}\varphi + I_2 \right),
+	\]	
+	with\vspace{-0.5em}
+	\[
+	\begin{split}
+	I_2 = & \int_{C_2(\varepsilon,\mu)} \frac{\left| \exp(\lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{1-\beta}{\alpha}} \right| }{D(\lambda)^{m+1}}\,|\mathrm{d}\lambda| \leq \frac{2}{\nu^{m+1}} \int_{\varepsilon}^{+\infty} \frac{r^{\frac{1-\beta}{\alpha}} \exp( -r^{\frac{1}{\alpha}} | \cos(\nicefrac{\mu}{\alpha}) |)  }{r^{m+1}}\,\mathrm{d}r \\ = & \frac{2}{\nu^{m+1}} \int_{\varepsilon^{\nicefrac{1}{\alpha}}}^{+\infty}
+	\frac{\exp(-s |\cos(\nicefrac{\mu}{\alpha})|)}{s^{m\alpha+\beta}}\,\mathrm{d}s \leq \frac{2 \alpha \exp(-\varepsilon^{\nicefrac{1}{\alpha}} |\cos(\nicefrac{\mu}{\alpha})| ) }{(m\alpha+\beta-1) \nu^{m+1} \varepsilon^{\frac{m\alpha+\beta-1}{\alpha}}}.
+	\end{split}
+	\]
+}
+\only<5->{
+\[
+	\| R_m \| \leq \frac{\prod_{j=1}^{m} h_{j+1,j} }{2\pi \alpha} \left( 2 \varepsilon^{\frac{1-\beta}{\alpha}-m} \int_{0}^{\mu} \frac{\exp(\varepsilon^{\nicefrac{1}{\alpha}} \cos(\nicefrac{\varphi}{\alpha}) )}{\nu(\varphi)^{m+1}}\,\mathrm{d}\varphi +
+\frac{2 \alpha \exp(-\varepsilon^{\nicefrac{1}{\alpha}} |\cos(\nicefrac{\mu}{\alpha})| ) }{(m\alpha+\beta-1) \nu^{m+1} \varepsilon^{\frac{m\alpha+\beta-1}{\alpha}}}
+\right)
+\]	
+The result follows then by setting $\varepsilon = M^\alpha$ and simplifying the expression. \hfill\qedsymbol
+}
+}
+
+\only<6->{\vfill
+\alert{\faExclamationTriangle}\; With the same proof another bound for the case of small $\alpha$ can be obtained.
+}
+\end{frame}
+
+\begin{frame}{A First Error Bound: small $\alpha$s}
+
+\begin{alertblock}{Theorem \parencite[Theorem~3.2]{MoretNovatiML}}
+	Let assumptions (A1) and (A2) hold, then for $m \geq 1$ and for every $M > 0$ we have
+	\[
+	\|R_m\| \leq \frac{\exp(M) \prod_{j=1}^{m} h_{j+1,j} }{\pi \nu^{m+1} M^{m\alpha+\beta-1}} \left( \frac{\mu}{\alpha} + \frac{\exp(-M(|\cos(\nicefrac{\mu}{\alpha})| + 1))}{m\alpha-1+\beta} \right).
+	\]
+\end{alertblock}
+
+\begin{alertblock}{Corollary \parencite[Corollary 3.3]{MoretNovatiML} }
+Let assumptions (A1) and (A2) hold. Let $m \geq 1$ be such that $m \alpha + \beta > 0$, then for every $M>0$, we have
+\[
+\|R_m\| \leq \frac{\exp(M) \prod_{j=1}^{m} h_{j+1,j} }{4\nu^{m+1}M^{m\alpha}} \frac{4 M^{1-\beta}}{\pi} \left(\frac{\mu}{\alpha} + \frac{\exp(-M(1 + |\cos(\nicefrac{\mu}{\alpha})|))}{M |\cos(\nicefrac{\mu}{\alpha})| } \right).
+\]
+\end{alertblock}
+
+\end{frame}
+
+
+\begin{frame}{A First Error Bound: some observations}
+
+\begin{itemize}
+	\item<1->[\faCog] The ML function is entire for $\alpha > 0$ $\Rightarrow$ superlinear convergence for large enough $m$:
+	\[
+	M = m\alpha + \beta -1 \;\Rightarrow\; \|R_m\| \propto \left( \frac{\exp(1)}{M} \right)^M \nu^{-(m+1)} \prod_{j=1}^{m} h_{j+1,j}.
+	\]
+	\item<2->[\faCog] To better understand this, we use that for every monic polynomial of degree $m$ we find
+	\[
+	\prod_{j=1}^{m} h_{j+1,j} \leq \only<2>{\|q_m(A) v \|}\only<3->{2 \gamma^m},
+	\]
+	Therefore, if we take $q_m$ as the \alert{\textbf{monic Faber polynomial}} associated to a closed convex subset $\Omega \supset W(-A)$ we get the bound in terms of the \textbf{logarithmic capacity} $\gamma$ of $\Omega$.
+	\item<3->[$\Rightarrow$] we have discovered:
+	\[
+	\|R_m\| \propto \left( \frac{\exp(1)}{m\alpha} \right)^{m\alpha} \left( \frac{\gamma}{\nu} \right)^m.
+	\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Specialized bounds}
+The bound can be refined under stricter hypotheses.
+
+\begin{alertblock}<2->{Theorem \parencite[Theorem~3.5]{MoretNovatiML}}
+Assume that $A$ is Hermitian with $\sigma(A) \subseteq [a,b] \subset [0,+\infty)$. Assume that $0 < \alpha < 1$, $\beta \geq \alpha$. Let $\mu \leq \nicefrac{\pi}{2}$, $\nicefrac{\alpha\pi}{2} < \mu < \alpha \pi$. Then for every index $m \geq 1$ and for every $M > 0$ we have
+\[
+\|R_m\| \leq \frac{4 M^{1-\beta}}{\pi} \left(\frac{\mu}{\alpha} + \frac{\exp(-M(1 + |\cos(\nicefrac{\mu}{\alpha})|))}{M |\cos(\nicefrac{\mu}{\alpha})| } \right) \exp(M) \Phi( u(M^\alpha \exp(i\mu) ) )^{-m}.
+\]
+for $\Phi(u) = u + \sqrt{u^2-1}$, $u(z) = \nicefrac{(|b+z|+|a+z|)}{b-a}$.
+\end{alertblock}
+
+\begin{exampleblock}<3->{Limiting relation}
+If $\alpha \rightarrow 0$, $\beta = 1$, we have $E_{0,1}(-z) = (1+z)^{-1}$, $|z| < 1$. Then setting $\mu = \alpha \pi$ and letting $M=1$, we find\vspace{-0.5em}
+\[
+\|R_m\| \leq \frac{4 (\pi \exp(1)-\exp(-1)) }{\pi \Phi(u(1))^m}
+\]
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}{The Shift-and-Invert Method~{\Large \parencite{MoretNovatiML}}}
+We remain under the assumptions (A1) and (A2) and consider the matrix
+\[
+Z = (I + h A)^{-1}, \qquad h > 0,
+\]
+together with the space $\mathcal{K}_{m}(Z,\mathbf{v})$.
+
+\onslide<2->{We can write the \alert{\textbf{analogous Arnoldi relation}} for $U_m = [\mathbf{u}_1,\ldots,\mathbf{u}_m]$ spanning $\mathcal{K}_{m}(Z,\mathbf{v})$:
+\[
+Z U_m = U_m S_m + s_{m+1,m} u_{m+1} \textbf{e}_m^T, \qquad S_m = U_m^H Z U_m.
+\]
+}
+
+\onslide<3->{\vspace{-0.5em}The \textbf{approximation} is then given by
+\[
+\mathbf{y} = f(A)\mathbf{v} \approx \mathbf{y}_m = V_m f(B_m)\mathbf{e}_1 \text{ where } (I + h B_m)S_m = I.
+\]}
+
+\onslide<4>{\vspace{-0.5em}We can repeat the general error analysis using
+\[
+R_m = E_{\alpha,\beta}(-A)\mathbf{v} - U_m E_{\alpha,\beta}(-B_m)\mathbf{e}_1 = \frac{1}{2\pi \alpha i} \int_{C(\varepsilon,\mu)} \exp( \lambda^{\nicefrac{1}{\alpha}}) \lambda^{\nicefrac{(1-\beta)}{\alpha}} b_m(\lambda)\,\mathrm{d}\lambda, 
+\]
+for $b_m(\lambda) = (\lambda I + A)^{-1}\mathbf{v} - U_m (\lambda I + B_m)^{-1}\mathbf{e}_1$.
+}
+\end{frame}
+
+\begin{frame}{Error bound~\parencite{MoretNovatiML}}
+
+\begin{alertblock}{Theorem~\parencite[Theorem~4.3]{MoretNovatiML}}
+For every matrix $A$ satisfying (A1) and (A2), assume $0 < \alpha < 1$ and $\beta \geq \alpha$. Then, there exists a function $g(h)$, continuous in any bounded interval $0 < h_1 \leq h \leq h_2$, such that for $m \geq 2$,\vspace{-0.5em}
+\[
+\|R_m\| \leq \frac{g(h)}{m-1}.
+\]
+\end{alertblock}
+
+\begin{alertblock}<2->{Theorem~\parencite[Theorem~4.5]{MoretNovatiML}}
+Assume that $A$ is Hermitian with $\sigma(A) \subseteq [a,+\infty)$, $a \geq 0$. Assume $0 < \alpha \leq \nicefrac{2}{3}$ and $\beta \geq \alpha$. Then, for every $m \geq 1$ we have\vspace{-0.5em}
+\[
+\|R_m\| \leq \frac{K_1 Q_m h^{\frac{\beta-1}{\alpha}}}{(1+\sqrt{2})^{m-1}} + \frac{K_2 h^{\nicefrac{\beta}{\alpha}}}{(m-1)^2} \exp\left( - \frac{ h^{-\nicefrac{1}{\alpha}}}{\sqrt{2}} \right),
+\]
+where 
+$
+Q_m = \max_{0 \leq |\varphi| \leq \nicefrac{3\alpha\pi}{4}} \exp\left( h^{-\nicefrac{1}{\alpha}} \cos \nicefrac{\varphi}{\alpha} \right) (1-\cos\varphi)^{\frac{m-1}{2}},
+$
+with $K_1$, $K_2$ constants.
+\end{alertblock}
+
+\end{frame}
+
+\subsection{Conclusions}
+
+\begin{frame}{ML function, what have we found?}
+
+\begin{itemize}
+	\item<1->[\faCog] The \emph{polynomial method} suffers both for \textbf{small $\alpha$ values} and for \textbf{large field of values}.
+	\item<2->[\faCog] For the \emph{shift-and-invert} method the convergence doesn't deteriorate with the size of $W(A)$, its uniform with respect to the $h$ parameter. 
+	\item<3->[\faWrench] To obtain a complete method one still has to find a way to repeatedly compute the matrix functions in\vspace{-0.5em}
+	\[
+	\mathbf{u}(t) = E_{\alpha,1}(-t^\alpha A) \mathbf{u}_0 + \int_{0}^{t} (t-s)^{\alpha-1} E_{\alpha,\alpha}(-A(t-s)^\alpha)\mathbf{g}(s)\,\textrm{d}s.
+	\]
+	\item<4->[\faBinoculars] \textbf{Research ideas:} finding better rational approximations/poles/expansions together with error analysis for the ML function.
+\end{itemize}
+
+\begin{exampleblock}<5->{Other extensions}
+	A variant with \emph{restart} is discussed in~\parencite{MoretPopolizio}, the combination with other matrix-functions in~\parencite{MoretNovatiFDEfunction}.
+\end{exampleblock}
+
+
+\end{frame}
+
+
+
+
+\appendix
+
+\section*{Bibliography}
+{\unnumbered
+	\begin{frame}[allowframebreaks,noframenumbering]{Bibliography}
+	\small
+	\printbibliography
+	
+\end{frame}
+}
+
+\end{document}

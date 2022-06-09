@@ -1,0 +1,1313 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+% Math
+\usepackage{nicefrac}
+
+% Tipography stuff
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{fontawesome5}
+\usepackage{soul}
+\usepackage{euler}
+
+% Bibliography
+\usepackage[giveninits,style=authoryear-comp,backend=biber]{biblatex}
+\addbibresource{../fracbiblio.bib}
+\newcommand\unnumbered{\setbeamertemplate{footline}{}}%\addtocounter{framenumber}{-1}
+\renewcommand*{\bibfont}{\normalfont\small}
+
+% Figures
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{calc,arrows,patterns}
+\usepackage{subfig}
+\usepackage{graphicx} % Allows including images
+\usepackage[american]{circuitikz}
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks,linkcolor=,urlcolor=MidnightBlue}
+
+% Code
+\usepackage{minted}
+
+
+\author{Fabio Durastante}
+\title{An introduction to fractional calculus}
+\subtitle{Fundamental ideas and numerics}
+\institute{Università di Pisa\\\href{mailto:fabio.durastante@unipi.it}{\faEnvelope\;fabio.durastante@unipi.it}\\\href{https://fdurastante.github.io}{\faFirefox\;fdurastante.github.io}}
+\date{May, 2022}
+
+\newcommand{\de}{{\rm d}}
+
+
+\begin{document}
+
+{\unnumbered
+\begin{frame}[t,plain,noframenumbering]
+\titlepage
+\vspace{-4em}\includegraphics[width=2cm]{frame.png}
+\end{frame}
+}
+
+\section{Further details on FLMMs}
+
+\begin{frame}{\faCompass\,Where are we?}
+\definecolor{success}{HTML}{4a934a}
+\definecolor{todo}{HTML}{0099cc}
+
+We know a general way to obtain FLMM methods of the form
+\[
+y^{(n)} = T_{m-1}(t_n) + \tau^\beta \sum_{j=0}^{s} \alert<3>{w_{n,j}} f(t_j,y^{(j)}) + \tau^\alpha \sum_{j=0}^{n} \alert<2>{\omega_{n-j}} f(t_j,y^{(j)}),
+\]
+\begin{itemize}
+	\item[\textcolor{success}{\faCheckCircle}]<1-> starting from the polynomials $(\rho,\sigma)$ of an implicit order $p$ method,
+	\item[\textcolor{success}{\faCheckCircle}]<2-> we have seen how to compute the \alert<2>{convolution coefficients} $\omega_n$,
+	\item[\textcolor{success}{\faCheckCircle}]<3-> we have seen how to compute the \alert<3>{starting nodes} $w_{n,j}$,
+	\item[\textcolor{todo}{\faClipboardList}]<4-> we need to discuss how we compute the starting values for a multi-step method,
+	\item[\textcolor{todo}{\faClipboardList}]<5-> we still need to discuss how we can efficiently treat the memory term.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Computing the starting values}\small
+To \textbf{initialize the computation} we need the values $y^{(0)},\ldots,y^{(s)}$, $s+1$, $s = |\mathcal{A}| = \mathcal{A}_{p-1} \cup \{p-1\}$ with $p$ the order of convergence of the FLMM, and  $\mathcal{A}_{p-1} = \{ \nu \in \mathbb{R} \,|\; \nu = i + j \alpha, \quad i,j \in \mathbb{N}, \nu < {p-1}\}$.
+\begin{itemize}
+	\item<2-> We know $y^{(0)}$ from the initial condition, thus we have to solve for the remaining ones.
+	\item<3-> To avoid mixing methods we evaluate all the approximations at the same time by solving
+	\[
+	\begin{bmatrix}
+	y^{(1)}\\
+	y^{(2)}\\
+	\vdots\\
+	y^{(s)}
+	\end{bmatrix} = \begin{bmatrix}
+	T_{m-1}(t_1) \\
+	T_{m-1}(t_2) \\
+	\vdots \\
+	T_{m-1}(t_s) \\
+	\end{bmatrix}
+	+ \tau^\alpha \begin{bmatrix}
+	(\omega_1 + w_{1,0}) f_0 \\
+	(\omega_2 + w_{2,0}) f_0 \\
+	\vdots \\
+	(\omega_s + w_{s,0}) f_0 
+	\end{bmatrix}
+	+ \tau^\alpha \left( \Omega \otimes I + W \otimes I \right) \begin{bmatrix}
+	f(t_1,y^{(1)}) \\
+	f(t_2,y^{(2)}) \\
+	\vdots \\
+	f(t_s,y^{(s)}) \\
+	\end{bmatrix}  
+	\]
+	\only<3>{where
+	\[
+	\Omega = \begin{bmatrix}
+	\omega_0 & \\
+	\omega_1 & \omega_0 \\
+	\vdots & \vdots & \ddots \\
+	\omega_{s-1} & \omega_{s-2} & \cdots & \omega_0 
+	\end{bmatrix}, \quad W = \begin{bmatrix}
+	w_{1,1} & w_{1,2} & \cdots & w_{1,s} \\
+	w_{2,1} & w_{2,2} & \cdots & w_{2,s} \\
+	\vdots & \vdots & \ddots & \vdots \\
+	w_{s,1} & w_{s,2} & \cdots & w_{s,s} 
+	\end{bmatrix}
+	\]}
+\only<4->{
+	\item<4-> This will be in general an $s \times \dim(y^{(j)})$ nonlinear system that we need to solve before starting the iteration.
+	\item<5-> If the value of $\alpha$ is not very small, viz $s$ is moderate, and the system of ODEs is moderate this is manageable. 
+}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Treating the memory term}
+If we compute the sum on the coefficients $\omega_{j}$ naively for
+\[
+y^{(n)} = T_{m-1}(t_n) + \tau^\beta \sum_{j=0}^{s} w_{n,j} f(t_j,y^{(j)}) + \tau^\alpha \alert{\sum_{j=0}^{n-1} \omega_{n-j} f(t_j,y^{(j)})} + \tau^\alpha \omega_{0}f(t_n,y^{(n)}),
+\]
+we end up having a $O(N^2)$ cost! If we do not perform this task efficiently the numerical solution degenerates in an unworkable task as we either refine our
+grid or enlarge our computational domain.
+
+\begin{itemize}
+	\item[\faDoorClosed]<2-> We can try to ``forget'' part of the lag-term,
+	\item[\faDoorClosed]<3-> We can consider using a stretched grid towards $t_0$ to reduce $N$,
+	\item[\faDoorClosed]<4-> We can try an approach with nested meshes to reduce the load,
+	\item[\faDoorClosed]<5-> We can exploit the fact that this is a convolution and adopt some FFT tricks.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The FFT trick~\parencite{HairerFFTtrick}}
+
+The treatment remains the same indifferently for both PI and FLMM method, let us focus here on the generic formulation
+\[
+y^{(n)} = \phi_n + \sum_{j=0}^{n} c_{n-j} f_j.
+\]
+
+\begin{itemize}
+	\item<2-> Let $r$ be a moderate number of step, e.g., $r = 2^k$ for a small $k$, we compute the first steps directly
+	\[
+	y^{(n)} = \phi_n + \sum_{j=0}^{n} c_{n-j} f_j, \quad n = 0,1,\ldots,r-1.
+	\]
+	\item<3-> If we now want to compute the next $r$ approximations we can separate the lag term as
+	\[
+	y^{(n)} = \phi_n + \sum_{j=0}^{r-1} c_{n-j} f_j + \sum_{j=r}^{n} c_{n-j} f_j, \quad n \in \{r,r+1,\ldots,2r-1\}.
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The FFT trick~\parencite{HairerFFTtrick}}
+\only<1-3>{
+\begin{itemize}
+	\item<1-> If we now want to compute the next $r$ approximations we can separate the lag term as
+\[
+y^{(n)} = \phi_n + \sum_{j=0}^{r-1} c_{n-j} f_j + \sum_{j=r}^{n} c_{n-j} f_j, \quad n \in \{r,r+1,\ldots,2r-1\}.
+\]
+\end{itemize}}
+\begin{onlyenv}<2>
+	\begin{exampleblock}{\faLightbulb\,We can use FFT!}
+		If we call $S_r(n,0,r-1) = \sum_{j=0}^{r-1} c_{n-j}f_j$, $n \in \{r,r+1,\ldots,2r-1\}$, the set of partial sums each of length $r$ we can evaluate them with FFT in $O(2r \log_2(2r))$.
+	\end{exampleblock}
+\end{onlyenv}
+\begin{onlyenv}<4>
+	\begin{exampleblock}{\faLightbulb\,We can use FFT!}
+		If we call $S_{2r}(n,0,2r-1) = \sum_{j=0}^{2r-1} c_{n-j}f_j$, and $S_{r}(n,2r,3r-1) = \sum_{j=2r}^{3r-1} c_{n-j}f_j$ the set of partial sums of lengths $2r$ and $r$ we can evaluate them with FFT in $O(4r \log_2(4r))$ and $O(2r \log_2(2r))$ respectively.
+	\end{exampleblock}
+\end{onlyenv}
+\begin{onlyenv}<3->
+\begin{itemize}
+	\item<3-> We can apply the same process recursively if we double every time-interval under consideration
+	\[
+	\begin{split}
+	y^{(n)} = & \phi_n + \sum_{j=0}^{2r-1} c_{n-j} f_j + \sum_{j=2r}^{n} c_{n-j} f_j, \quad n \in \{2r,2r+1,\ldots,3r-1\}, \\
+	y^{(n)} = & \phi_n + \sum_{j=0}^{2r-1} c_{n-j} f_j + \sum_{j=2r}^{3r-1} c_{n-j} f_j + \sum_{j=3r}^{n} c_{n-j} f_j, \quad n \in \{3r,3r+1,\ldots,4r-1\},
+	\end{split}
+	\]
+	
+\end{itemize}
+\end{onlyenv}
+\end{frame}
+
+\begin{frame}[fragile]{The FFT trick~\parencite{HairerFFTtrick}}
+\begin{columns}
+\begin{column}{0.45\columnwidth}\only<1-9>{
+\definecolor{qqqqww}{rgb}{0,0,0.4}
+\definecolor{ffzzqq}{rgb}{1,0.6,0}
+\definecolor{fftttt}{rgb}{1,0.2,0.2}
+\definecolor{zzzzff}{rgb}{0.6,0.6,1}
+\begin{tikzpicture}[line cap=round,line join=round,>=triangle 45,x=0.35cm,y=0.35cm]
+\clip(-0.6,-0.6) rectangle (16.3,16.3);
+\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (2,0) -- (4,0) -- (4,2) -- (2,2) -- cycle;
+\fill[color=fftttt,fill=fftttt,fill opacity=0.1] (4,0) -- (8,0) -- (8,4) -- (4,4) -- cycle;
+\fill[color=ffzzqq,fill=ffzzqq,fill opacity=0.1] (8,0) -- (16,0) -- (16,8) -- (8,8) -- cycle;
+\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (6,4) -- (8,4) -- (8,6) -- (6,6) -- cycle;
+\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (10,8) -- (12,8) -- (12,10) -- (10,10) -- cycle;
+\fill[color=fftttt,fill=fftttt,fill opacity=0.1] (12,8) -- (16,8) -- (16,12) -- (12,12) -- cycle;
+\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (14,12) -- (16,12) -- (16,14) -- (14,14) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (4,4) -- (6,4) -- (5.99,5.99) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (5.99,5.99) -- (8,6) -- (8,8) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (8,8) -- (10,8) -- (10,10) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (10,10) -- (12,10) -- (12,12) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (12,12) -- (14,12) -- (14,14) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (14,14) -- (16,14) -- (16,16) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (0,0) -- (2,0) -- (1.99,1.99) -- cycle;
+\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (1.99,1.99) -- (4,2) -- (4,4) -- cycle;
+\draw (0,0)-- (16,16);
+\draw (16,16)-- (16,0);
+\draw (16,0)-- (0,0);
+\draw [color=zzzzff] (2,0)-- (4,0);
+\draw [color=zzzzff] (4,0)-- (4,2);
+\draw [color=zzzzff] (4,2)-- (2,2);
+\draw [color=zzzzff] (2,2)-- (2,0);
+\draw [color=fftttt] (4,0)-- (8,0);
+\draw [color=fftttt] (8,0)-- (8,4);
+\draw [color=fftttt] (8,4)-- (4,4);
+\draw [color=fftttt] (4,4)-- (4,0);
+\draw [color=ffzzqq] (8,0)-- (16,0);
+\draw [color=ffzzqq] (16,0)-- (16,8);
+\draw [color=ffzzqq] (16,8)-- (8,8);
+\draw [color=ffzzqq] (8,8)-- (8,0);
+\draw [color=zzzzff] (6,4)-- (8,4);
+\draw [color=zzzzff] (8,4)-- (8,6);
+\draw [color=zzzzff] (8,6)-- (6,6);
+\draw [color=zzzzff] (6,6)-- (6,4);
+\draw [color=zzzzff] (10,8)-- (12,8);
+\draw [color=zzzzff] (12,8)-- (12,10);
+\draw [color=zzzzff] (12,10)-- (10,10);
+\draw [color=zzzzff] (10,10)-- (10,8);
+\draw [color=fftttt] (12,8)-- (16,8);
+\draw [color=fftttt] (16,8)-- (16,12);
+\draw [color=fftttt] (16,12)-- (12,12);
+\draw [color=fftttt] (12,12)-- (12,8);
+\draw [color=zzzzff] (14,12)-- (16,12);
+\draw [color=zzzzff] (16,12)-- (16,14);
+\draw [color=zzzzff] (16,14)-- (14,14);
+\draw [color=zzzzff] (14,14)-- (14,12);
+\draw [color=qqqqww] (4,4)-- (6,4);
+\draw [color=qqqqww] (6,4)-- (5.99,5.99);
+\draw [color=qqqqww] (5.99,5.99)-- (4,4);
+\draw [color=qqqqww] (5.99,5.99)-- (8,6);
+\draw [color=qqqqww] (8,6)-- (8,8);
+\draw [color=qqqqww] (8,8)-- (5.99,5.99);
+\draw [color=qqqqww] (8,8)-- (10,8);
+\draw [color=qqqqww] (10,8)-- (10,10);
+\draw [color=qqqqww] (10,10)-- (8,8);
+\draw [color=qqqqww] (10,10)-- (12,10);
+\draw [color=qqqqww] (12,10)-- (12,12);
+\draw [color=qqqqww] (12,12)-- (10,10);
+\draw [color=qqqqww] (12,12)-- (14,12);
+\draw [color=qqqqww] (14,12)-- (14,14);
+\draw [color=qqqqww] (14,14)-- (12,12);
+\draw [color=qqqqww] (14,14)-- (16,14);
+\draw [color=qqqqww] (16,14)-- (16,16);
+\draw [color=qqqqww] (16,16)-- (14,14);
+\draw [color=qqqqww] (0,0)-- (2,0);
+\draw [color=qqqqww] (2,0)-- (1.99,1.99);
+\draw [color=qqqqww] (1.99,1.99)-- (0,0);
+\draw [color=qqqqww] (1.99,1.99)-- (4,2);
+\draw [color=qqqqww] (4,2)-- (4,4);
+\draw [color=qqqqww] (4,4)-- (1.99,1.99);
+\begin{scriptsize}
+\fill [color=black] (0,0) circle (1.5pt);
+\draw[color=black] (-0.06,-0.24) node {0};
+\fill [color=black] (2,0) circle (1.5pt);
+\draw[color=black] (1.98,-0.24) node {r};
+\fill [color=black] (4,0) circle (1.5pt);
+\draw[color=black] (3.61,-0.26) node {2r};
+\fill [color=black] (8,0) circle (1.5pt);
+\draw[color=black] (7.9,-0.13) node {4r};
+\fill [color=black] (16,0) circle (1.5pt);
+\draw[color=black] (15.81,-0.11) node {8r};
+\draw[color=zzzzff] (3.17,1.16) node {$S_r$};
+\draw[color=fftttt] (6.42,2.16) node {$S_{2r}$};
+\draw[color=ffzzqq] (12.43,4.16) node {$S_{4r}$};
+\draw[color=zzzzff] (7.17,5.16) node {$S_r$};
+\draw[color=zzzzff] (11.19,9.15) node {$S_r$};
+\draw[color=fftttt] (14.43,10.15) node {$S_{2r}$};
+\draw[color=zzzzff] (15.18,13.15) node {$S_r$};
+\draw[color=qqqqww] (5.5,4.82) node {$T_r$};
+\draw[color=qqqqww] (7.5,6.82) node {$T_r$};
+\draw[color=qqqqww] (9.52,8.82) node {$T_r$};
+\draw[color=qqqqww] (11.52,10.82) node {$T_r$};
+\draw[color=qqqqww] (13.52,12.82) node {$T_r$};
+\draw[color=qqqqww] (15.52,14.82) node {$T_r$};
+\draw[color=qqqqww] (1.5,0.82) node {$T_r$};
+\draw[color=qqqqww] (3.5,2.82) node {$T_r$};
+\end{scriptsize}
+\end{tikzpicture}}%
+\only<10>{
+\input{nlogn.tikz}
+}
+\end{column}
+\begin{column}{0.55\columnwidth}%
+\definecolor{qqqqww}{rgb}{0,0,0.4}%
+\definecolor{ffzzqq}{rgb}{1,0.6,0}%
+\definecolor{fftttt}{rgb}{1,0.2,0.2}%
+\definecolor{zzzzff}{rgb}{0.6,0.6,1}%
+\only<1-2>{
+\begin{itemize}
+	\item We can iterate the process for the $4r$ approximations in the interval $n \in \{ 4r,\ldots,8r-1\}$, together
+	with the partial sums $S_{4r}(n,0,4r-1)$, $S_{2r}(n,4r,6r-1)$, $S_{r}(n,6r,7r-1)$ that can be evaluated in
+	$O(8r \log_2(8r))$, $O(4r \log_2(4r))$ and $O(2r \log_2(2r))$ respectively,
+	\item<2-> At each level we have to complete the recursion by computing\vspace{-1em}
+	\[
+	\begin{split}
+	T_r(p,n) = & \sum_{j=p}^{n} c_{n-j} f_j, \; p = \ell r, \\ n \in & \{\ell r, \ell r + 1,\ldots,(\ell+1)r-1\}, \\ \ell = & 0,1,2,\ldots.
+	\end{split}
+	\]
+\end{itemize}}%
+\only<3->{
+To determine the whole cost we just have to sum the various components
+\begin{itemize}
+	\item<4-> Assume that $N = 2^{n_t}$
+	\item<5-> $O(N \log_2 N)$ for \textcolor{ffzzqq}{$S_{4r}$},
+	\item[$+$]<6-> $O( \nicefrac{N}{2} \log_2 \nicefrac{N}{2})$ for $2$ \textcolor{fftttt}{$S_{2r}$}
+	\item[$+$]<7-> $O( \nicefrac{N}{4} \log_2 \nicefrac{N}{4})$ for $4$ \textcolor{zzzzff}{$S_r$}
+	\item[$+$]<8-> $\nicefrac{r(r+1)}{2}$ for the $N/r$ convolutions \textcolor{qqqqww}{$T_r$}
+	\item<9-> In general:
+\only<9>{\[
+	\begin{split}
+	N \log_2 N + 2 \frac{N}{2} \log_2 \frac{N}{2} + 4 \frac{N}{4}\log_2 \frac{N}{4} + \cdots \\ + p \frac{N}{p} \log_2 \frac{N}{p} + \frac{N}{r} \frac{r(r+1)}{2}, \quad p = \frac{N}{2r} 
+	\end{split}
+	\]}
+\only<10>{
+\[
+\begin{split}
+\sum_{j=0}^{\log_2 p} N \log_2 \frac{N}{2^j} + N \frac{r+1}{2} = O(N (\log_2 N)^2 ).
+\end{split}
+\]
+}
+\end{itemize}
+}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Short-memory principle~\parencite{FordSpeedAccuracy}}
+We can try to use a ``fixed memory length'' to reduce the computational (and memory) load.
+\[
+\begin{split}
+y(t_{n+1}) =  y(t_n) & + \frac{1}{\Gamma(\alpha)} \int_{t_n}^{t_{n+1}} (t_{n+1}-\tau)^{\alpha-1} f(\tau,x(\tau))\,\textrm{d}\tau \\
+& + \frac{1}{\Gamma(\alpha)} \int_{0}^{t_n} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} ) f(\tau,y(\tau))\,\textrm{d}\tau, \quad \alpha \in (0,1).
+\end{split} 
+\]
+\only<2->{Let us introduce now a fixed window $T_M$ of memory, then}
+\only<2-7>{
+\[
+\begin{split}
+E = & \left| \frac{1}{\Gamma(\alpha)} \int_{0}^{t_n - T_M} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} ) f(\tau,y(\tau))\,\textrm{d}\tau \right| \\ \leq &  \frac{M}{\Gamma(\alpha)} \left| \int_{0}^{t_n - T_M} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} )\,\textrm{d}\tau \right|\only<3>{\\
+= & \frac{M}{\alpha \Gamma(\alpha)} \left| (\tau + T_M)^\alpha - t_{n+1}^{\alpha} - T^\alpha + t_n^\alpha \right| }\only<4-5>{\\
+= & \frac{M}{\Gamma(\alpha)} \left| \int_{T_M}^{T_M + \tau} z^{\alpha-1}\,\textrm{d}z - \int_{t_n}^{t_{n+1}} z^{\alpha-1}\,\textrm{d}z \right| \only<5>{ (Mean Value Theorem) } }\only<6>{ \\
+= & \frac{M}{\Gamma(\alpha)} \left| (z_1^*)^{\alpha-1} \tau - (z_2^*)^{\alpha-1} \tau \right| \quad z_1^* \in [T_M,T_M+\tau], \; z_2^* \in [t_n,t_{n+1}]
+}\only<7>{ \\
+< & \frac{M}{\Gamma(\alpha)} T_M^{\alpha-1} \tau, \qquad \alpha \in (0,1).
+}
+\end{split}
+\]
+}\only<8>{
+\[
+E = \left| \frac{1}{\Gamma(\alpha)} \int_{0}^{t_n - T_M} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} ) f(\tau,y(\tau))\,\textrm{d}\tau \right|  < \frac{M}{\Gamma(\alpha)} T_M^{\alpha-1} \tau, \quad \alpha \in (0,1).
+\]
+}\only<9>{
+If we have a global error bound $E_{\text{global}}$ with step-length $\tau$ we just need to choose
+\[
+T_M > \left( \frac{M}{\Gamma(\alpha)E_{\text{global}}} \right)^{\nicefrac{1}{1-\alpha}}, \quad \alpha \in (0,1),
+\] 
+while if we have a local error bound $E_{\text{local}}$
+\[
+T_M > \left( \frac{M\tau}{\Gamma(\alpha)E_{\text{local}}} \right)^{\nicefrac{1}{1-\alpha}}, \quad \alpha \in (0,1).
+\]
+}
+\end{frame}
+
+\begin{frame}{Short-memory principle~\parencite{FordSpeedAccuracy}}
+
+\begin{itemize}
+	\item[\faSmile]<1-> In case $\alpha \in (0,1)$ the short memory method with fixed length can be effective and the length T is independent of the full
+	interval of integration.
+	\item[\faSadTear]<2-> Similar bounds can be written for the case $\alpha > 1$, that is
+	\[
+	E < \frac{M}{\Gamma(\alpha)} (t_{n+1}^\alpha - T_M^{\alpha-1})\tau, \quad \alpha > 1.
+	\]
+	But now to preserve the order of accuracy, we must choose
+	\[
+	T_M^{\alpha - 1} > t_{n+1}^{\alpha-1} - \frac{E_{\text{global}} \Gamma(\alpha)}{M}, \quad \alpha > 1,
+	\]
+	that we will make us lose all the computational gain.
+\end{itemize}
+
+\onslide<3>{The idea can be refined by using \emph{nested meshes}.}
+
+\end{frame}
+
+\begin{frame}{Nested meshes}
+Zeroing out the memory term is too drastic, we may want to relax this.
+
+\begin{exampleblock}<2->{Scaling properties}
+\only<2>{\[I^{\alpha}_{[0,t]} 
+	f(t) = \int_{0}^{t} 
+	\frac{f(\tau)}{(t-\tau)^{1-\alpha}}\,\textrm{d}\tau\]}
+\only<3>{\[
+	I^{\alpha}_{[0,t]} f(w t) = \int_{0}^{t} \frac{f(\tau)}{(wt-\tau)^{1-\alpha}}\,\textrm{d}\tau\]}
+\only<4>{\[
+	I^{\alpha}_{[0,t]} f(w t) = w^\alpha \int_{0}^{t} \frac{f(w\tau)}{(t-\tau)^{1-\alpha}}\,\textrm{d}\tau\]}
+\only<5->{
+	Given $p \in \mathbb{N}$ we then have
+	\[
+	I^{\alpha}_{[0,t]} f(w^p t) = w^{p\alpha} \int_{0}^{t} \frac{f(w^p \tau)}{(t-\tau)^{1-\alpha}}\,\textrm{d}\tau\]
+}
+\end{exampleblock}
+\begin{itemize}
+	\item[\faLightbulb]<6-> We can use the weight on the mesh \[\Omega_\tau^\alpha f(n\tau) \approx I^{\alpha}_{[0,t]} f(n\tau), \text{ step length }\tau\] to compute
+	\[
+	\Omega^\alpha_{w^p \tau} f(n w^p \tau) \approx I^{\alpha}_{[0,t]} f(nw^p\tau), \text{ step length } w^p \tau
+	\]
+	\item<7-> In summary for any $p \in \mathbb{N}$ we get\vspace{-0.5em}
+	\[
+	\Omega_\tau^{\alpha} f(n\tau) = \sum_{j=0}^n \omega_{n-j} f(j\tau) \;\Leftrightarrow\; \Omega^\alpha_{w^p \tau} f(n w^p \tau) = w^{p\alpha} \sum_{j=0}^n \omega_{n-j} f(j w^p \tau).
+	\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Nested meshes~\parencite{FordSpeedAccuracy}}
+\begin{block}{Nested mesh}
+Given $\tau \in \mathbb{R}^+$, the mesh $M_\tau = \{ \tau n, \; n \in \mathbb{N} \}$. Selected $w,r,p \in \mathbb{N}$, $w > 0$, $r > p$, we have $M_{w^p \tau} \supset M_{w^r \tau}$ and we decompose the interval as
+\[
+[0,t] = [0,t-w^m T] \cup [t - w^mT,t-w^{m-1}T] \cup \cdots \cup [t-wT,t-T]\cup[t-T,t]
+\]
+for $m \in \mathbb{N}$ the smallest integer such that $t < w^{m+1} T$.
+\end{block}
+
+\begin{itemize}
+	\item[\faLightbulb]<2-> This links the \textbf{scaling property} with the singularity of the type $1/(t-\tau)^{1-\alpha}$ suggesting that we should distribute the computational effort logarithmically, and not uniformly.
+	\item<3-> We rewrite our integral\only<4>{ using the scaling property} as
+	\[
+	I_{[0,t]}^\alpha f(t) = \only<3>{I_{[t-T,t]}^\alpha f(t) + \sum_{i=0}^{m-1} I_{[t-w^{i+1}T,t-w^iT]}^\alpha f(t) + I_{[0,t-w^mT]}^\alpha f(t)}
+	\only<4>{I_{[t-T,t]}^\alpha f(t) + \sum_{i=0}^{m-1} w^{i\alpha} I_{[t-w T,t-T]}^\alpha f(w^i t) + w^{m\alpha}I_{[0,t-T]}^\alpha f(w^m t).}
+	\]
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Nested meshes~\parencite{FordSpeedAccuracy}}
+In the discrete approximation of
+\[
+I_{[0,t]}^\alpha f(t) = I_{[t-T,t]}^\alpha f(t) + \sum_{i=0}^{m-1} w^{i\alpha} I_{[t-w T,t-T]}^\alpha f(w^i t) + w^{m\alpha}I_{[0,t-T]}^\alpha f(w^m t).
+\]
+we approximate\vspace{-0.5em}
+\[
+\Omega_{\tau,[t-w^{i+1} T,t-w^i T]}^\alpha f(t) \approx \Omega_{w^i \tau,[t-w^{i+1} T,t-w^i T]}^\alpha f(t)
+\]
+and substitute\vspace{-0.5em}
+\[
+w^{i\alpha} \Omega_{\tau,[t-w T,t- T]}^\alpha f(t) = \Omega_{w^i \tau,[t-w^{i+1} T,t- w^{i} T]}^\alpha f(t).
+\]
+\begin{alertblock}<2->{Theorem~\parencite[Theorem~1]{FordSpeedAccuracy}}
+The nested mesh scheme preserves the order of the underlying quadrature
+rule on which it is based.
+\end{alertblock}
+\onslide<3>{\small \textbf{Proof.} For integration over a fixed interval $[0,t]$ the choice of $T$ fixes (independent of $h$) the number of subranges over which the integral is evaluated, on each of them we have en error $O(h^p)$.}
+
+\end{frame}
+
+\begin{frame}{Nested meshes~\parencite{FordSpeedAccuracy}}
+
+\begin{itemize}
+	\item<1-> The first benefit is that we evaluate a fixed number of quadrature coefficients and then re-use them on all successive intervals,
+	\item<2->[\faMoneyBillWave] This approach cost $O(w^m)$ with respect to $O(w^{2m})$ of the full method,
+	\item<3->[\faCog] We could use linear extrapolation techniques to improve the results.
+	\item<4->[\faCog] Selecting the various parameter may need a bit of tuning.
+\end{itemize}
+
+\end{frame}
+
+\section{Codes}
+
+\begin{frame}[fragile]{\faCode\;Available codes}
+With respect to the ordinary case for which there exists many reliable and high-performance codes, the choices for computing the solution of fractional differential equation is much more \emph{sparse}.
+
+\begin{itemize}
+\item From \parencite{garrappa2018numerical}
+\begin{itemize}
+	\item[\faCode] \verb|FDE_PI1_Ex.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi1_ex.m}{Explicit Product-Integration of rectanguar type}
+	\item[\faCode] \verb|FDE_PI1_Im.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi1_im.m}{Implicit Product-Integration of rectanguar type}
+	\item[\faCode] \verb|FDE_PI2_Im.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi2_im.m}{Implicit Product-Integration of trapezoidal type}
+	\item[\faCode] \verb|FDE_PI12_PC.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi12_pc.m}{Product-Integration with predictor-corrector}
+\end{itemize}
+\item From \parencite{GarrappaTrapezoidal}
+\begin{itemize}
+	\item[\faCode] FLMM2 Matlab code - \href{http://www.mathworks.com/matlabcentral/fileexchange/47081-flmm2}{Three implicit second order Fractional Linear Multistep Methods}.
+\end{itemize}
+
+\begin{block}{\faBinoculars\,A remark}
+All these methods use direct-solver for the Newton method inside them, there is space to make improvement on the solution strategies. Furthermore, a challenge that yet remains: can we find a strategy that combines the convolution features and savings on the memory?
+\end{block}
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}{What do we have now}
+\definecolor{success}{HTML}{4a934a}
+\definecolor{todo}{HTML}{0099cc}
+
+We know a general way to obtain FLMM methods of the form\vspace{-0.5em}
+\[
+y^{(n)} = T_{m-1}(t_n) + \tau^\beta \sum_{j=0}^{s} {w_{n,j}} f(t_j,y^{(j)}) + \tau^\alpha \sum_{j=0}^{n} {\omega_{n-j}} f(t_j,y^{(j)}),
+\]
+\begin{itemize}
+	\item[\textcolor{success}{\faCheckCircle}] starting from the polynomials $(\rho,\sigma)$ of an implicit order $p$ method,
+	\item[\textcolor{success}{\faCheckCircle}] we have seen how to compute the convolution coefficients $\omega_n$,
+	\item[\textcolor{success}{\faCheckCircle}] we have seen how to compute the starting nodes $w_{n,j}$,
+	\item[\textcolor{success}{\faCheckCircle}] we know how we can compute the starting values for a multi-step method by solving a nonlinear system with Newton,
+	\item[\textcolor{success}{\faCheckCircle}] we have some hints on how we can efficiently treat the memory term.
+\end{itemize}
+
+%\begin{block}<2>{\faLuggageCart\,Things we didn't pack\ldots}
+%There have been some effort in devising methods of Runge-Kutta type~\parencite{FischerRK}, collocation methods, and exponential type integrators. 
+%\end{block}
+
+\end{frame}
+
+\section{Examples and Applications}
+
+\begin{frame}{A worked out example}
+Let us write everything for a case, let us start from the 2\textsuperscript{nd} order BDF formula for ODEs
+\[
+y^{(n+2)} - \frac{4}{3} y^{(n+1)} + \frac{1}{3} y^{(n)} = \frac{2}{3}\tau f_{n+2},
+\]
+\begin{columns}
+\begin{column}{0.65\columnwidth}
+\begin{itemize}
+	\item<2-> First of all we write down the $(\rho,\sigma)$ polynomials defining the scheme:
+	\[
+	\rho(\zeta) = \zeta^2 - \frac{4}{3}\zeta + \frac{1}{3}, \qquad \sigma(\zeta) = \frac{2}{3}\zeta^2. 
+	\]
+	\item<3-> Then we compute the generating function $\omega(\zeta)$
+	\[
+	\omega(\zeta) = \frac{\rho(\nicefrac{1}{\zeta})}{\sigma(\nicefrac{1}{\zeta})} = \frac{2}{3\left(1 - \nicefrac{4\zeta}{3} + \nicefrac{\zeta^2}{3}\right)}.
+	\]
+\end{itemize}
+\end{column}
+\begin{column}{0.35\columnwidth}
+\only<3>{
+\centering
+
+$\alpha = 0.5$
+
+\includegraphics[width=0.8\columnwidth]{bdf2stability.eps}
+\[
+\left\lbrace \nicefrac{1}{\omega(\zeta)^\alpha} \,:\; |\zeta| \leq 1 \right\rbrace
+\]
+}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{A worked out example}
+Now we need to expand the convolution coefficients of \[\omega^\alpha(\zeta) = (\omega(\zeta))^\alpha = \frac{2^\alpha}{3^\alpha}\alert<2>{(1 - \nicefrac{4\zeta}{3} + \nicefrac{\zeta^2}{3})^{-\alpha}}.\]
+\begin{onlyenv}<2>
+\begin{alertblock}{Theorem~\parencite[Theorem 1.6c, p. 42]{HenriciBook}}\small
+	Let $\phi(\zeta) = 1 + \sum_{n=1}^{+\infty} a_n \zeta^n$ be a formal power series. Then for any $\alpha \in \mathbb{C}$, we have\vspace{-0.5em}
+	\[
+	(\phi(\zeta))^\alpha = \sum_{n=0}^{+\infty} v_n^{(\alpha)} \zeta^n,
+	\]
+	where coefficients $v_n^{(\alpha)}$ can be evaluated recursively as\vspace{-0.5em}
+	\[
+	v_0^{(\alpha)} = 1, \qquad v_n^{(\alpha)} = \sum_{j=1}^{n} \left( \frac{(\alpha +1)j}{n} - 1 \right) a_j v_{n-j}^{(\alpha)}
+	\]
+\end{alertblock}
+\end{onlyenv}
+\only<3->{
+	\vspace{-0.5em}\begin{itemize}
+		\item $\omega_n = \nicefrac{2^\alpha}{3^\alpha} \tilde{\omega}_n$,
+		\item<4-> $a_1 = -\nicefrac{4}{3}$, $a_2 = \nicefrac{1}{3}$, $a_j = 0$ if $j \geq 3$, thus using
+		\[
+		\tilde{\omega}_0^{(\alpha)} = 1, \qquad \tilde{\omega}_n^{(\alpha)} = \sum_{j=1}^{n} \left( \frac{(\alpha +1)j}{n} - 1 \right) a_j v_{n-j}^{(\alpha)}
+		\]
+		\item<5-> we get $\tilde{\omega}_0 = 1$, $\tilde{\omega}_1 = \nicefrac{4}{3}\alpha \tilde{\omega}_0 = \nicefrac{4 \alpha}{3}$, 
+		\[
+		\tilde{\omega}_n = \frac{4}{3} \left(1 + \frac{\alpha-1}{n}\right) \tilde{\omega}_{n-1} + \frac{4}{3}\left(\frac{2(1-\alpha)}{n} - 1\right)\tilde{\omega}_{n-2}.
+		\]
+	\end{itemize}	
+}
+\end{frame}
+
+\begin{frame}[fragile]{A worked out example}
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+\input{omegabdf2.tikz}
+\[\alpha = 0.5.\]
+\end{column}
+\begin{column}{0.6\columnwidth}
+\begin{itemize}
+	\item Since the $a_j$ are a finite small number, we can compute the coefficients in an $O(N)$ operations,
+	\begin{onlyenv}<1>\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\scriptsize,breaklines]{matlab}
+omega = zeros(1,N+1) ;
+onethird = 1/3 ; fourthird = 4/3;
+twothird_oneminusalpha = 2/3*(1-alpha);
+fourthird_oneminusalpha = 4/3*(1-alpha);
+omega(1) = 1 ; omega(2) = fourthird*alpha*omega(1);
+for n = 2 : N
+ omega(n+1) = (fourthird - fourthird_oneminusalpha/n)*omega(n) + ...
+ (twothird_oneminusalpha/n - onethird)*omega(n-1);
+end
+omega = omega*((2/3)^(alpha)); 
+\end{minted}
+	\end{onlyenv}
+	\item<2-> We can solve ${}_{CA}D^{0.5}_{[0,2]}y(t) = -2 y(t)$, $y(0) = 1$
+	\only<2>{\begin{center}
+	\begin{tabular}{ccc}
+	\toprule
+	$\tau$ & $|y^{(n)} - y(2)|$ & order \\
+	\midrule
+	 $2^{-6}$ & 1.44e-04 & 1.61 \\
+	 $2^{-7}$ & 4.42e-05 & 1.71 \\
+	 $2^{-8}$ & 1.28e-05 & 1.79 \\
+	 $2^{-9}$ & 3.57e-06 & 1.84 \\
+	 $2^{-10}$ & 9.68e-07 & 1.88 \\
+	 $2^{-11}$ & 2.85e-07 & 1.76 \\
+	 $2^{-12}$ & 8.17e-08 & 1.80 \\
+	 $2^{-13}$ & 2.29e-08 & 1.84 \\
+	 $2^{-14}$ & 6.27e-09 & 1.87 \\
+	\bottomrule
+	\end{tabular}
+	\end{center}}
+	\only<3->{
+	\item<3-> For the starting weights we have to solve a $3 \times 3$ Vandermonde system:
+	\[
+	\left[\begin{array}{ccc} 1 & 1 & 1\\ 0 & 1 & \sqrt{2}\\ 0 & 1 & 2 \end{array}\right] \begin{bmatrix}
+	w_{n,0} \\ w_{n,1} \\ w_{n,2} 
+	\end{bmatrix} = \begin{bmatrix}
+	b_1 \\ b_2 \\ b_3
+	\end{bmatrix}
+	\]
+	number of time-step times.\vspace{-0.5em}
+	\begin{block}{\small Reuse}\small
+	Since we have a fixed time-grid we can reuse the same factorization for the Vandermonde system and
+	compute all the weights in a single sweep.
+	\end{block}
+	}
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\subsection{Fractional Brusselator}
+
+\begin{frame}[fragile]{Fractional Brusselator}
+The Brusselator is a model of the \textbf{autocatalytic chemical reaction}, it is described by
+\only<1-3>{\[
+\begin{cases}
+\dot{x}_1 = a - (\mu + 1)x_1 + x_1^2x_2,\\
+\dot{x}_2 = \mu x_1 - x_1^2x_2,
+\end{cases}\quad a,\mu > 0.
+\]}\only<4->{\[
+\begin{cases}
+{}_{CA}D^{\alpha_1} x(t) = a - (\mu + 1)x_1 + x_1^2x_2,\\
+{}_{CA}D^{\alpha_2} x(t) = \mu x_1 - x_1^2x_2,
+\end{cases}\quad a,\mu > 0.
+\]}\vspace{-1em}
+\begin{columns}
+\begin{column}{0.6\columnwidth}
+\begin{onlyenv}<1-2>
+\begin{itemize}
+	\item<1-> If $\mu > a^2 + 1$ then a single Brusselator has a \emph{unique limit cycle},
+	\item<2-> If $(a-1)^2 < \mu \leq a^2 + 1$ all the orbits tend to the steady state.
+\end{itemize}
+\end{onlyenv}
+\begin{onlyenv}<3>\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+a = 1 ; mu = 4 ;
+param = [ a , mu ] ;
+f_fun = @(t,y,par) [ ...
+par(1) - (par(2)+1)*y(1) + y(1)^2*y(2) ; ...
+par(2)*y(1) - y(1)^2*y(2) ] ;
+t0 = 0 ; T = 100 ;
+y0 = [ 1 ; 1] ;
+[T,Y] = ode45(@(t,y) f_fun(t,y,param),[t0,T],y0);
+figure(1)
+plot(Y(:,1),Y(:,2),'k-',y(1,1),y(2,1),'ro')
+\end{minted}
+\end{onlyenv}
+\begin{onlyenv}<4->\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+alpha = [0.8,0.7] ;
+h = 1e-2;
+[t, y] = fde_pi1_ex(alpha,f_fun,t0,T,y0,h,param) ;
+\end{minted}
+
+The cycle of the single fractional Brusselator is contained in the region
+\[
+\left\lbrace (x_1,x_2) \,:\; \frac{a}{\mu+1} < x_1 < \frac{2a}{\mu}, \; 0 < x_2 < \frac{\mu(1+\mu)}{a} \right\rbrace
+\]
+\end{onlyenv}
+\end{column}
+\begin{column}{0.4\columnwidth}
+\begin{onlyenv}<3>
+\centering
+
+\input{ordinarybrusselator.tikz}
+\end{onlyenv}%
+\begin{onlyenv}<4>
+\centering
+
+\input{fractionalbrusselator.tikz}	
+\end{onlyenv}
+\begin{onlyenv}<5>
+\begin{exampleblock}{\faQuestionCircle\,Of interest~\parencite{WANG2007414}}
+Finding the smallest values $\alpha_1$, $\alpha_2$ for which a limit cycle exist is of interest.
+\end{exampleblock}
+\end{onlyenv}
+\end{column}
+\end{columns}
+\end{frame}
+
+\subsection{Bagley-Torvik Model}
+
+\begin{frame}{Bagley-Torvik Model~\parencite{BagleyTorvik}}
+
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+\centering
+\begin{block}{Stoke's Second Problem}
+Can we determine the behavior of a half-space of Newtonian, 
+viscous fluid undergoing the motion induced by the prescribed 
+uniform sinusoidal motion of a plate on the surface? 
+\end{block}
+
+\includegraphics[width=0.8\columnwidth]{bgmodel.png}
+\end{column}
+\begin{column}{0.6\columnwidth}
+\only<2->{If we write down the \textbf{equation of motion} we find
+\only<2>{
+\[
+\rho \frac{\partial v}{\partial t} = \mu \frac{\partial^2 v}{\partial z^2}
+\]}
+\only<3>{
+\[
+\rho [ s \tilde{v}(s,z) - v(0,x)] = \mu \frac{d^2 \tilde{v}(s,z)}{dz^2},
+\]}
+\only<4>{
+\[
+\tilde{v}(s,z) = \tilde{v}_p(s) \exp\left(\sqrt{\frac{\rho s}{\mu}}z\right)
+\]
+}\only<5>{
+\[
+\tilde{\sigma}(s,z) = \sqrt{\mu \rho} \sqrt{s} \tilde{v}(s,z) = \sqrt{\mu \rho} \frac{1}{\sqrt{s}} s \tilde{v}(s,z)
+\]
+}\only<6>{
+\[
+\tilde{\sigma}(s,z) = \sqrt{\mu \rho} \mathcal{L} \left\lbrace \frac{1}{\Gamma(\nicefrac{1}{2}) t^{\nicefrac{1}{2}}} \right\rbrace * \mathcal{L}\left\lbrace v_t \right\rbrace
+\]
+}\only<7>{
+\[
+\sigma(t,z) = \sqrt{\mu \rho} \frac{1}{\Gamma(\nicefrac{1}{2})} \int_{0}^{t} (t-\tau)^{\nicefrac{1}{2}} v_\tau(\tau,z)\,\textrm{d}\tau.
+\]
+}\only<8>{
+\[
+\sigma(t,z) = \sqrt{\mu \rho} {}_{CA}D^{\nicefrac{1}{2}}_{[0,t]} v(t,z).
+\]
+}\vspace{-1.2em}
+\begin{itemize}
+	\item<2->$\rho$ is the \emph{fluid density}, $\mu$ is the viscosity, $v$ is
+	the profile of the \emph{transverse fluid velocity}. 
+	\item<3-> We apply Laplace transform to the equation $\tilde{v} = \mathcal{L}{v}(s)$,
+	\item<4-> We solve and impose the boundary condition given by the $\tilde{v}_p = \mathcal{L}{V_p}(s)$,
+	\item<5-> Since the \emph{shear stress} is given by $\sigma(t,z) = \mu v_z(t,z)$ we can write its Laplace transform.
+	\item<6-> Finally we invert it.
+\end{itemize}
+	
+}
+\end{column}
+\end{columns}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{Bagley-Torvik Model~\parencite{BagleyTorvik}}
+\begin{columns}
+\begin{column}{0.3\columnwidth}
+\centering
+\begin{tikzpicture}[black!75,thick]
+% Supporting structure
+\fill [pattern = north west lines] (-1.5,0) rectangle ++(3,.2);
+\draw[thick] (-1.5,0) -- ++(3,0);
+\draw
+[
+decoration={
+	coil,
+	aspect=0.3, 
+	segment length=1.2mm, 
+	amplitude=2mm, 
+	pre length=3mm,
+	post length=3mm},
+decorate
+] (0,0) -- ++(0,-3) 
+node[midway,right=0.25cm,black]{$K$};
+% Mass
+\node[draw,
+fill=gray!60,
+minimum width=0.25cm,
+minimum height=1.7cm,
+anchor=north,
+label=east:$m$] at (0,-3) {};
+\draw [very thick,
+black,
+-latex
+] (0,-4.8) -- (0,-5.4) 
+node[midway,left]{\small $X$};
+\end{tikzpicture}	
+
+Immersed Plate
+\end{column}
+\begin{column}{0.7\columnwidth}
+Assumptions:
+\begin{itemize}
+	\item The spring is massless and its oscillations do not disturb the fluid,
+	\item The area $A$ of the plate is sufficiently large as to produce in the fluid adjacent to
+	the plate the velocity field and stresses we just derived,
+\end{itemize}
+\onslide<2->{
+Deriving the equation:
+\[
+m \ddot{X} = F_X = - K X - 2A \sigma(t,0) 
+\]}\onslide<3->{
+Using the expression for the \emph{strain} and $V_p(t,0) = \dot{X}(t)$ we find
+\[
+m \ddot{X}  + 2A \sqrt{\mu \rho} {}_{CA}D^{\nicefrac{3}{2}}_{[0,t]} X + K X = 0.
+\]
+}
+\end{column}
+\end{columns}
+\end{frame}
+
+\section{Linear Multi-Term FDEs}
+
+\begin{frame}{Linear Multi-Term FDEs}
+The Bagley-Torvik model is an example of a \alert{Linear Multi-Term FDE}, that is, something of the form
+\[
+\lambda_Q {}_{CA}D^{\alpha_Q} y(t) + \lambda_{Q-1}{}_{CA}D^{\alpha_{Q-1}} y(t) + \cdots + \lambda_2 {}_{CA}D^{\alpha_2} y(t) + \lambda_1 {}_{CA}D^{\alpha_1}y(t) = f(t,y(t)),
+\]
+with 
+\begin{itemize}
+	\item $\lambda_i \in \mathbb{R}$ $\forall\,i=1,\ldots,Q$,
+	\item $0 < \alpha_1 < \alpha_2 < \ldots < \alpha_{Q-1} < \alpha_Q$ and $\alpha_Q \neq 0$.
+\end{itemize}
+For this problem we have $m_Q = \max m_i$, $m_i = \lceil \alpha_i \rceil$, $i=1,\ldots,Q$ \textbf{initial conditions}:
+\begin{equation*}
+y(t_0) = y_0, y'(t_0) = y_0^{(1)}, \ldots, y^{(m_Q-1)}(t_0) = y_0^{(m_Q-1)}.
+\end{equation*}
+
+\onslide<2>{\faQuestionCircle\, How can we solve them?}
+
+\end{frame}
+
+\begin{frame}{Linear Multi-Term FDEs}
+We need to \textbf{recall one of the properties} we have seen of the Caputo derivatives
+\begin{itemize}
+	\item[$(P_1)$] $I_{[t_0,T]}^\alpha {}_{CA}D_{[t_0,T]}^\alpha y(t) = y(t) - T_{m-1}[y,t_0](t)$,
+	\item[$(P_2)$] $I_{[t_0,T]}^\beta {}_{CA}D_{[t_0,T]}^\alpha y(t) = I_{[t_0,T]}^\beta {}_{RL}D_{[t_0,T]}^\alpha \left[ y(t) - T_{m-1}[y;t_0](t) \right] =  I_{[t_0,T]}^{\beta-\alpha}\left[y(t) - T_{m-1}[y;t_0](t)\right]$, $\beta > \alpha$.
+\end{itemize}
+\onslide<2->{
+We start from the multi-term equation
+\only<2>{\[
+\lambda_Q {}_{CA}D^{\alpha_Q} y(t) + \lambda_{Q-1}{}_{CA}D^{\alpha_{Q-1}} y(t) + \cdots + \lambda_2 {}_{CA}D^{\alpha_2} y(t) + \lambda_1 {}_{CA}D^{\alpha_1}y(t) = f(t,y(t)),
+\]}\only<3>{\[
+\lambda_Q I_{[t_0,T]}^{\alpha_Q}\left[{}_{CA}D^{\alpha_Q} y(t) \right] = - I_{[t_0,T]}^{\alpha_Q}\left[ \sum_{i=1}^{Q-1} \lambda_i {}_{CA}D^{\alpha_i}y(t) + f(t,y(t))\right],
+\]}\only<4>{\[
+y(t) - T_{m_Q-1}[y,t_0](t) = - \sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} I_{[t_0,t]}^{\alpha_Q - \alpha_i} \left[y(t) - T_{m_i-1}[y;t_0](t) \right] + \frac{1}{\lambda_Q} I_{[t_0,T]}^{\alpha_Q} f(t,y(t))
+\]}\only<5>{\[
+y(t) = T_{m_Q-1}[y,t_0](t) -\sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} I_{[t_0,t]}^{\alpha_Q - \alpha_i} \left[y(t) - T_{m_i-1}[y;t_0](t) \right] + \frac{1}{\lambda_Q} I_{[t_0,T]}^{\alpha_Q} f(t,y(t))
+\]}
+\begin{itemize}
+\item<3-> we multiply both sides by $I_{[t_0,T]}^{\alpha_Q}$,
+\item<4-> we use $P_1$ on the left-hand side, $P_2$ on the right-hand side,
+\item<5-> and re-arrange to get an expression for the solution.
+\end{itemize}
+}
+
+\end{frame}
+
+\begin{frame}{Linear Multi-Term FDEs: generalizing PI rules}
+First we do a bit of rewriting of
+\only<1-2>{\[
+y(t) = \alert<2>{T_{m_Q-1}[y,t_0](t) -\sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} I_{[t_0,t]}^{\alpha_Q - \alpha_i}} \left[y(t) - \alert<2>{T_{m_i-1}[y;t_0](t)} \right] + \frac{1}{\lambda_Q} I_{[t_0,T]}^{\alpha_Q} f(t,y(t))
+\]}\only<3>{\[
+y(t) = \tilde{T}(t) - \sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} I_{[t_0,t]}^{\alpha_{Q}  - \alpha_i} y(t) + \frac{1}{\lambda_Q} I_{[t_0,T]}^{\alpha_Q} f(t,y(t)).
+\]}
+\begin{itemize}
+	\item<1-> we employ the usual fractional integral for polynomials: \[I_{[t_0,t]}^{\alpha} T_{m-1}[y;t_0](t) = \sum_{k=0}^{m-1} \frac{(t-t_0)^{k+\alpha}}{\Gamma(k+\alpha)} y^{(k)}(t_0), \begin{array}{l} \alpha \in \{\alpha_1,\ldots,\alpha_{Q-1}\}, \\ m \in \{m_1,\ldots,m_{Q-1}\}.\end{array}\]
+	\item<2-> We use it to \alert<2>{simplify the expression}
+	\[
+	\tilde{T}(t) = T_{m_Q-1}[y;t_0](t) + \sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} \sum_{k=0}^{m_i-1} \frac{(t-t_0)^{k+\alpha_Q-\alpha_i}}{\Gamma(k+\alpha_Q-\alpha_i+1)}y^{(k)}(t_0).
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Linear Multi-Term FDEs: generalizing PI rules}
+Now we have an expression that we can treat by adapting one of the Product Integral rules
+\[
+y(t) = \tilde{T}(t) - \sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} I_{[t_0,t]}^{\alpha_{Q}  - \alpha_i} y(t) + \frac{1}{\lambda_Q} I_{[t_0,T]}^{\alpha_Q} f(t,y(t)).
+\]
+\onslide<2->{
+We can start from the \textbf{\only<2>{explicit}\only<3->{implicit} rectangular product integral rule} on a uniform grid
+\[
+y^{(n)} = \tilde{T}(t_n) - \sum_{i=1}^{Q-1} \frac{\lambda_i}{\lambda_Q} \tau^{\alpha_Q - \alpha_i} \sum_{j=0}^{n\only<2>{-1}} b_{n-j-1}^{(\alpha_Q - \alpha_i)} y^{(j)} + \frac{1}{\lambda_Q} \sum_{j=0}^{n\only<2>{-1}} b_{n-j-1}^{(\alpha_Q)} f(t_j,y^{(j)}). 
+\]
+with 
+\[
+b_n^{(\alpha)} = \nicefrac{\displaystyle \left[(n+1)^\alpha - n^\alpha\right]}{\displaystyle \alpha}, \quad n = 1,\ldots,N.
+\]
+}
+\onslide<4>{We can do it similarly for the \textbf{Implicit Trapezoidal Rule} and then for the \textbf{Predictor-Corrector method}~\parencite{DiethelmMultiterm}.}
+\end{frame}
+
+\begin{frame}[fragile]{Linear Multi-Term FDEs: generalizing PI rules}
+
+\onslide<1->{\alert{\faQuestionCircle}\; Can we do something similar for FLMMs?}
+
+\onslide<2->{\faCog\;We \alert{don't know} how to determine the starting values $w_{n,j}$ for the quadrature. Thus this approach is not viable.}
+
+\begin{onlyenv}<3>
+\small
+\textbf{Available codes \parencite{garrappa2018numerical}:}
+\begin{itemize}
+	\item[\faCode] \verb|MT_FDE_PI1_Ex.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/mt_fde_pi1_ex.m}{Explicit Product-Integration of rectanguar type}
+	\item[\faCode] \verb|MT_FDE_PI1_Im.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/mt_fde_pi1_im.m}{Implicit Product-Integration of rectanguar type}
+	\item[\faCode] \verb|MT_FDE_PI2_Im.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/mt_fde_pi2_im.m}{Implicit Product-Integration of trapezoidal type}
+	\item[\faCode] \verb|MT_FDE_PI12_PC.m|- \href{https://www.dm.uniba.it/members/garrappa/software_folder/mt_fde_pi12_pc.m}{Product-Integration with predictor-corrector}
+\end{itemize} 
+\end{onlyenv}
+
+\end{frame}
+
+\begin{frame}[fragile]{Linear Multi-Term FDEs: back to Bagley-Torvik}
+We reached the equation
+\[
+m \ddot{X}  + 2A \sqrt{\mu \rho} {}_{CA}D^{\nicefrac{3}{2}}_{[0,t]} X + K X = 0.
+\]\vspace{-2em}
+\begin{columns}
+\begin{column}{0.6\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+m = 10; A = 6; K = 3;
+mu = 2; rho = 2;
+alpha = [2 3/2] ;
+lambda = [m 2*A*sqrt(mu*rho)] ;
+f_fun = @(t,X) -K*X;
+J_fun = @(t,X) -K;
+t0 = 0 ; T = 100 ;
+X0 = [0 , 2 ];
+h = 1e-2;
+[t, X] = mt_fde_pi1_ex(alpha, lambda, f_fun, t0, T, X0, h);
+\end{minted}
+\end{column}
+\begin{column}{0.4\columnwidth}
+\centering
+
+\input{bagleytorviksolution.tikz}
+\end{column}
+\end{columns}
+
+\onslide<2>{\centering But does it fit the reality?}
+
+\end{frame}
+
+\begin{frame}[fragile]{Linear Multi-Term FDEs: back to Bagley-Torvik}
+\begin{columns}
+\begin{column}{0.65\columnwidth}
+\includegraphics[width=\columnwidth]{bgmodelresults.png}
+\end{column}
+\begin{column}{0.35\columnwidth}\small
+The model we have derived is a model of the form
+\[
+\begin{array}{c}
+\sigma(t) = G_0 \epsilon(t) + G_1 \dot{\epsilon}(t), \\ \epsilon(t) = \frac{x(t)}{\delta} \\
+f(t) = m \ddot{x}(t) + f_p(t), \\ f_p(t) = \frac{2A}{\delta}(G_0 + G_1 {}_{CA}D^\alpha x(t)).
+\end{array} 
+\]
+One can do \emph{parameter tuning} to find the fractional order from experimental data
+and compare the results with the integer-order model. The results on the left by \cite{BagleyTorvik}
+show that the fractional model obtain a better fit with the measured data.
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Equivalent formulations of the Multi-Term FDEs}
+
+In the integer-order case we know how to rewrite the equation
+\[
+y^{(n)}(t) = f(t,y^{(n-1)}(t),\ldots,y^{(1)}(t),y(t)),  \quad y^{(j)}(0) = y_0^{(j)}, \quad j=0,1,\ldots,n-1,
+\]
+as a \textbf{system of first-order equations}.
+
+\onslide<2>{\alert{\faQuestionCircle}\, Can we do something similar in the fractional case?}
+
+\begin{itemize}
+	\item[(A1)]<3-> Let us assume that our multi-term equation is of the form
+	\[
+	{}_{CA}D^{\alpha_k} y(t) = f(t,{}_{CA}D^{\alpha_{k-1}} y(t),\ldots,{}_{CA}D^{\alpha_{1}}(t),y(t)),  \quad \begin{array}{l}y^{(j)}(0) = y_0^{(j)}, \\ j=0,1,\ldots,n-1, \end{array}
+	\]
+	for $\alpha_k > \alpha_{k-1} > \cdots > \alpha_{1} > 0$, $\alpha_j - \alpha_{j-1} \leq 1$ $\forall\,j=1,2,\ldots,k$, $0 < \alpha_1 \leq 1$.
+	\item[(A2)]<4-> Assume also that $\alpha_j \in \mathbb{Q}$ $\forall\,j=1,2,\ldots,k$, and that $M$ is the least common multiple of $\alpha_1,\alpha_2,\ldots,\alpha_k$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Equivalent formulations of the Multi-Term FDEs}
+
+\begin{alertblock}{Theorem~\parencite[Theorem~8.1]{DiethelmBook}}
+Under the assumptions \alert{(A1)} and \alert{(A2)}, set $\gamma = \nicefrac{1}{M}$, and $N = M \alpha_k$, then the IVP is equivalent to
+\[
+\begin{cases}
+{}_{CA}D^{\gamma} y_0(t) = y_1(t),\\
+{}_{CA}D^{\gamma} y_1(t) = y_2(t),\\
+\vdots \\
+{}_{CA}D^{\gamma} y_{N-2}(t) = y_{N-1}(t),\\
+{}_{CA}D^{\gamma} y_{N-1}(t) = f(t,y_0(t),y_{\nicefrac{\alpha_{k-1}}{M}}(t),\ldots,y_{\nicefrac{\alpha_{1}}{M}}(t),y(t)) % ,y_{\nicefrac{\alpha_{k-2}}{M}}(t),
+\end{cases} \hspace{-0.5em} y_i(0) = \begin{cases}
+y_0^{(\nicefrac{j}{m})}, & \text{ if } \frac{j}{M} \in \mathbb{N}_0,\\
+0, & \text{ otherwise}.
+\end{cases}
+\]
+\only<1>{
+\begin{itemize}
+	\item[$\Rightarrow$] whenever $\mathbf{y} = (y_0,\ldots,y_{N-1})^T$ with $y_0 \in \mathcal{C}^{\lceil \alpha_k \rceil}[0,b]$, for some $b > 0$, is a solution of the $N$-dimensional system, then $y \equiv y_0$ is a solution of the multi-term FDE.
+\end{itemize}
+}\only<2>{
+\begin{itemize}
+	\item[$\Leftarrow$] whenever $y \in \mathcal{C}^{\lceil \alpha_k \rceil }([0,b])$ is a solution of the multi-term FDE, then the vector function $\mathbf{y} = (y,{}_{CA}D^{\gamma}y,{}_{CA}D^{2\gamma}y,\ldots,{}_{CA}D^{(N-1)\gamma}y)^T$ solves the $N$-dimensional system.
+\end{itemize}
+}
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}{Equivalent formulations of the Multi-Term FDEs}
+
+We can relax \alert{(A2)} from the \emph{rationality requirement} to a requirement on being commensurable\footnotemark[2].
+\begin{itemize}
+	\item[(A2)'] Let $1 \geq \alpha_k > \alpha_{k-1} > \ldots > \alpha_1 > 0$ and assume the equation to be \emph{commensurate}, then we define $\tilde{\alpha}_j = \nicefrac{\alpha_j}{\alpha_1}$ for $j=1,\ldots,k$, let $\tilde{M}$ be the least common multiple of the denominators of the values $\tilde{\alpha}_1,\ldots,\tilde{\alpha}_k$.
+\end{itemize} 
+
+\begin{alertblock}{Theorem \parencite[Theorem~8.2]{DiethelmBook}}
+Under the assumption \alert{(A1)} and \alert{(A2)'}, set $\gamma = \nicefrac{\alpha_1}{\tilde{M}}$ and $N = \nicefrac{\tilde{M}\alpha_k}{\alpha_1}$, then the equivalence relation of the $N$-dimensional system and of the multi-term FDE holds as in the previous result.
+\end{alertblock}
+
+\begin{itemize}
+	\item[\faLightbulb]<2-> Existence and uniqueness results can be obtained for the single term reformulation,
+	\item[\faCog]<3-> See~\parencite{MR2527892} for other reformulations and comparisons.
+\end{itemize}
+
+\footnotetext[2]{Two non-zero real numbers $\alpha$ and $\beta$ are said to be commensurable if their ratio $\nicefrac{\alpha}{\beta} \in \mathbb{Q}$.}
+
+\end{frame}
+
+\section{Partial Differential Equations with Fractional Derivatives with respect to Time}
+
+\begin{frame}{The Method of Lines}
+
+Consider a partial differential equations of the form
+\[
+\text{Find }u(\mathbf{x},t)\text{ s.t. }u_t = \mathcal{L} u, \quad  \mathbf{x} \in \Omega \subseteq \mathbb{R}^d, t \in I \subseteq \mathbb{R}_+,
+\]
+where $\mathcal{L}$ is a differential operator, either linear or nonlinear, coupled with the opportune boundary conditions, and given suitable initial conditions.
+
+\onslide<2->{A \emph{classical way} of approaching this task is using a \textbf{Method Of Lines} (MOL) approach, that is
+\begin{enumerate}
+	\item<2-> we discretize w.r.t. the \emph{space variables} with some method (e.g., Finite Elements/Differences/Volumes, meshfree/meshless methods, spectral methods\ldots)
+	\[
+	M \mathbf{u}_t = F(t,\mathbf{u}), \quad M \in \mathbb{R}^{n_d \times n_d}, \; F\,:\mathbb{R} \times \mathbb{R}^{n_d} \rightarrow \mathbb{R}^{n_d},\, \mathbf{u} : \mathbb{R} \rightarrow \mathbb{R}^{n_d}.
+	\]
+	\item<3-> now we have a (possibly nonlinear, non-autonomous) system of ODEs to which we can apply an integrator.
+\end{enumerate}
+}
+
+\end{frame}
+
+\begin{frame}{PDEs with fractional derivatives with respect to time}
+We can think of using the methods we have seen until now for solving PDEs in which the \textbf{derivative with respect to time} has been substituted by the \textbf{fractional derivative in the Caputo sense}
+\[
+\text{Find }u(\mathbf{x},t)\text{ s.t. } {}_{CA}D^{\alpha} u = \mathcal{L} u, \quad  \mathbf{x} \in \Omega \subseteq \mathbb{R}^d, t \in I \subseteq \mathbb{R}_+.
+\]\vfill
+\only<2-4>{
+\textbf{Examples}:
+\begin{itemize}
+	\item[\faDiceOne]<2-> Time-fractional diffusion equation
+	\[
+	{}_{CA}D^{\alpha}_t u = \operatorname{div}(p(x)\operatorname{grad}u) - q(x)u +F(x,t), \quad 0 < \alpha \leq 1.
+	\]
+	\item[\faDiceTwo]<3-> Time-fractional advection-dispersion equation
+	\[
+	{}_{CA}D^{\alpha}_t u = \operatorname{div}(p(x)\operatorname{grad}u) - \nu \operatorname{grad}(u), \quad 0 < \alpha \leq 1.
+	\]
+	\item[\faDiceThree]<4-> Time-fractional  Schr\"{o}dinger equation
+	\[
+	(i T_\rho)^\alpha {}_{CA}D^{\alpha}_t \psi = - \frac{L^2_\rho}{2 N_m} \nabla^2 \psi + N_\nu \psi, \quad 0 < \alpha \leq 1.
+	\]
+\end{itemize}
+}
+\only<5->{
+	\textbf{Examples}:
+	\begin{itemize}
+		\item[\faDiceFive]<5-> Time-fractional Burgers equation equation
+		\[
+		{}_{CA}D^{\alpha}_t u = u_{xx} + A u^p u_x, \quad 0 < \alpha \leq 1, \; p > 0.
+		\]
+		\item[\faDiceSix]<6-> Time-fractional Korteweg--de Vries equation
+		\[
+		{}_{CA}D^{\alpha}_t u = u_{xxx} + A u^p u_x, \quad 0 < \alpha \leq 1, \; p > 0.
+		\]
+		\item[\faDiceD20]<7-> Time-fractional (incompressible) Navier--Stokes equation
+		\[
+		\begin{cases}
+		{}_{CA}D^{\alpha}_t  (u \cdot \nabla)u = \nu \nabla^2 u - \frac{1}{\rho} \nabla p + f, \\
+		\nabla \cdot u = 0.
+		\end{cases} \; 0 < \alpha \leq 1.
+		\]
+	\end{itemize}
+}
+\end{frame}
+
+\begin{frame}{An example with diffusion}
+Let us consider the case of
+\[
+{}_{CA}D^{\alpha}_t u = 0.05 \nabla^2 u, \quad \alpha = 0.3,1.
+\]
+and integrate it with the FBDF2 with $\tau = 10^{-2}$.
+\begin{center}
+\only<1>{\includegraphics[width=0.9\columnwidth]{diff_001.png}}%
+\only<2>{\includegraphics[width=0.9\columnwidth]{diff_011.png}}%
+\only<3>{\includegraphics[width=0.9\columnwidth]{diff_021.png}}%
+\only<4>{\includegraphics[width=0.9\columnwidth]{diff_031.png}}%
+\only<5>{\includegraphics[width=0.9\columnwidth]{diff_041.png}}%
+\only<6>{\includegraphics[width=0.9\columnwidth]{diff_051.png}}%
+\only<7>{\includegraphics[width=0.9\columnwidth]{diff_061.png}}%
+\only<8>{\includegraphics[width=0.9\columnwidth]{diff_071.png}}%
+\only<9>{\includegraphics[width=0.9\columnwidth]{diff_081.png}}%
+\only<10>{\includegraphics[width=0.9\columnwidth]{diff_091.png}}%
+\only<11->{\includegraphics[width=0.9\columnwidth]{diff_101.png}}%
+\onslide<12>{ How can you describe the observed behavior? }
+\end{center}
+\end{frame}
+
+\begin{frame}{Conclusions and next steps}
+\definecolor{success}{HTML}{4a934a}
+\definecolor{todo}{HTML}{0099cc}
+
+\begin{itemize}
+	\item[\textcolor{success}{\faCheckCircle}]<1-> We have completed the construction of several schemes for the integration of FODEs, 
+	\item[\textcolor{success}{\faCheckCircle}]<2-> We have discussed the case of FODEs with multiple terms and different orders,
+	\item[\textcolor{success}{\faCheckCircle}]<3-> We started looking into some time-fractional PDEs using the Method of Lines together with our FODEs algorithms.
+	\item[\textcolor{todo}{\faClipboardList}]<4-> Can we better describe this ``subdiffusive'' behavior we have observed in time-fractional diffusion equation?
+	\item[\textcolor{todo}{\faClipboardList}]<5-> For linear problems can we investigate the ``exponential'' fractional integrators?
+\end{itemize}
+
+\end{frame}
+
+
+%\subsection{Fractional-order Chua-Hartley System}
+%
+%\begin{frame}[fragile]{Fractional-order Chua-Hartley System}
+%\begin{columns}
+%\begin{column}{0.4\columnwidth}
+%\centering
+%
+%\includegraphics[width=\columnwidth]{chua.png}	
+%
+%\begin{itemize}
+%\item \small $L$ is an \emph{inductor},
+%\item \small $C_1$ and $C_2$ are two \emph{capacitors},
+%\item \small $R$ is a \emph{resistance},
+%\item \small $N_R$ is is a \textbf{nonlinear} negative resistance\footnotemark[1] called a \emph{Chua's diode}.
+%\end{itemize}
+%\end{column}
+%\begin{column}{0.6\columnwidth}
+%If we write down the equation for the currents in the system
+%\[
+%\begin{cases}
+%\dot{x} = \alpha \left[y + \frac{x-2x^3}{7}\right],\\
+%\dot{y} = x-y+z,\\
+%\dot{z} = -\beta y,
+%\end{cases}
+%\]
+%where $x(t)$ and $y(t)$ represent the \textbf{voltages} across the capacitors $C_1$ and $C_2$, while $z(t)$ represents the 
+%\textbf{electric current} in the inductor $L_1$. 
+%\vfill
+%
+%\begin{quote}\footnotesize
+%	\faFile*\;\fullcite{hartley1995chaos}
+%\end{quote}
+%
+%\end{column}
+%\end{columns}
+%\footnotetext[1]{It causes an increase in voltage across the terminals and thus a decrease in electric current through it.}
+%\end{frame}
+%
+%\begin{frame}{Fractional-order Chua-Hartley System}
+%\begin{columns}
+%\begin{column}{0.4\columnwidth}
+%\centering
+%
+%\includegraphics[width=\columnwidth]{ordinarysystem.eps}
+%\end{column}
+%\begin{column}{0.6\columnwidth}
+%	contenuto...
+%\end{column}
+%\end{columns}
+%\end{frame}
+
+%\begin{frame}[fragile]{The FRF first implementation}
+%
+%\begin{columns}
+%\begin{column}{0.6\columnwidth}\definecolor{bg}{rgb}{0.95,0.95,0.95}
+%The code is analogous to the one for the fractional integrals 
+%with Newton-Cotes formulas:
+%\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%for i=0:N-1
+%% These are the values b0,b1,...,bN-1 we need 
+%% them for all the computations
+%b(i+1) = ((i+1)^alpha - i^alpha)/alpha; 
+%end
+%y(:,1) = y0;
+%c = (tau^alpha/gamma(alpha));
+%for j=1:N-1
+%fy(:,j) = f(t(j),y(:,j)); % New value of f
+%y(:,j+1) = y(:,1) + c*sum(flipud(b(1:j)).'.*fy(:,1:j));
+%end
+%\end{minted}
+%\end{column}
+%\begin{column}{0.4\columnwidth}
+%\begin{itemize}
+%\item[\faCode]<2-> To build the solution we have to keep in memory either the \textbf{previous solutions} or the \textbf{function evaluations},
+%\item[\faCode]<3-> We have to compute:
+%\[
+%\sum_{j=0}^{n-2} b_{n-j-1}f^{(j)},
+%\]
+%this is a \alert{quadratic cost} with $N$.
+%\item<4-> The $1$-step name is related to the number of initial values to start the computation.
+%\end{itemize}
+%\end{column}
+%\end{columns}
+%
+%\end{frame}
+%
+%\begin{frame}[fragile]{The FRF consistency order}
+%\begin{columns}
+%\begin{column}{0.5\columnwidth}
+%We need to investigate the order of approximation of this method.
+%
+%If we apply it to the case
+%\[
+%{}_{CA}D_{[0,t]}^\alpha y(t) = \lambda y(t), \quad y(0) = 0,
+%\]
+%for $t \in [0,]
+%\end{column}
+%\begin{column}{0.5\columnwidth}
+%\centering
+%
+%\input{fprerror.tikz}
+%	
+%\begin{tabular}{ll}
+%\toprule
+%$\tau$ & Error\\
+%\midrule
+%5.00e-01 & 5.07e-02\\
+%1.00e-01 & 8.17e-03\\
+%1.00e-02 & 6.83e-04\\
+%1.00e-03 & 6.40e-05\\
+%\bottomrule
+%\end{tabular}
+%
+%\end{column}
+%\end{columns}
+%\end{frame}
+%
+%\begin{frame}{The Fractional Trapezoidal Formula}
+%
+%\end{frame}
+%
+%\section{Fractional Linear Multistep Methods}
+%
+%\begin{frame}{Fractional Linear Multistep Methods}
+%To 
+%\end{frame}
+
+\appendix
+
+\section*{Bibliography}
+{\unnumbered
+	\begin{frame}[allowframebreaks,noframenumbering]{Bibliography}
+	\small
+	\printbibliography
+	
+\end{frame}
+}
+
+\end{document}

@@ -20,7 +20,14 @@ numerical methods for their simulation. In particular, we will focus on the defi
 operators, with the associated fractional derivative operations according to Riemann-Liouville, Caputo,
 and Riesz. With these instruments we will first discuss the formulation of ordinary fractional equations
 and their solution [3], then their use in the definition of fractional diffusion problems as a fractional
-partial differential equation [7]. In the final part, we will briefly touch on some questions concerning
+partial differential equation [7]. Regarding numerical methods, we will focus on finite
+difference and multi-step methods for simulating initial value problems with time-fractional
+derivatives. Regarding the solution of boundary value problems with space-fractional derivatives,
+we will focus on the use of finite difference methods and on the connection between
+the properties of the resulting discretization matrices and the analytic
+properties of the operators.
+
+In the final part, we will briefly touch on some questions concerning
 the definition of the fractional Laplacian and some of its applications within modeling for complex
 networks [1, 2, 4].
 

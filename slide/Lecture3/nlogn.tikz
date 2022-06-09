@@ -1,0 +1,73 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{center}
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.8\columnwidth,
+height=0.75\columnwidth,
+at={(1.142in,0.473in)},
+scale only axis,
+xmode=log,
+xmin=1,
+xmax=100000,
+xminorticks=true,
+xlabel style={font=\color{white!15!black}},
+xlabel={N},
+ymode=log,
+ymin=10,
+ymax=1000000000,
+yminorticks=true,
+axis background/.style={fill=white},
+xmajorgrids,
+xminorgrids,
+ymajorgrids,
+yminorgrids,
+legend style={at={(0.03,0.97)}, anchor=north west, legend cell align=left, align=left, draw=white!15!black}
+]
+\addplot [color=mycolor1, line width=2.0pt, mark=o, mark options={solid, mycolor1}]
+  table[row sep=crcr]{%
+4	16\\
+8	64\\
+16	256\\
+32	1024\\
+64	4096\\
+128	16384\\
+256	65536\\
+512	262144\\
+1024	1048576\\
+2048	4194304\\
+4096	16777216\\
+8192	67108864\\
+16384	268435456\\
+};
+\addlegendentry{$\text{N}^\text{2}$}
+
+\addplot [color=mycolor2, dashed, line width=2.0pt, mark=x, mark options={solid, mycolor2}]
+  table[row sep=crcr]{%
+4	16\\
+8	72\\
+16	256\\
+32	800\\
+64	2304\\
+128	6272\\
+256	16384\\
+512	41472\\
+1024	102400\\
+2048	247808\\
+4096	589824\\
+8192	1384448\\
+16384	3211264\\
+};
+\addlegendentry{$\text{N log}_\text{2}\text{(N)}^\text{2}$}
+
+\end{axis}
+\end{tikzpicture}%
+\end{center}

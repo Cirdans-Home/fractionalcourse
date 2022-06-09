@@ -1,0 +1,1620 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+% Math
+\usepackage{nicefrac}
+
+% Tipography stuff
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{fontawesome5}
+\usepackage{soul}
+\usepackage{euler}
+
+% Bibliography
+\usepackage[giveninits,style=authoryear-comp,backend=biber]{biblatex}
+\addbibresource{../fracbiblio.bib}
+\newcommand\unnumbered{\setbeamertemplate{footline}{}}%\addtocounter{framenumber}{-1}
+\renewcommand*{\bibfont}{\normalfont\small}
+
+% Figures
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{calc,arrows}
+\usepackage{subfig}
+\usepackage{graphicx} % Allows including images
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks,linkcolor=,urlcolor=MidnightBlue}
+
+% Code
+\usepackage{minted}
+
+
+\author{Fabio Durastante}
+\title{An introduction to fractional calculus}
+\subtitle{Fundamental ideas and numerics}
+\institute{Università di Pisa\\\href{mailto:fabio.durastante@unipi.it}{\faEnvelope\;fabio.durastante@unipi.it}\\\href{https://fdurastante.github.io}{\faFirefox\;fdurastante.github.io}}
+\date{May, 2022}
+
+\newcommand{\de}{{\rm d}}
+
+
+\begin{document}
+
+{\unnumbered
+\begin{frame}[t,plain,noframenumbering]
+\titlepage
+\vspace{-4em}\includegraphics[width=2cm]{frame.png}
+\end{frame}
+}
+
+\section{The Numerical Integration of FODEs}
+
+\begin{frame}{The Numerical Integration of FODEs}
+We want to find a \textbf{numerical solution} of the differential equation written in terms of Caputo Derivatives
+\begin{equation}\label{eq:fode}
+\alpha > 0,\quad m = \lceil \alpha \rceil, \qquad \begin{cases}
+\displaystyle {}_{C}{D_{[0,t]}^{\alpha}} \mathbf{y}(t) = f(t,\mathbf{y}(t)), & t \in [0,T],\\[0.5em]
+\displaystyle \frac{d^k \mathbf{y}(0)}{d t^k}  = \mathbf{y}_0^{(k)}, & k=0,1,\ldots,m-1.
+\end{cases}\tag{FODE}
+\end{equation}
+
+\begin{block}{Caputo fractional derivative~\parencite{CaputoOriginal}}
+	Let $\alpha \geq 0$, and $m = \lceil \alpha \rceil$. Then, we define the operator
+	\[
+	{}_{C}{D_{[a,t]}^{\alpha}} y = I_{[a,t]}^{m-\alpha} \frac{d^m}{d t^m} y,
+	\]
+	whenever $\frac{d^m}{d t^m} y \in \mathbb{L}^1([a,b])$.
+\end{block}
+
+\end{frame}
+
+\begin{frame}{The Numerical Integration of ODEs}
+What methods do we know for ODEs?
+
+\onslide<2->{Given a grid $\{t_j = j \tau\}_{j=1}^{N}$ and $\tau = T/N$, approximating $\mathbf{y}(t_j) \approx y^{(j)}$.}
+
+\begin{description}
+	\item<3->[Explicit methods:] Compute $y^{(j)}$ using only values $y^{(k)}$ for $k < j$
+	\begin{itemize}
+		\item<7-> One Step Methods: Explicit Runge-Kutta Methods (ERK)
+		\item<7-> Linear Multistep Methods: Adams--Bashforth, Predictor-Corrector 
+	\end{itemize}
+	\item<4->[Implicit methods:] Compute $y^{(j)}$ using only values $y^{(k)}$ for $k \leq j$
+	\begin{itemize}
+		\item<8-> One Step Methods: Implicit Runge-Kutta Methods (IRK,DIRK,SDIRK)
+		\item<8-> Linear Multistep Methods: Adams--Moulton, Backward Differentiation Formulas (BDFs), Numerical Differentiation Formulas (NDFs),\ldots
+	\end{itemize}
+	\item<5->[Exponential integrators:] Compute directly $y^{(N)}$ without any $y^{(j)}$ for $j < N$.
+\end{description}
+
+\onslide<9->{For both \emph{implicit} and \emph{explicit} methods we have also \alert{all-at-once} formulations, and a middle-ground represented by \alert{Implicit-Explicit} (IMEX) methods.}
+
+\onslide<10>{Our \emph{objective} is to transport what we can for the solution of \eqref{eq:fode}.}
+
+\end{frame}
+
+\section{Product Integration Rules}
+
+\begin{frame}{Product Integration Rules}
+\textbf{P}roduct \textbf{I}ntegration rules were introduced in the work \parencite{YoungPI} for Integral Equations.
+
+\onslide<2->{
+From the \emph{existence results} we know that a solution to \eqref{eq:fode} is a solution to the Integral Equation
+\[
+y(t) = \sum_{k=0}^{m-1} \frac{t^k}{k!} y_0^{(k)} + \frac{1}{\Gamma(\alpha)} \int_{0}^{t} (t-\tau)^{\alpha-1} f(\tau,y(\tau))\,\textrm{d}\tau, \quad m = \lceil \alpha \rceil.
+\]
+}
+\begin{itemize}
+	\item<3-> Adams-Bashforth-Moulton methods are obtained by applying a \emph{quadrature formula to the integral},
+	\item<4-> We can use, e.g.,
+	\begin{itemize}
+		\item the \textbf{fractional rectangular formula}  with nodes $\{t_j = j \tau\}_{j=1}^{n-1}$,
+		\item or the \textbf{product trapezoidal quadrature formula} with nodes $\{t_j = j \tau\}_{j=1}^{n}$.
+	\end{itemize}
+	To obtain a \alert{predictor-corrector} method.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Product Integral Rules}
+The main idea behind PI rules is to approximate the integral
+\[
+\int_{0}^{t} (t-\tau)^{\alpha-1} f(s,y(s))\,\textrm{d}s
+\] 
+by approximating the vector field $f$ with suitable polynomials.\only<2->{ We build an \alert{Adams-type} method}.
+\only<2->{
+If we consider a grid $\{t_0,t_1,\ldots,t_N\}$ on the whole $[t_0,T]$ we can decompose the integral as
+\only<1-4>{\[
+y(t) = T_{m-1}(t) + \frac{1}{\Gamma(\alpha)} \sum_{j=0}^{n-1} \int_{t_j}^{t_{j+1}} (t-s)^{\alpha-1} f(\tau,y(\tau)) \,\textrm{d}\tau, \qquad t \geq t_n.
+\]}\only<5->{
+\[
+y^{(n)} = T_{m-1}(t_n) + w_n f^{(0)} + \sum_{j=1}^{n} b_{n,j} f^{(j)},
+\]
+}
+\begin{itemize}
+	\item<3-> Replace $f$ in each sub-interval by the first–degree polynomial interpolant
+	\only<3>{
+	\[
+	p_j(\tau) = f_{j+1} + \frac{s - t_{j+1}}{\tau_j}, \quad s \in [t_j,tj+1], \quad \tau_j = t_{j+1}-t_j, \quad f_j = f(t_j,y_j).
+	\]
+	}
+	\item<4-> These produce the usual fractional integral that we now how to solve
+	\only<4>{
+	\[
+	I_{n,j}^{(k)} = \frac{1}{\Gamma(\alpha)} \int_{t_j}^{t_n} (t_n - \tau)^{\alpha-1} (\tau-t_j)^k\,\textrm{d}\tau = \frac{(t_n - t_j)^{\alpha+k}}{\Gamma(\alpha+k+1)}.
+	\]
+	}
+	\item<5> We plug everything in our expression using that:
+	\[
+	w_n = I_{n,0}^{(0)} - \frac{I_{n,0}^{(1)}}{\tau_0} + \frac{I_{n,1}^{(1)}}{\tau_0}, \quad b_{n_j} = \frac{ I_{n,j-1}^{(1)} - I_{n,j}^{(1)} }{\tau_{j-1}} - \frac{I_{n,j}^{(1)} - I_{n,j+1}^{(1)}}{\tau_j}, \,j\leq n-1, \quad b_{n,n} = \frac{I_{n,n-1}^{(1)}}{\tau_{n-1}}.
+	\]
+\end{itemize}
+
+}
+\end{frame}
+
+\begin{frame}{Product Integral Rules - Convergence}
+
+To discuss \textbf{convergence properties} we can piggyback on the theory of Abel's and Volterra's fractional integral equations.
+\only<2->{
+\begin{equation*}
+\int_{0}^{t} (t-s)^{-\alpha} \only<2>{K(t,s)} y(s) \,\textrm{d}s = f(t), \quad 0 < \alpha < 1 \quad \only<2>{\text{ (Volterra's Integral Eq.)}}\only<3>{\text{ (Abel's Integral Eq.)}}
+\end{equation*}
+}
+\only<3->{
+If we \alert{discretize everything as before} we get 
+\[
+[ B_N \odot K_N]\mathbf{y} = \mathbf{g}, \quad B_N = \tau^{1-\alpha} [b_{i,j}], \quad K_N = [k(t_i,t_j)], \quad \odot \text{ Hadamard product}.
+\]
+where $\mathbf{y} = (y_0,\ldots,y_N)^T$ and $g$ contains the \textbf{initial conditions} and the \textbf{evaluations} of $f$.
+\begin{block}{Convergence analysis for \parencite{CameronMcKee}}
+``[Consistency of order $p$] demands that $f(t) \in \mathcal{C}^{1-\alpha}[0,T]$ which is necessary in any case for $y(t)$ to be a smooth function $\ldots$ $|y(t_i) - y_i| \leq C \tau^p$, $i=0,1,\ldots,m-1$.'' 
+\end{block}
+}
+
+\end{frame}
+
+\begin{frame}{Product Integral Rules - Convergence}
+The requirements from the standard theory are \textbf{far too strong} for what we can reasonably expect from the analysis on the solution regularity we did in the last lecture.
+
+\begin{alertblock}{Theorem~\parencite{JenniferDixon}}
+Let $f$ be Lipschitz continuous with respect to the second variable and $y_n$ be the numerical approximation obtained by applying the PI trapezoidal rule on the interval $[t_0,T]$. There exist a constant $C = C_1(T-t_0)$, which does not depend on $h$, such that
+\[
+\| y(t_n) - y_n \| \leq C (t_n^{\alpha-1} \tau^{1+\alpha} + \tau^2), \qquad \tau = \max_{j=0,\ldots,n-1} \tau_j.
+\]
+\end{alertblock}
+
+\begin{itemize}
+	\item<2-> The same drop in the convergence order occurs also when higher degree polynomials are employed,
+	\item<3-> When $\alpha > 1$ convergence order $2$ is obtained.
+	\item[\faBrain]<4-> It doesn't make much sense to use higher-degree PI rules if $0 < \alpha < 1$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The Fractional Rectangular Formula}
+
+Let us reduce to the case with $\alpha \in (0,1)$, $m = 1$, and a \emph{uniform mesh}.
+
+To build it we need to \emph{approximate the integral} with the \alert{rectangule rule}
+\[
+\int_{0}^{t} (t-\tau)^{\alpha-1} f(\tau,y(\tau))\,\textrm{d}\tau
+\]
+on the grid $\{t_j = t_0 + j\tau\}_{j=1}^N$ with \emph{uniform} grid spacing $\tau$, we denote
+\[
+f^{(j)} = f(t_j,y^{(j)}) \text{ for } y^{(j)} \approx y(t_j),
+\]
+and write it as
+\[
+\only<1-3>{ y^{(n)} = y_0 + \frac{\tau^\alpha}{\Gamma(\alpha)} \sum_{j=0}^{\alert<3>{n-1}} b_{n-j-1}f^{(j)}, \quad b_n = \nicefrac{\displaystyle \left[(n+1)^\alpha - n^\alpha\right]}{\displaystyle \alpha}, \quad n = 1,\ldots,N.}%
+\only<4>{
+y^{(n)} = y_0 + \frac{\tau^\alpha}{\Gamma(\alpha)}\left( b_{0}f^{(n-1)} + \alert<4>{\sum_{j=0}^{\alert<3>{n-2}} b_{n-j-1}f^{(j)}} \right) \quad b_n = \nicefrac{\displaystyle \left[(n+1)^\alpha - n^\alpha\right]}{\displaystyle \alpha}, \quad n = 1,\ldots,N.
+}
+\]
+\begin{itemize}
+	\item<2-> This is an \alert<2>{explicit method},
+	\item<3-> By construction, this is a 1-step method\ldots\onslide<4>{ but in reality \alert<4>{we need all the previous steps}!}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Some observations}
+\begin{itemize}
+	\item[\faCode]<1-> To build the solution we have to keep in memory either the \textbf{previous solutions} or the \textbf{function evaluations},
+	\item[\faCode]<2-> Using a uniform mesh the evaluation of the weights just involve the computation of real powers of integer numbers,\only<2>{ we can simplify also the fractional trapezoidal formula
+	\begin{align*}
+	y^{(n)} = & T_{m-1}(t_n) + \frac{\tau^\alpha}{\Gamma(\alpha+2)} \left( w_n f^{(0)} + \sum_{j=1}^{n} b_{n-j}f^{(j)} \right), \\
+	w_n = &\; (\alpha + 1 - n) n^\alpha + (n-1)^{\alpha + 1}, \\ b_0 = &\; 1, \; b_n = (n-1)^{\alpha+1} - 2 n^{\alpha + 1} + (n+1)^{\alpha+1}, \; n \geq 1.
+	\end{align*}
+	}
+	\item[\faCode]<3-> We have to compute:
+	\[
+	\sum_{j=0}^{n-2} b_{n-j-1}f^{(j)},
+	\]
+	this is a \alert{quadratic cost} with $N$, but there is a \textbf{convolution structure}, so we can expect that some FFT-based trick could come to the rescue.
+	\item[\faCode]<4-> The $1$-step name is related to the number of initial values to start the computation.
+\end{itemize}
+
+\begin{block}<5>{\faLightbulb\,Predictor-Corrector algorithms}
+Now that we have two schemes we can think of using them together to build a \textbf{predictor-corrector} algorithm.
+\end{block}
+
+\end{frame}
+
+\subsection{Predictor-Corrector Scheme}
+
+\begin{frame}{\Large Fractional Predictor-Corrector Scheme~\parencite{FRACPECE}}
+We are going to write it again for $ 0 < \alpha < 1$ on a uniform mesh
+
+\begin{enumerate}
+	\item<1-> In the \emph{prediction step} we use the fractional rectangular formula
+	\[
+	y^{(n+1)}_P = y^{(0)} + \frac{\tau^\alpha}{\Gamma(\alpha)} \sum_{j=0}^{n} b_{j,n+1} f(t_j,y^{(j)}), \quad b_{j,n+1} = \frac{(n+1-j)^\alpha - (n-j)^\alpha}{\alpha}
+	\]
+	\item<2-> In the \emph{correction step} we use the fractional trapezoidal formula
+	\[
+	y^{(n+1)} = y^{(0)} + \frac{\tau^\alpha}{\Gamma(\alpha)} \left( \sum_{j=0}^{n} a_{j,n+1} f(t_j,y^{(j)}) + a_{n+1,n+1}f(t_{n+1},y^{(n+1)}_P) \right)
+	\]
+	where
+	\[
+	a_{j,n+1} = \begin{cases}
+	\nicefrac{(n^{\alpha+1} - (n-\alpha)(n+1)^\alpha}{\alpha(\alpha+1)}, & j = 0,\\
+	\nicefrac{(n-j+2)^{\alpha+1} -2(n-j+1)^{\alpha+1} + (n-j)^{\alpha+1}}{\alpha(\alpha+1)}, & j = 1,2,\ldots,n, \\
+	\nicefrac{1}{\alpha(\alpha+1)}, & j = n+1.
+	\end{cases}
+	\]
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{A Fractional Predictor-Corrector Scheme}
+
+\begin{itemize}
+	\item Predictor-Corrector schemes are of interest because they represent a good \textbf{compromise} between \textbf{accuracy} and \textbf{ease of implementation}.
+	\item<2> To investigate the convergence we need to look deeper into the convergence results of the two PI integral rules~\parencite{FractionalAdamsMethodsAnalysis}.
+	\begin{alertblock}{Theorem~\parencite[Theorem 2.4]{FractionalAdamsMethodsAnalysis}}
+	\begin{enumerate}[(a)]
+	\item Let $z \in \mathcal{C}^1([0,T])$. Then\vspace{-0.5em}
+	\[
+	\left\lvert \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1}z(t)\,\textrm{d}t - \sum_{j=0}^{k} b_{j,k+1}z(t_j) \right\rvert \leq \frac{1}{\alpha} \|z'\|_\infty t_{k+1}^{\alpha} \tau.
+	\]
+	\item Let $z(t) = t^p$ for some $p \in (0,1)$. Then,\vspace{-0.5em}
+	\[
+	\left\lvert \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1}z(t)\,\textrm{d}t - \sum_{j=0}^{k} b_{j,k+1}z(t_j) \right\rvert \leq C_{\alpha,p}^{Re} t_{k+1}^{\alpha+p-1} \tau.
+	\]
+	\end{enumerate}
+	\end{alertblock}
+	
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{A Fractional Predictor-Corrector Scheme}
+And analogously for the product trapezoidal formula.
+\begin{alertblock}{Theorem~\parencite[Theorem 2.5]{FractionalAdamsMethodsAnalysis}.}
+\begin{enumerate}[(a)]
+\only<1>{\item If $z \in \mathcal{C}^2([0,T])$, then there exist a constant $C_\alpha^{Tr}$ depending only on $\alpha$ such that\vspace{-0.5em}
+\[
+\left| \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1}z(t)\,\textrm{d}t - \sum_{j=0}^{k+1} a_{j,k+1}z(t_j) \right| \leq C_\alpha^{Tr} \|z''\|_\infty t_{k+1}^\alpha \tau^2.
+\]}
+\item Let $z \in \mathcal{C}^{1}([0,T])$ and assume that $z'$ fulfills a Lipschitz condition of order $\mu \in (0,1)$. Then, there exists positive constants $B_{\alpha,\mu}^{Tr}$ and $M_{z,\mu}$ such that\vspace{-0.5em}
+\[
+\left| \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1}z(t)\,\textrm{d}t - \sum_{j=0}^{k+1} a_{j,k+1}z(t_j) \right| \leq B_{\alpha,\mu}^{Tr} M_{z,\mu} t_{k+1}^\alpha \tau^{1+\mu}.
+\] 
+\only<2>{\item[(c)] Let $z(t) = t^p$ for some $p \in (0,2)$ and $\rho = \min(2,p+1)$. Then\vspace{-0.5em}
+\[
+\left| \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1}z(t)\,\textrm{d}t - \sum_{j=0}^{k+1} a_{j,k+1}z(t_j) \right| \leq C_{\alpha,p}^{Tr} t_{k+1}^{\alpha+p-\rho} \tau^\rho.
+\]}
+\end{enumerate}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{A Fractional Predictor-Corrector Scheme}
+Observe that for the fractional rectangular case \alert{(b)} the bound contains 
+\[
+t_{k+1}^{\alpha +p -1},
+\]
+if $\alpha+p<1$ then we get that the overall integration error becomes larger if the size
+of the interval of integration becomes smaller!
+
+Similarly for the case \alert{(c)} for the fractional trapezoidal rule
+\[
+\alpha < 1, \; p < 1, \; \rho = p + 1, \quad t_{k+1}^{\alpha+p-\rho},
+\] 
+has the same explosive behavior.
+
+\begin{exampleblock}{Smaller intervals for harder integrals}
+By making $t_{k+1}$ smaller we have two effects
+\begin{enumerate}
+	\item We reduce the length of the integration interval,
+	\item We change the weight function in a way that makes the integral more difficult.
+\end{enumerate}
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}{A Fractional Predictor-Corrector Scheme}
+
+\begin{alertblock}{Lemma~\parencite[Lemma~3.1]{FractionalAdamsMethodsAnalysis}}
+Assume that the solution $y$ of the initial value problem is such that
+\[
+\left\lvert \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1} {}_{CA}D_{[0,t]}^\alpha y(t) \, \textrm{d}t - \sum_{j=0}^{k} b_{j,k+1} {}_{CA}D_{[0,t]}^\alpha y(t)  \right\rvert \leq C_1 t_{k+1}^{\gamma_1} \tau^{\delta_1},
+\]
+and
+\[
+\left\lvert \int_{0}^{t_{k+1}} (t_{k+1}-t)^{\alpha-1} {}_{CA}D_{[0,t]}^\alpha y(t) \, \textrm{d}t - \sum_{j=0}^{k+1} a_{j,k+1} {}_{CA}D_{[0,t]}^\alpha y(t)  \right\rvert \leq C_2 t_{k+1}^{\gamma_2} \tau^{\delta_2},
+\]
+with some $\gamma_1,\gamma_2 \geq 0$ and $\delta_1,\delta_2 > 0$. Then, for some suitably chosen $T > 0$, we have
+\[
+\max_{0 \leq j \leq N} |y(t_j) - y^{(j)}| = O(\tau^q), \quad q = \min\{\delta_1+\alpha,\delta_2\}, \quad N = \lceil \nicefrac{T}{\tau} \rceil.
+\]
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}{Error bounds}
+\begin{alertblock}{Theorem~\parencite[Theorem 3.2]{FractionalAdamsMethodsAnalysis}}
+Let $0 < \alpha$ and assume ${}_{CA}D_{[0,t]}^\alpha y(t) \in \mathcal{C}^2([O,T])$ for some suitable $T$. Then,\vspace{-1em}
+\[
+\max_{0 \leq j \leq N} |y(t_j) - y^{(j)}| = \begin{cases}
+O(\tau^2), & \text{ if } \alpha \geq 1,\\
+O(\tau^{1+\alpha}), & \text{ if } \alpha < 1.
+\end{cases}
+\]
+\end{alertblock}
+
+\only<1>{\textbf{Proof.} In view of the two bounds for the Fractional Rectangular and Trapezoidal forms we can apply the previous Lemma with $\gamma_1 = \gamma_2 = \alpha > 0$, $\delta_1 = 1$, $\delta_2 = 2$. Therefore we find a bound of order $O(\tau^q)$ where
+\[
+q = \min \{1+\alpha,2\} = \begin{cases}
+2, & \text{ if } \alpha \geq 1,\\
+1+\alpha, & \text{ if } \alpha < 1.
+\end{cases}
+\]}\only<2-3>{
+\begin{itemize}
+	\item Order of convergence is a non-decreasing function of $\alpha$,
+	\item Hypotheses are stated in terms of the $\alpha$th Caputo derivative of the solution,
+	\only<3>{\item<3> Can we replace them by similar assumptions on $y$ itself?}
+\end{itemize}
+}\only<3->{
+\begin{alertblock}{Theorem~ \cite[Theorem~3.3]{FractionalAdamsMethodsAnalysis}}
+Let $\alpha > 1$ and assume $y \in \mathcal{C}^{1+\lceil\alpha\rceil}([0,T])$ for some suitable $T$, then\vspace{-1em}
+\[
+\max_{0 \leq j \leq N} |y(t_j) - y^{(j)}| = O(\tau^{1+\lceil\alpha\rceil-\alpha}).
+\]
+\end{alertblock}
+}\only<4>{\textbf{Proof.} We need to use the characterization of Caputo's derivative
+\[
+{}_{CA}D_{[0,t]}^\alpha y(t) = \sum_{\ell = 0}^{m-\lceil\alpha\rceil -1}\frac{y^{(l+\lceil\alpha\rceil)}(0)}{\Gamma( \lceil\alpha\rceil - \alpha + \ell +1)} t^{\lceil\alpha\rceil-\alpha+\ell}  + g(t), \quad \begin{array}{l}
+g \in \mathcal{C}^{m-\lceil\alpha\rceil}([O,T]),\\
+g^{(m-\lceil\alpha\rceil)} \in \text{Lip}(\lceil\alpha\rceil-\alpha).
+\end{array}
+\]
+}\only<5>{\textbf{Proof.} Then for $\alpha > 1$, we can apply the Lemma with $\gamma_1 = 0$, $\gamma_2 = \alpha-1 > 0$, $\delta_1 = 1$, $\delta_2 = 1 + \lceil\alpha\rceil - \alpha$ and thus $\delta_1+\alpha = 1+\alpha > 2 > \delta_2$, $\min\{\delta_1+\alpha,\delta_2\} = \delta_2$. The overall order is then $O(\tau^{\delta_2}) = O(\tau^{1+\lceil\alpha\rceil - \alpha})$.
+}
+\end{frame}
+
+\begin{frame}[fragile]{An example}
+
+\begin{example}\vspace{-1em}
+\begin{equation*}
+\begin{cases}
+{}_{CA}D^\alpha_{[0,t]} y(t) = \frac{40320}{\Gamma(9-\alpha)} t^{8-\alpha} - 3 \frac{\Gamma(5 + \nicefrac{\alpha}{2})}{\Gamma(5-\nicefrac{\alpha}{2})} t^{4-\nicefrac{\alpha}{2}} + \frac{9}{4}\Gamma(\alpha+1) + \left( \nicefrac{3t^{\nicefrac{\alpha}{2}}}{2} - t^4 \right)^3 - y(t)^{\nicefrac{3}{2}},\\
+y(0) = 0.
+\end{cases}
+\end{equation*}\vspace{-0.5em}
+Solution: $y(t) = t^8 - 3 t^{4 + \nicefrac{\alpha}{2}} + \frac{9}{4}t^\alpha$.
+\end{example}
+\begin{columns}
+\begin{column}{0.5\columnwidth}\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{onlyenv}<1>
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+tauval = 2.^(-(1:6));
+for i=1:length(hval)
+ tau  = tauval(i);
+ t0 = 0; T = 1;
+ alpha   = 0.25;
+ [T, Y] = fde_pi1_ex(alpha, f_fun, t0, T, y0, tau);
+ err(i) = norm(Y - ye(T),'inf');
+end
+\end{minted}
+\end{onlyenv}
+\begin{onlyenv}<2->
+\begin{tabular}{llll}
+\toprule
+$\alpha$ & $\tau$ & $E$ & $q$ \\
+\midrule
+0.25 & 5.00e-01 & 1.42e+00 & \\
+& 2.50e-01 & 4.17e-01 & 1.77 \\
+& 1.25e-01 & 2.13e-01 & 0.97 \\
+& 6.25e-02 & 1.03e-01 & 1.05 \\
+& 3.12e-02 & 5.04e-02 & 1.03 \\
+& 1.56e-02 & 2.44e-02 & 1.05 \\
+\bottomrule
+\end{tabular}
+\end{onlyenv}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\begin{onlyenv}<1-2>{
+\centering
+
+\input{example1sol.tikz}}
+\end{onlyenv}%
+\begin{onlyenv}<3>
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+hval = 2.^(-(1:6));
+for i=1:length(hval)
+ h = hval(i);
+ t0 = 0; T = 1;
+ [T, Y] = fde_pi12_pc(alpha, f_fun, t0, T, y0, h, [], 1);
+ err(i) = norm(Y - ye(T),'inf');
+end
+\end{minted}
+\end{onlyenv}
+\begin{onlyenv}<4>
+\begin{tabular}{llll}
+\toprule
+$\alpha$ & $\tau$ & $E$ & $q$ \\
+\midrule
+0.25 & 5.00e-01 & 2.75e+00 & \\
+& 2.50e-01 & 1.80e+00 & 0.61 \\
+& 1.25e-01 & 8.37e-01 & 1.10 \\
+& 6.25e-02 & 2.45e-01 & 1.77 \\
+& 3.12e-02 & 6.57e-02 & 1.90 \\
+& 1.56e-02 & 2.02e-02 & 1.70 \\
+\bottomrule
+\end{tabular}
+\end{onlyenv}
+\begin{onlyenv}<5>
+	\begin{tabular}{llll}
+		\toprule
+		$\alpha$ & $\tau$ & $E$ & $q$ \\
+		\midrule
+     & 1.95e-03 & 9.33e-04 & 1.42 \\
+& 9.77e-04 & 3.58e-04 & 1.38 \\
+& 4.88e-04 & 1.40e-04 & 1.35 \\
+& 2.44e-04 & 5.56e-05 & 1.33 \\
+& 1.22e-04 & 2.23e-05 & 1.32 \\
+& 6.10e-05 & 9.00e-06 & 1.31 \\
+		\bottomrule
+	\end{tabular}
+\end{onlyenv}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{More than one correction step}
+One can think of improving convergence by performing \textbf{more than one correction step} in the algorithm~\parencite{PredictorCorrector}.
+
+Let us call $\mu \in \mathbb{N}$ the number of correction steps:
+\[
+\begin{cases}
+y^{(n+1)}_{[0]} = y^{(0)} + \frac{\tau^\alpha}{\Gamma(\alpha)} \sum_{j=0}^{n} b_{j,n+1} f(t_j,y^{(j)}), & \text{Prediction step},\\
+y^{(n+1)}_{[\ell]} = y^{(0)} + \frac{\tau^\alpha}{\Gamma(\alpha)} \left( \sum_{j=0}^{n} a_{j,n+1} f(t_j,y^{(j)}) + a_{n+1,n+1}f(t_{n+1},y^{(n+1)}_{[\ell-1]}) \right), & \text{Correction steps }\\
+& \ell=1,\ldots,\mu.\\
+y^{(n+1)} \equiv y^{(n+1)}_{[\mu]}. 
+\end{cases}
+\]
+\begin{itemize}
+	\item[\faBrain]<2-> Each iteration is expected to increase the order of convergence of a fraction $\alpha$ from order $1$ ($\mu = 0$) representing the fractional rectangular rule,
+	\item[\faBrain]<3-> The standard predictor corrector method is obtained for $\mu = 1$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Convergence behavior}
+The convergence behavior can be described by using repeatedly the result from \parencite[Lemma 3.1]{FractionalAdamsMethodsAnalysis} that we have used to obtain the other convergence bounds.
+
+\begin{alertblock}{Corollary}
+\[
+\max_{0 \leq n \leq N} |y(t_n) - y^{(n)}| = \begin{cases}
+O(\tau^{\min(1+\mu\alpha,2) }), & \text{ if } {}_{CA} D_{[t_0,t]}^\alpha y(t) \in \mathcal{C}^2([0,T]),\\
+O(\tau^{\min(1+\mu\alpha,2-\alpha)}), & \text{ if } y(t) \in \mathcal{C}^2([0,T]),\\
+O(\tau^{1+\alpha}), & \text{ if } f(t,y) \in \mathcal{C}^2([O,T]\times\mathbb{D}).
+\end{cases}
+\]
+\end{alertblock}
+\begin{itemize}
+	\item<2-> The maximum order of convergence for ${}_{CA} D_{[t_0,t]}^\alpha y(t) \in \mathcal{C}^2([0,T])$ is obtained for $\mu = \lceil \nicefrac{1}{\alpha} \rceil$,
+	\item<3-> The maximum order of convergence for $y(t) \in \mathcal{C}^2([0,T])$ is obtained for $\mu = \lceil \nicefrac{1-\alpha}{\alpha} \rceil$,
+	\item<4-> In the third case with a single corrector step, and no improvement is possible.
+	\item[\faLightbulb]<5> In general we could fix a maximum number of steps $\mu$ and halt the procedure when the error is under a certain tolerance.
+\end{itemize}
+\end{frame}
+
+\subsection{Absolute stability}
+
+\begin{frame}{Absolute stability}
+
+Let us focus on the \textbf{test problem}
+\[
+{}_{CA} D_{[t_0,t]}^\alpha y(t) = \lambda y(t), \quad y(0) = y_0, \quad \lambda \in \mathbb{C}, \quad 0 < \alpha < 1. 
+\]
+In the last lecture we have seen that the solution of this problem can be expressed as
+\[
+y(t) = E_{\alpha}(\lambda (t - t_0)^\alpha) y_0.
+\]
+
+\begin{columns}[t]
+\begin{column}{0.63\columnwidth}
+\begin{block}<2->{Asymptotic behavior}
+The solution $y(t)$ asymptotically vanishes as $t \rightarrow +\infty$ for 
+\[
+\lambda \in S^* = \{ z \in \mathbb{C}\,:\, |\arg(z) - \pi| < (1 - \nicefrac{\alpha}{2}) \pi. \}
+\]
+\end{block}
+\only<3->{
+The application of PI rule leads to a non-homogeneous difference equation\vspace{-1.5em}
+\[
+y^{(n)} = g^{(n)} + \sum_{j=k}^{n} c_{n-j} y^{(j)}, \quad n \geq k,
+\]
+where $c_n$, $g^{(n)}$ depends on $z = \tau^\alpha \lambda$.
+}\end{column}
+\begin{column}{0.37\columnwidth}
+\centering	
+	
+\only<2>{\includegraphics[width=0.75\columnwidth]{sset.eps}}
+\only<3>{\includegraphics[width=0.75\columnwidth]{argml.eps}}
+\only<4>{\includegraphics[width=0.75\columnwidth]{absml.eps}}
+\end{column}
+\end{columns}
+
+
+\end{frame}
+
+\begin{frame}{Absolute stability}
+\begin{exampleblock}{Informally}
+The stability region of the various PI formulas can be described as the set of all $z = \tau^\alpha \lambda$ for which the numerical solution $\{y^{(n)}\}_n$ behaves as the true solution and tends to $0$ as $n \rightarrow + \infty$.
+\end{exampleblock}
+
+\only<2->{As for the other theoretical result we are going to leverage information on the associated Volterra integral equation~\parencite{LubichConvergence}.
+\begin{itemize}
+	\item First we rewrite our non-homogeneous difference equation (in which we simplify the notation assuming to work with scalars) as
+	\[
+	\begin{cases}
+	y_n =  f_n + \tau^\alpha \sum_{j=0}^{n} \omega_{n-j} g(y_j), & n \geq 0 \\
+	f_n =  f(t_n) + \tau^\alpha \sum_{j=-m}^{-1} w_{n,j} g(y_j), & t_n = t_0 + n \tau, \quad t_0 = m h.
+	\end{cases}
+	\]
+	\item Then we assume that $h^\alpha w_{n,j} g(y_j) = O( (n\tau)^{\alpha-1} \tau g(y_j) )$, i.e., $w_{n,j} = O(n^{\alpha-1})$ as $n \rightarrow + \infty$, $j=-M,\ldots,-1$.
+\end{itemize}
+
+}
+
+\end{frame}
+
+\begin{frame}{Absolute stability}
+\begin{block}{A connection to the classical theory}
+In the classical case $\alpha = 1$, if we can express the term\vspace{-0.7em}
+\[
+\sum_{n=0}^{+\infty} \omega_n \zeta^n = \frac{\sigma(\zeta^{-1})}{\rho(\zeta^{-1})}
+\]
+as a rational function, then we have found a standard Linear Multistep Method.
+\end{block}
+
+\begin{block}<2>{$A$-stable method}
+A convolution quadrature $\{\omega\}_n$ for the Abel equation\vspace{-0.7em}
+\[
+y(t) = f(t) + \frac{1}{\Gamma(\alpha)} \int_{0}^{t} (t-s)^{\alpha-1} g[y(s)]\,\textrm{d}s, \quad t \geq 0,\;0 < \alpha \leq 1,
+\]
+is called $A$-stable if the solution $\{y_n\}_n$ given by the convolution quadrature satisfies\vspace{-0.7em}
+\[
+y_n \rightarrow 0 \text{ as } n \rightarrow + \infty \text{ whenever } \{f_n\}_n \text{ has a finite limit } \forall \tau  > 0, \; \forall\,\lambda \in S^*.
+\]
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Stability region}
+In general we cannot expect to have stability for every $\lambda \in S^*$, consider, e.g.
+\[
+{}_{CA} D_{[t_0,t]}^\alpha y(t) = - 5 y(t), \quad y(0) = 1, \quad T = 1. 
+\]  
+integrated with the explicit fractional rectangular rule
+\begin{columns}
+\begin{column}{0.33\columnwidth}
+\centering
+
+\input{expicit1e-1.tikz}
+
+$h = 10^{-1}$\vfill
+\end{column}
+\begin{column}{0.33\columnwidth}
+\centering
+
+\input{expicit1e-2.tikz}
+
+$h = 10^{-2}$\vfill
+\end{column}
+\begin{column}{0.33\columnwidth}
+\centering
+
+\input{expicit1e-3.tikz}
+
+$h = 10^{-3}$\vfill
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Stability region}
+\begin{block}{Stability region}
+The \emph{stability region} $S$ of a convolution quadrature $\{\omega_m\}$ is the set of all complex $z = \tau^\alpha \lambda$ for which the numerical solution $\{y_n\}_n$ satisfies
+\[
+y_n \rightarrow 0 \text{ as } n \rightarrow + \infty \text{ whenever }\{f_n\}_n\text{ has a finite limit}.
+\]
+The method is called \emph{strongly stable}, if for any $\lambda \in S^*$ there exists $\tau_0(\lambda) > 0$ such that $\tau^\alpha \lambda \in S$ for all $0 < \tau < \tau_0(\lambda)$. The method is called $A(\theta)$-stable if $S$ contains the sector $|\arg(z)-\pi| < \theta$. 
+\end{block}
+
+\onslide<2>{
+To obtain the \alert{characterization} we need, we consider weights\vspace{-0.5em}
+\begin{equation}\label{eq:weightconditions}
+\omega_n = (-1)^n \binom{-\alpha}{n} + v_n, \quad n \geq 0, \{v_n\}_n \in \ell^1, \tag{H\textsubscript{1}}
+\end{equation}
+to which corresponds\vspace{-0.5em}
+\[
+\omega(\zeta) = (1-\zeta)^{-\alpha} + v(\zeta) \text{ continuous in } \{ \zeta \in \mathbb{C} \,:\,|\zeta| \leq 1, \; \zeta \neq 1 \}, \; \lim_{\zeta \rightarrow 1^{-}} w(\zeta) = +\infty.
+\]
+}
+
+\end{frame}
+
+\begin{frame}{Stability region}
+\begin{onlyenv}<1-4,6-12,14,15->
+\begin{alertblock}{Theorem~\parencite[Theorem 2.1]{LubichConvergence}}
+	The stability region of a convolution quadrature under the condition~\eqref{eq:weightconditions} is
+	\[
+	S = \mathbb{C} \setminus \left\lbrace \nicefrac{1}{\omega(\zeta)} \,:\; |\zeta| \leq 1 \right\rbrace.
+	\]
+\end{alertblock}
+\end{onlyenv}
+\begin{onlyenv}<5>
+\begin{exampleblock}{Wiener inversion Theorem}
+$f(\zeta) = \sum_{n=0}^{+\infty} a_n \zeta^n$ with $\|f\|_1 < +\infty$, $\zeta = e^{in\theta}$, then $\nicefrac{1}{f(\theta)} \in \ell^1$ iff $f(\theta) \neq 0$ for all $\theta$.
+\end{exampleblock}
+\end{onlyenv}
+\begin{onlyenv}<13>
+\begin{exampleblock}{Lemma~\parencite[Lemma~2.1]{LubichConvergence}}
+Assume that the coefficient sequence of $a(\zeta)$ is in $\ell^1$. Let $|\zeta_0| \leq 1$. Then the coefficient sequence of 
+\[
+\frac{a(\zeta) - a(\zeta_0)}{\zeta - \zeta_0} \text{ converges to zero.}
+\]
+\end{exampleblock}
+\end{onlyenv}
+
+\only<2-15>{\textbf{Proof.} }\only<2-6>{Let $z = \tau^\alpha \lambda$. Since $0$ is neither contained in $S^*$ nor in $S$, we can assume $z \neq 0$. We can rewrite our difference equation as
+\[
+y(\zeta) = f(\zeta) + z \omega(\zeta)y(\zeta) \;\Leftrightarrow\;  y(\zeta) = \frac{f(\zeta)}{1 - z \omega(\zeta)} = \frac{(1-\zeta)^\alpha f(\zeta)}{(1-\zeta)^\alpha [1-z \omega(\zeta)]}.
+\]
+We first prove that $S \subseteq S^*$. 
+\begin{itemize}
+	\item<3-> The coefficient sequence $(1-\zeta)^\alpha [1-z\omega(\zeta)]$ is in $\ell^1$, \only<3>{
+	indeed $v(\zeta)$ and $(1-\zeta)^\alpha$ are in $\ell^1$ by using~\eqref{eq:weightconditions} (for the first one with $-\alpha$ instead of $\alpha$), hence also $1+(1-\zeta)^\alpha v(\zeta) = (1-\zeta)^\alpha \omega(\zeta)$, since for any two sequences in $\ell^1$ we have $\sum_n|\sum_i a_{n-i}b_i| \leq \sum |a_i||b_i|$.
+	}
+	\item<4-> If $z \in S$ then $1 -z \omega(\zeta) \neq 0$ for $|\zeta| \leq 1$ with $\zeta \neq 1$.
+	\item[\eqref{eq:weightconditions}]<5-> $(1-\zeta)^\alpha [1-z\omega(\zeta)] = (1-\zeta)^\alpha [1-z v(\zeta)]-z$ and thus
+	\[
+	(1-\zeta)^\alpha [1-z \omega(\zeta)]\neq 0 \text{ for } |\zeta| \leq 1 \only<6>{\,\Rightarrow\, \nicefrac{1}{(1-\zeta)^\alpha [1-z \omega(\zeta)]} \in \ell^1.}
+	\]
+\end{itemize}}\only<7-10>{
+We first prove that $S \subseteq S^*$.  Let $\tilde{f}_n = f_n - f_{\infty} \overset{n\rightarrow+\infty}{0}$ so that we can write
+\[
+f(\zeta) = \frac{f_{\infty}}{1-\zeta} + \tilde{f}(\zeta)\; \Rightarrow \; (1-\zeta)^\alpha f(\zeta) = (1-\zeta)^{\alpha-1} f_{\infty} + (1-\zeta)^\alpha \tilde{f}(\zeta) \text{ has coefficients }\rightarrow 0.
+\]
+\only<8->{By \eqref{eq:weightconditions} the coefficient sequence of $(1-\zeta)^{\alpha-1} \rightarrow 0$.}\only<9->{ The coefficient sequence of $(1-\zeta)^\alpha \tilde{f}(\zeta) \rightarrow 0$ since $(1-\zeta)^\alpha \in \ell_1$ and $\ell_1 * c_0 \subset c_0$ for $*$ the convolution operator, and $c_0$ the space of zero sequences}\only<10->{ $\Rightarrow\,$ the sequence $\{y_n\}_n$ of $y(\zeta)$ is in $c_0$. Hence we have proved that if $z  \in S$ then $z \in S^*$.}
+}\only<11-14>{To conclude we need to prove that $S^*$ is exhausted by $S$, we assume that
+\[
+1- z \omega(\zeta_0) = 0 \text{ for some } |\zeta_0| \leq 1 \text{ and by \eqref{eq:weightconditions} } \zeta_0 \neq 1,
+\]
+and show that then $z \notin S^*$.\only<12->{We select 
+\[
+y(\zeta) = \frac{(1-\zeta)^\alpha}{\zeta-\zeta_0} = \only<12>{\frac{(1-\zeta)^\alpha - (1-\zeta_0)^\alpha}{\zeta - \zeta_0}}\only<13>{\underbrace{\frac{(1-\zeta)^\alpha - (1-\zeta_0)^\alpha}{\zeta - \zeta_0}}_{=0}} + (1-\zeta_0)^\alpha \frac{1}{\zeta - \zeta_0}.
+\]
+}\only<14->{On the other hand, $\nicefrac{1}{\zeta-\zeta_0} = - \sum_{n=0}^{+\infty} \zeta_0^{-n - 1} \zeta^{n}$ diverges! Hence also the sequence associated to $y(\zeta)$ diverges.
+
+}
+}\only<15>{
+We can now collect the various parts together
+\[
+\begin{split}
+f(\zeta) = [1 - z \omega(\zeta)] y(\zeta) = & (1-\zeta)^\alpha [1 - z \omega(\zeta)](1-\zeta)^{-\alpha} y(\zeta) \\
+= & \frac{ (1-\zeta)^\alpha (1-z\omega(\zeta)) - (1-\zeta_0)(1-z\omega(\zeta_0)) }{\zeta - \zeta_0}
+\end{split}
+\]
+using again the lemma we get that $\{f_n\}_n$ goes to zero, but, $\{y_n\}_n$ does not, hence $z \notin S^*$. \qedhere
+}
+\begin{onlyenv}<16>
+\begin{alertblock}{Corollary}
+If a convolution quadrature satisfying \eqref{eq:weightconditions} is applied to the Volterra equation and if $\tau^\alpha \lambda \in S$, then $\{y_n\}_n$ is bounded whenever $\{f_n\}_n$ is bounded. Conversely, if $\{y_n\}_n$ is bounded whenever $\{f_n\}_n$ is bounded then $\tau^\alpha \lambda \in \overline{S}$.
+\end{alertblock}
+\end{onlyenv}
+\begin{onlyenv}<17->
+	\begin{alertblock}{Corollary}
+	The stability region of an explicit convolution quadrature ($\omega_0 = 0$) satisfying \eqref{eq:weightconditions} is bounded.
+	\end{alertblock}
+\only<17>{\textbf{Proof.} By the open mapping theorem $\omega(\zeta)$ maps neighborhood of $0$ into  neighborhood of $0$. Hence $S^*$ is a neighborhood of $\infty$, and the result follows from the Theorem.
+}
+\end{onlyenv}
+\begin{onlyenv}<18->
+\begin{alertblock}{Corollary}
+Every convolution quadrature satisfying \eqref{eq:weightconditions} is strongly stable.
+\end{alertblock}
+\begin{itemize}
+	\item[\faCogs] Using these results we can recover the stability regions for the different methods,
+	\item[\faExclamationTriangle] Often PI rules do not possess analytical
+	representation of $\omega(\zeta)$ we can just use numerical approximations.
+\end{itemize}
+\end{onlyenv}
+\end{frame}
+
+\begin{frame}{Stability region: predictor corrector method}
+For the Predictor-Corrector method we have
+\only<1>{\[\begin{cases} 
+y^{(n+1)}_P = y^{(0)} + \frac{\tau^\alpha}{\Gamma(\alpha)} \sum_{j=0}^{n} b_{j,n+1} f(t_j,y^{(j)}), \\
+y^{(n+1)} = y^{(0)} + \frac{\tau^\alpha}{\Gamma(\alpha)} \left( \sum_{j=0}^{n} a_{j,n+1} f(t_j,y^{(j)}) + a_{n+1,n+1}f(t_{n+1},y^{(n+1)}_P) \right)
+\end{cases}\]}%
+\only<2>{
+\[\begin{cases} 
+y^{(n+1)}_P = y^{(0)} + \tau^\alpha \sum_{j=0}^{n} b_{n-j-1} f(t_j,y^{(j)}), \\
+y^{(n+1)} = y^{(0)} + \tau^\alpha a_{n,0} f^{(0)} + \tau^\alpha \sum_{j=1}^{n}a_{n-j}f(t_n,y^{(n+1)}_P)
+\end{cases}\]
+}%
+\only<3-5>{
+\[
+y^{(n)} = g^{(n)} + \sum_{j=k}^{n} c_{n-j} y^{(j)}, \quad n \geq k,
+\]
+}
+where
+\only<1>{
+\[
+\begin{split}
+b_{j,n+1} = & \frac{(n+1-j)^\alpha - (n-j)^\alpha}{\alpha} \\
+a_{j,n+1} = & \begin{cases}
+\nicefrac{(n^{\alpha+1} - (n-\alpha)(n+1)^\alpha}{\alpha(\alpha+1)}, & j = 0,\\
+\nicefrac{(n-j+2)^{\alpha+1} -2(n-j+1)^{\alpha+1} + (n-j)^{\alpha+1}}{\alpha(\alpha+1)}, & j = 1,2,\ldots,n, \\
+\nicefrac{1}{\alpha(\alpha+1)}, & j = n+1.
+\end{cases}
+\end{split}
+\]}%
+\only<2>{
+\[
+\begin{split}
+b_{n} = & \frac{(n+1)^\alpha - n^\alpha}{\Gamma(\alpha+1)} \\
+a_{n,0} = & \nicefrac{(n-1)^{\alpha+1} - n^\alpha(n-\alpha-1)}{\Gamma(\alpha+2)},\\
+a_n = & \begin{cases}
+\nicefrac{1}{\Gamma(\alpha+2)}, & n = 0,\\
+\nicefrac{(n-1)^{\alpha+1} - 2 n^{\alpha + 1} + (n+1)^{\alpha+1}}{\Gamma(\alpha+2)}, & n \geq 1.
+\end{cases}
+\end{split}
+\]
+}%
+\only<3-5>{
+\begin{equation*}
+\begin{cases}
+g^{(n)} = (1 + z a_{n,0} + z a_0 + z^2 a_0 b_{n-1})y^{(0)},\\
+c_0 = 0, \; c_n = z a_n + z^2 a_0 b_{n-1}, & n \geq 1.
+\end{cases}
+\end{equation*}
+}
+\only<4->{
+\faCog\,To apply the stability region Theorem we have then to investigate the quantity $1-c(\zeta)$ for $|\zeta| \leq 1$, and $c(\zeta) = \sum_{n=0}^{+\infty} c_n \zeta^n$.
+}
+\begin{onlyenv}<5>
+\begin{alertblock}{Proposition}
+The stability region of the Predictor-Corrector method is
+\[
+S = \{ z \in \mathbb{C}\,|\; 1- z(\alpha(\zeta) - a_0) - z^2 a_0 \zeta b(\zeta) \neq 0\;:\;|\zeta| \leq 1 \}.
+\]
+\end{alertblock}
+\end{onlyenv}
+\end{frame}
+
+\begin{frame}{Stability region: predictor corrector method}
+\begin{alertblock}{Proposition}
+	The stability region of the Predictor-Corrector method is
+	\[
+	S = \{ z \in \mathbb{C}\,|\; 1- z(\alpha(\zeta) - a_0) - z^2 a_0 \zeta b(\zeta) \neq 0\;:\;|\zeta| \leq 1 \}.
+	\]
+\end{alertblock}
+
+\textbf{Proof.} To apply the Theorem we need to prove \eqref{eq:weightconditions}, we use the binomial series to write
+\[
+\begin{split}
+(n-1)^p = n^p - pn^{p-1} + \frac{p(p-1)}{2} n^{p-2} + \frac{p(p-1)(p-2)}{6}n^{p-3} + O(n^{p-4}),\\
+\end{split}
+\]
+and similarly for $(n+1)^p$, from which we obtain
+\[
+b_n = \frac{1}{\Gamma(\alpha)} n^{\alpha-1} + O(n^{\alpha-2}), \; a_{n,0} = \frac{1}{2\Gamma(\alpha)} n^{\alpha-1} + O(n^{\alpha-2}), \; \alpha_n = \frac{1}{\Gamma(\alpha)} n^{\alpha-1} + O(n^{\alpha-3}),
+\]
+and the expression we need for $c(\zeta)$ as
+\[
+c(\zeta) = z(\alpha(\zeta) - \alpha_0) + z^2 \alpha_0 \zeta b(\zeta). \qquad\qquad\qedsymbol
+\]
+
+\only<2>{\faCog\; The expression can be evaluated only numerically.}
+\end{frame}
+
+\begin{frame}{\faBinoculars\;  A research idea?}
+
+We have written a predictor-method in an explicit form, we can write and analyze in a similar way also a predictor-corrector made of two \emph{implicit methods}.
+\begin{itemize}
+	\item We have now to solve a (possibly) non-linear problem at each step, thus things don't seem to good\ldots
+	\item But we can expect better stability and convergence properties.
+	\item<2->[\faLightbulb] What if we decide to \alert{solve the nonlinear problem in reduced precision}? 
+\end{itemize}
+
+\only<3->{
+Multiprecision algorithms on specialized hardware can give both an acceleration and maintain the overall accuracy. This idea has already been partially explored for the ODE case, but not yet for FODEs:
+\begin{center}\small
+\faFile* \,\fullcite{burnett2021performance} 	
+\end{center}
+\begin{exampleblock}<4>{Further analyses}
+One can investigate also stability regions, effects of multiple correction steps, tolerances and step-size selections\ldots
+\end{exampleblock}
+}
+
+
+
+\end{frame}
+
+\section{Fractional Linear Multistep Method}
+
+\begin{frame}{Fractional Linear Multistep Method}
+To obtain methods that can be analyzed we can move to \emph{Linear Multistep Methods}.
+
+\begin{itemize}
+	\item<2-> For an ODE a FLMM with $k$ step is a method of the form:
+	\begin{equation}
+	\label{four} \sum_{j=0}^{k} a_{j} y_{n+j} = \tau
+	\sum_{j=0}^{k} b_{j} f_{n+j}, \quad n=0, \dots,
+	s.
+	\end{equation} 
+	for $t_j=t_0+j\tau$, for $j=0,\ldots,N$, $\tau=(T-t_0)/N$,
+	\item<3-> They are associated with the polynomials $\rho(z) = \sum_{j=0}^{k} a_j z^j$, $\sigma(z) = \sum_{j=0}^k b_j z^j$,
+	\item<4-> The fractional version has been introduced in the pioneering work \parencite{LubichFLMM}
+	\begin{alertblock}{Theorem \parencite[Theorem~2.6]{LubichFLMM}}
+	Let $(\rho,\sigma)$ denote an implicit linear multistep method which is stable and consistent of order $p$. Assume that the zeros
+	of $\sigma(\zeta)$ have absolute values less than $1$. Let $w(\zeta) = \nicefrac{\sigma(\zeta^{-1})}{\rho(\zeta^{-1})}$ denote
+	the generating power series of the corresponding convolution quadrature $\omega$. We define $\omega^\alpha = \{\omega_n^{(\alpha)}\}_{n=0}^{+\infty}$
+	by $\omega^\alpha(\zeta) = \omega(\zeta)^\alpha$, then the convolution quadrature $\omega^\alpha$ is convergent of order $p$.
+	\end{alertblock}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Fractional Linear Multistep Method}
+An example is represented by \textbf{B}ackward \textbf{D}ifferentiation \textbf{F}ormula\textbf{s},
+for which we have
+
+\begin{columns}
+\begin{column}{0.7\columnwidth}
+\centering
+\begin{tabular}{cl}
+	\toprule
+	$p$ & $\omega^\alpha(\zeta)$ \\
+	\midrule
+	\alert<2-4>{1} & \alert<2-4>{$(1-\zeta)^{-\alpha}$} \\
+	\alert<5-7>{2} & \alert<5-7>{$(\nicefrac{3}{2} - 2\zeta + \nicefrac{1}{2}\zeta^2)^{-\alpha}$}\\
+	3 & $(\nicefrac{11}{6} -3\zeta + \nicefrac{3}{2}\zeta^2 - \nicefrac{1}{3}\zeta^3)^{-\alpha} $\\
+	4 & $(\nicefrac{25}{12} -4\zeta +4\zeta^2 -\nicefrac{4}{3}\zeta^3 + \nicefrac{1}{4}\zeta^4 )^{-\alpha} $\\
+	5 & $(\nicefrac{137}{60} - 5\zeta + 5\zeta^2 -\nicefrac{10}{3}\zeta^3 + \nicefrac{5}{4}\zeta^4 -\nicefrac{1}{5}\zeta^5)^{-\alpha}$\\
+	6 & $(\nicefrac{147}{60} -6\zeta +\nicefrac{15}{2}\zeta^2 - \nicefrac{20}{3} \zeta^3 + \nicefrac{15}{4} \zeta^4 -\nicefrac{6}{5}\zeta^5 + \nicefrac{1}{6}\zeta^6 )^{-\alpha}$\\
+	\bottomrule
+\end{tabular}
+\end{column}
+\begin{column}{0.3\columnwidth}
+\centering
+
+\only<2>{\includegraphics[width=\columnwidth]{stabbdf1e1.eps}\\$\alpha = 1$}%
+\only<3>{\includegraphics[width=\columnwidth]{stabbdf1e05.eps}\\$\alpha = 0.5$}%
+\only<4>{\includegraphics[width=\columnwidth]{stabbdf1e03.eps}\\$\alpha = 0.3$}%
+\only<5>{\includegraphics[width=\columnwidth]{stabbdf2e1.eps}\\$\alpha = 1$}%
+\only<6>{\includegraphics[width=\columnwidth]{stabbdf2e05.eps}\\$\alpha = 0.5$}%
+\only<7>{\includegraphics[width=\columnwidth]{stabbdf2e03.eps}\\$\alpha = 0.3$}%
+\begin{onlyenv}<8>
+\begin{block}{\faQuestionCircle\, How do we obtain the coefficients?}
+How can we obtain the coefficient describing the method?
+\end{block}
+\end{onlyenv}
+\end{column}
+\end{columns}
+\vfill
+
+\only<2-4>{For $p = 1$ we can consider the stability region $S = \mathbb{C} \setminus \left\lbrace \nicefrac{1}{\omega(\zeta)} \,:\; |\zeta| \leq 1 \right\rbrace$ and plot the part of the $\mathbb{C}$-plane we have to remove.}
+\only<5-7>{For $p = 1$ we can consider the stability region $S = \mathbb{C} \setminus \left\lbrace \nicefrac{1}{\omega(\zeta)} \,:\; |\zeta| \leq 1 \right\rbrace$ and plot the part of the $\mathbb{C}$-plane we have to remove.}
+
+\end{frame}
+
+\begin{frame}{Computing the FLMM coefficients}
+
+We have now the converse of the previous problem, we have a closed expression for $\omega(\zeta)$, and now we need the coefficients to write
+\[
+I_\tau^\alpha g(t_n) = \tau^\alpha \sum_{j=0}^{n} \omega_{n-j} g(t_j) + \tau^\beta \sum_{j=0}^{s} w_{n,j} g(t_j),
+\]
+\begin{itemize}
+	\item $\{\omega_{j}\}_{j=0}^n$ convolution coefficients from $\omega(\zeta)$,
+	\item $\{w_{n,j}\}_{j=0}^{k}$ starting quadrature weights. 
+\end{itemize}
+
+\begin{itemize}
+	\item<2-> For the convolution coefficients we can use:
+	\begin{itemize}
+		\item<3->[\faDoorClosed] Fast Fourier Transform (FFT) techniques for formal power series,
+		\item<4->[\faDoorClosed] A recursion technique for complex binomial series. 
+	\end{itemize}
+	\item<5-> Solving a small $k \times k$ Vandermonde system. 
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The Newton Method for Power Series~\parencite{HenriciFFTMethods}}
+
+Let us suppose that $\alpha = \nicefrac{1}{2}$ and that we have a power series of the form
+\[
+\omega(\zeta) = \sum_{j=0}^{+\infty} \omega_j \zeta^j,
+\]
+for which we want to compute for a generic $p$th degree BDF
+\only<1>{
+\[
+\omega(\zeta)^{-2} = q(\zeta) \text{ with } q(\zeta) = \sum_{k=1}^{p} \frac{1}{k}(1-\zeta)^k,
+\]
+}\only<2>{
+\[
+F(\omega(\zeta)) = 0 \text{ with } F(w) = w^{-2} - q(\zeta).
+\]
+}
+
+\only<3>{
+To which we can apply the Newton's method for power series
+\[
+\begin{cases}
+\omega^{(0)}(\zeta) = \omega_0, \\
+\omega^{(m+1)}(\zeta) = \left[ \omega^{(m)}(\zeta) - F'(\omega^{(m)}(\zeta))^{-1} F(\omega^{(m)}(\zeta)) \right]_{2^{m+1}},
+\end{cases}
+\]
+for $[ \cdot ]_k$ the truncation operator for a power series, i.e., $\left[ \sum_{j=0}^{+\infty} a_j \zeta^j \right]_k = \sum_{j=0}^{k} a_j \zeta^j$, and $\omega_0$ the solution of $[F(\omega_0)]_1 = 0$.	
+}
+\only<4>{
+To which we can apply the Newton's method for power series
+\[
+\begin{cases}
+\omega^{(0)}(\zeta) = \omega_0 = q(0)^{-\nicefrac{1}{2}}, \\
+\omega^{(m+1)}(\zeta) = \left[ \nicefrac{3}{2} \omega^{(m)}(\zeta) - \nicefrac{1}{2}\left(\omega^{(m)}(\zeta)\right)^3 q(\zeta) \right]_{2^{m+1}},
+\end{cases}
+\]
+for $[ \cdot ]_k$ the truncation operator for a power series, i.e., $\left[ \sum_{j=0}^{+\infty} a_j \zeta^j \right]_k = \sum_{j=0}^{k} a_j \zeta^j$.
+
+After $m$ step we have that
+\[
+\omega^{(m)}(\zeta) = [\omega(\zeta)]_{2^m} = \sum_{j=0}^{2^m-1} \omega_j \zeta^j \quad \forall m \geq 0\, \text{ and cost } O(2^m \log(2^m)).
+\]
+}
+\end{frame}
+
+\begin{frame}{Recurrence relation}
+
+\begin{alertblock}{Theorem~\cite[Theorem 1.6c, p. 42]{HenriciBook}}
+Let $\phi(\zeta) = 1 + \sum_{n=1}^{+\infty} a_n \zeta^n$ be a formal power series. Then for any $\alpha \in \mathcal{C}$, we have
+\[
+(\phi(\zeta))^\alpha = \sum_{n=0}^{+\infty} v_n^{(\alpha)} \zeta^n,
+\]
+where coefficients $v_n^{(\alpha)}$ can be evaluated recursively as
+\[
+ v_0^{(\alpha)} = 1, \qquad v_n^{(\alpha)} = \sum_{j=1}^{n} \left( \frac{(\alpha +1)j}{n} - 1 \right) a_j v_{n-j}^{(\alpha)}
+\]
+\end{alertblock}
+
+\begin{itemize}
+	\item[\faMoneyBillWave] This approach costs an $O(N^2)$ in general, but can be simplified, e.g., when $a_1 = \pm 1$, and $a_i > 0$ for $i > 1$ it involves only $2N$ multiplications and $N$ additions.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Computing the starting weights}
+The starting weights $w_{n,j}$ in 
+\[
+I_\tau^\alpha g(t_n) = \tau^\alpha \sum_{j=0}^{n} \omega_{n-j} g(t_j) + \tau^\beta \sum_{j=0}^{s} w_{n,j} g(t_j),
+\]
+are introduced to deal with the singular behavior of the solution close to the left endpoint of the integration interval.
+
+\begin{block}<2->{Starting weight selection}
+We fix them by imposing that $I_\tau^\alpha t^\nu$ is exact for $\nu \in \mathcal{A} = \mathcal{A}_{p-1} \cup \{p-1\}$ with $p$ the order of convergence of the FLMM, and  $\mathcal{A}_{p-1} = \{ \nu \in \mathbb{R} \,|\; \nu = i + j \alpha, \quad i,j \in \mathbb{N}, \nu < {p-1}\}$.
+\end{block}
+
+\onslide<3>{
+\[
+\tau^\alpha \sum_{j=0}^{s} w_{n,j} (jh)^\nu = \frac{1}{\Gamma(\alpha)} \int_{0}^{n\tau} (n\tau - \xi)^{\alpha-1} \chi^\nu\,\textrm{d}\chi - \tau^\alpha \sum_{j=0}^{n} \omega_{n-j} (jh)^\nu, \quad \nu \in \mathcal{A}. 
+\]	
+}
+
+\end{frame}
+
+\begin{frame}{Solving the Vandermonde system}
+The resulting linear system is of ``real'' Vandermonde type, i.e.,
+\[
+(A)_{j,\nu_i = 1}^s = (jh)^{\nu_i}, \qquad \nu_{i} \in A, \quad s = |\mathcal{A}|.
+\]
+\begin{itemize}
+	\item The condition number depends on $\alpha$!
+	\item<2-> If $\alpha = \nicefrac{1}{M}$ for some integer $M$ then we can rewrite the system in the ``integer'' Vandermonde form, thus \emph{mildly} ill-conditioned,
+	\item<3-> If $\alpha = \nicefrac{1}{M} - \epsilon$ and $p \geq 2$, then $\mathcal{A}$ will contain $1$ and $M\alpha = 1 - M\epsilon$, hence the matrix will have two almost identical columns, thus a \emph{bad} ill-conditioning.
+	\item<4-> The right-hand side 
+	\[
+	\frac{1}{\Gamma(\alpha)} \int_{0}^{n\tau} (n\tau - \xi)^{\alpha-1} \chi^\nu\,\textrm{d}\chi - \tau^\alpha \sum_{j=0}^{n} \omega_{n-j} (jh)^\nu
+	\]
+	can suffer from cancellation of digits!
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{\faCompass\,Where are we?}
+\definecolor{success}{HTML}{4a934a}
+\definecolor{todo}{HTML}{0099cc}
+
+We know a general way to obtain FLMM methods of the form
+\[
+y^{(n)} = T_{m-1}(t_n) + \tau^\beta \sum_{j=0}^{s} \alert<3>{w_{n,j}} f(t_j,y^{(j)}) + \tau^\alpha \sum_{j=0}^{n} \alert<2>{\omega_{n-j}} f(t_j,y^{(j)}),
+\]
+\begin{itemize}
+	\item[\textcolor{success}{\faCheckCircle}]<1-> starting from the polynomials $(\rho,\sigma)$ of an implicit order $p$ method,
+	\item[\textcolor{success}{\faCheckCircle}]<2-> we have seen how to compute the convolution coefficients $\omega_n$,
+	\item[\textcolor{success}{\faCheckCircle}]<3-> we have seen how to compute the starting nodes $w_{n,j}$,
+	\item[\textcolor{todo}{\faClipboardList}]<4-> we need to discuss how we compute the starting values for a multi-step method,
+	\item[\textcolor{todo}{\faClipboardList}]<5-> we still need to discuss how we can efficiently treat the memory term.
+\end{itemize}
+
+\end{frame}
+%
+%\begin{frame}{Computing the starting values}\small
+%To initialize the computation we need the values $y^{(0)},\ldots,y^{(s)}$, $s+1$, $s = |\mathcal{A}|$. 
+%\begin{itemize}
+%	\item<2-> We know $y^{(0)}$ from the initial condition, thus we have to solve for the remaining ones.
+%	\item<3-> To avoid mixing methods we evaluate all the approximations at the same time by solving
+%	\[
+%	\begin{bmatrix}
+%	y^{(1)}\\
+%	y^{(2)}\\
+%	\vdots\\
+%	y^{(s)}
+%	\end{bmatrix} = \begin{bmatrix}
+%	T_{m-1}(t_1) \\
+%	T_{m-1}(t_2) \\
+%	\vdots \\
+%	T_{m-1}(t_s) \\
+%	\end{bmatrix}
+%	+ \tau^\alpha \begin{bmatrix}
+%	(\omega_1 + w_{1,0}) f_0 \\
+%	(\omega_2 + w_{2,0}) f_0 \\
+%	\vdots \\
+%	(\omega_s + w_{s,0}) f_0 
+%	\end{bmatrix}
+%	+ \tau^\alpha \left( \Omega \otimes I + W \otimes I \right) \begin{bmatrix}
+%	f(t_1,y^{(1)}) \\
+%	f(t_2,y^{(2)}) \\
+%	\vdots \\
+%	f(t_s,y^{(s)}) \\
+%	\end{bmatrix}  
+%	\]
+%	\only<3>{where
+%	\[
+%	\Omega = \begin{bmatrix}
+%	\omega_0 & \\
+%	\omega_1 & \omega_0 \\
+%	\vdots & \vdots & \ddots \\
+%	\omega_{s-1} & \omega_{s-2} & \cdots & \omega_0 
+%	\end{bmatrix}, \quad W = \begin{bmatrix}
+%	w_{1,1} & w_{1,2} & \cdots & w_{1,s} \\
+%	w_{2,1} & w_{2,2} & \cdots & w_{2,s} \\
+%	\vdots & \vdots & \ddots & \vdots \\
+%	w_{s,1} & w_{s,2} & \cdots & w_{s,s} 
+%	\end{bmatrix}
+%	\]}
+%\only<4->{
+%	\item<4-> This will be in general an $s \times \dim(y^{(j)})$ nonlinear system that we need to solve before starting the iteration.
+%	\item<5-> If the value of $\alpha$ is not very small, viz $s$ is moderate, and the system of ODEs is moderate this is manageable. 
+%}
+%\end{itemize}
+%\end{frame}
+%
+%\begin{frame}{Treating the memory term}
+%If we compute the sum on the coefficients $\omega_{j}$ naively for
+%\[
+%y^{(n)} = T_{m-1}(t_n) + \tau^\beta \sum_{j=0}^{s} w_{n,j} f(t_j,y^{(j)}) + \tau^\alpha \alert{\sum_{j=0}^{n} \omega_{n-j} f(t_j,y^{(j)})},
+%\]
+%we end up having a $O(N^2)$ cost! If we do not perform this task efficiently the numerical solution degenerates in an unworkable task as we either refine our
+%grid or enlarge our computational domain.
+%
+%\begin{itemize}
+%	\item[\faDoorClosed]<2-> We can try to ``forget'' part of the lag-term,
+%	\item[\faDoorClosed]<3-> We can consider using a stretched grid towards $t_0$ to reduce $N$,
+%	\item[\faDoorClosed]<4-> We can try an approach with nested meshes to reduce the load,
+%	\item[\faDoorClosed]<5-> We can exploit the fact that this is a convolution and adopt some FFT tricks.
+%\end{itemize}
+%
+%\end{frame}
+%
+%\begin{frame}{The FFT trick~\parencite{HairerFFTtrick}}
+%
+%The treatment remains the same indifferently for both PI and FLMM method, let us focus here on the generic formulation
+%\[
+%y^{(n)} = \phi_n + \sum_{j=0}^{n} c_{n-j} f_j.
+%\]
+%
+%\begin{itemize}
+%	\item<2-> Let $r$ be a moderate number of step, e.g., $r = 2^k$ for a small $k$, we compute the first step directly
+%	\[
+%	y^{(n)} = \phi_n + \sum_{j=0}^{n} c_{n-j} f_j, \quad n = 0,1,\ldots,r-1.
+%	\]
+%	\item<3-> If we now want to compute the next $r$ approximations we can separate the lag term as
+%	\[
+%	y^{(n)} = \phi_n + \sum_{j=0}^{r-1} c_{n-j} f_j + \sum_{j=r}^{n} c_{n-j} f_j, \quad n \in \{r,r+1,\ldots,2r-1\}.
+%	\]
+%\end{itemize}
+%\end{frame}
+%
+%\begin{frame}{The FFT trick~\parencite{HairerFFTtrick}}
+%\only<1-3>{
+%\begin{itemize}
+%	\item<1-> If we now want to compute the next $r$ approximations we can separate the lag term as
+%\[
+%y^{(n)} = \phi_n + \sum_{j=0}^{r-1} c_{n-j} f_j + \sum_{j=r}^{n} c_{n-j} f_j, \quad n \in \{r,r+1,\ldots,2r-1\}.
+%\]
+%\end{itemize}}
+%\begin{onlyenv}<2>
+%	\begin{exampleblock}{\faLightbulb\,We can use FFT!}
+%		If we call $S_r(n,0,r-1) = \sum_{j=0}^{r-1} c_{n-j}f_j$, $n \in \{r,r+1,\ldots,2r-1\}$, the set of partial sums each of length $r$ we can evaluate them with FFT in $O(2r \log_2(2r))$.
+%	\end{exampleblock}
+%\end{onlyenv}
+%\begin{onlyenv}<4>
+%	\begin{exampleblock}{\faLightbulb\,We can use FFT!}
+%		If we call $S_{2r}(n,0,2r-1) = \sum_{j=0}^{2r-1} c_{n-j}f_j$, and $S_{r}(n,2r,3r-1) = \sum_{j=2r}^{3r-1} c_{n-j}f_j$ the set of partial sums of lengths $2r$ and $r$ we can evaluate them with FFT in $O(4r \log_2(4r))$ and $O(2r \log_2(2r))$ respectively.
+%	\end{exampleblock}
+%\end{onlyenv}
+%\begin{onlyenv}<3->
+%\begin{itemize}
+%	\item<3-> We can apply the same process recursively if we double every time-interval under consideration
+%	\[
+%	\begin{split}
+%	y^{(n)} = & \phi_n + \sum_{j=0}^{2r-1} c_{n-j} f_j + \sum_{j=2r}^{n} c_{n-j} f_j, \quad n \in \{2r,2r+1,\ldots,3r-1\}, \\
+%	y^{(n)} = & \phi_n + \sum_{j=0}^{2r-1} c_{n-j} f_j + \sum_{j=2r}^{3r-1} c_{n-j} f_j + \sum_{j=3r}^{n} c_{n-j} f_j, \quad n \in \{3r,3r+1,\ldots,4r-1\},
+%	\end{split}
+%	\]
+%	
+%\end{itemize}
+%\end{onlyenv}
+%\end{frame}
+%
+%\begin{frame}[fragile]{The FFT trick~\parencite{HairerFFTtrick}}
+%\begin{columns}
+%\begin{column}{0.45\columnwidth}\only<1-9>{
+%\definecolor{qqqqww}{rgb}{0,0,0.4}
+%\definecolor{ffzzqq}{rgb}{1,0.6,0}
+%\definecolor{fftttt}{rgb}{1,0.2,0.2}
+%\definecolor{zzzzff}{rgb}{0.6,0.6,1}
+%\begin{tikzpicture}[line cap=round,line join=round,>=triangle 45,x=0.35cm,y=0.35cm]
+%\clip(-0.6,-0.6) rectangle (16.3,16.3);
+%\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (2,0) -- (4,0) -- (4,2) -- (2,2) -- cycle;
+%\fill[color=fftttt,fill=fftttt,fill opacity=0.1] (4,0) -- (8,0) -- (8,4) -- (4,4) -- cycle;
+%\fill[color=ffzzqq,fill=ffzzqq,fill opacity=0.1] (8,0) -- (16,0) -- (16,8) -- (8,8) -- cycle;
+%\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (6,4) -- (8,4) -- (8,6) -- (6,6) -- cycle;
+%\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (10,8) -- (12,8) -- (12,10) -- (10,10) -- cycle;
+%\fill[color=fftttt,fill=fftttt,fill opacity=0.1] (12,8) -- (16,8) -- (16,12) -- (12,12) -- cycle;
+%\fill[color=zzzzff,fill=zzzzff,fill opacity=0.1] (14,12) -- (16,12) -- (16,14) -- (14,14) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (4,4) -- (6,4) -- (5.99,5.99) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (5.99,5.99) -- (8,6) -- (8,8) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (8,8) -- (10,8) -- (10,10) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (10,10) -- (12,10) -- (12,12) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (12,12) -- (14,12) -- (14,14) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (14,14) -- (16,14) -- (16,16) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (0,0) -- (2,0) -- (1.99,1.99) -- cycle;
+%\fill[color=qqqqww,fill=qqqqww,fill opacity=0.1] (1.99,1.99) -- (4,2) -- (4,4) -- cycle;
+%\draw (0,0)-- (16,16);
+%\draw (16,16)-- (16,0);
+%\draw (16,0)-- (0,0);
+%\draw [color=zzzzff] (2,0)-- (4,0);
+%\draw [color=zzzzff] (4,0)-- (4,2);
+%\draw [color=zzzzff] (4,2)-- (2,2);
+%\draw [color=zzzzff] (2,2)-- (2,0);
+%\draw [color=fftttt] (4,0)-- (8,0);
+%\draw [color=fftttt] (8,0)-- (8,4);
+%\draw [color=fftttt] (8,4)-- (4,4);
+%\draw [color=fftttt] (4,4)-- (4,0);
+%\draw [color=ffzzqq] (8,0)-- (16,0);
+%\draw [color=ffzzqq] (16,0)-- (16,8);
+%\draw [color=ffzzqq] (16,8)-- (8,8);
+%\draw [color=ffzzqq] (8,8)-- (8,0);
+%\draw [color=zzzzff] (6,4)-- (8,4);
+%\draw [color=zzzzff] (8,4)-- (8,6);
+%\draw [color=zzzzff] (8,6)-- (6,6);
+%\draw [color=zzzzff] (6,6)-- (6,4);
+%\draw [color=zzzzff] (10,8)-- (12,8);
+%\draw [color=zzzzff] (12,8)-- (12,10);
+%\draw [color=zzzzff] (12,10)-- (10,10);
+%\draw [color=zzzzff] (10,10)-- (10,8);
+%\draw [color=fftttt] (12,8)-- (16,8);
+%\draw [color=fftttt] (16,8)-- (16,12);
+%\draw [color=fftttt] (16,12)-- (12,12);
+%\draw [color=fftttt] (12,12)-- (12,8);
+%\draw [color=zzzzff] (14,12)-- (16,12);
+%\draw [color=zzzzff] (16,12)-- (16,14);
+%\draw [color=zzzzff] (16,14)-- (14,14);
+%\draw [color=zzzzff] (14,14)-- (14,12);
+%\draw [color=qqqqww] (4,4)-- (6,4);
+%\draw [color=qqqqww] (6,4)-- (5.99,5.99);
+%\draw [color=qqqqww] (5.99,5.99)-- (4,4);
+%\draw [color=qqqqww] (5.99,5.99)-- (8,6);
+%\draw [color=qqqqww] (8,6)-- (8,8);
+%\draw [color=qqqqww] (8,8)-- (5.99,5.99);
+%\draw [color=qqqqww] (8,8)-- (10,8);
+%\draw [color=qqqqww] (10,8)-- (10,10);
+%\draw [color=qqqqww] (10,10)-- (8,8);
+%\draw [color=qqqqww] (10,10)-- (12,10);
+%\draw [color=qqqqww] (12,10)-- (12,12);
+%\draw [color=qqqqww] (12,12)-- (10,10);
+%\draw [color=qqqqww] (12,12)-- (14,12);
+%\draw [color=qqqqww] (14,12)-- (14,14);
+%\draw [color=qqqqww] (14,14)-- (12,12);
+%\draw [color=qqqqww] (14,14)-- (16,14);
+%\draw [color=qqqqww] (16,14)-- (16,16);
+%\draw [color=qqqqww] (16,16)-- (14,14);
+%\draw [color=qqqqww] (0,0)-- (2,0);
+%\draw [color=qqqqww] (2,0)-- (1.99,1.99);
+%\draw [color=qqqqww] (1.99,1.99)-- (0,0);
+%\draw [color=qqqqww] (1.99,1.99)-- (4,2);
+%\draw [color=qqqqww] (4,2)-- (4,4);
+%\draw [color=qqqqww] (4,4)-- (1.99,1.99);
+%\begin{scriptsize}
+%\fill [color=black] (0,0) circle (1.5pt);
+%\draw[color=black] (-0.06,-0.24) node {0};
+%\fill [color=black] (2,0) circle (1.5pt);
+%\draw[color=black] (1.98,-0.24) node {r};
+%\fill [color=black] (4,0) circle (1.5pt);
+%\draw[color=black] (3.61,-0.26) node {2r};
+%\fill [color=black] (8,0) circle (1.5pt);
+%\draw[color=black] (7.9,-0.13) node {4r};
+%\fill [color=black] (16,0) circle (1.5pt);
+%\draw[color=black] (15.81,-0.11) node {8r};
+%\draw[color=zzzzff] (3.17,1.16) node {$S_r$};
+%\draw[color=fftttt] (6.42,2.16) node {$S_{2r}$};
+%\draw[color=ffzzqq] (12.43,4.16) node {$S_{4r}$};
+%\draw[color=zzzzff] (7.17,5.16) node {$S_r$};
+%\draw[color=zzzzff] (11.19,9.15) node {$S_r$};
+%\draw[color=fftttt] (14.43,10.15) node {$S_{2r}$};
+%\draw[color=zzzzff] (15.18,13.15) node {$S_r$};
+%\draw[color=qqqqww] (5.5,4.82) node {$T_r$};
+%\draw[color=qqqqww] (7.5,6.82) node {$T_r$};
+%\draw[color=qqqqww] (9.52,8.82) node {$T_r$};
+%\draw[color=qqqqww] (11.52,10.82) node {$T_r$};
+%\draw[color=qqqqww] (13.52,12.82) node {$T_r$};
+%\draw[color=qqqqww] (15.52,14.82) node {$T_r$};
+%\draw[color=qqqqww] (1.5,0.82) node {$T_r$};
+%\draw[color=qqqqww] (3.5,2.82) node {$T_r$};
+%\end{scriptsize}
+%\end{tikzpicture}}%
+%\only<10>{
+%\input{nlogn.tikz}
+%}
+%\end{column}
+%\begin{column}{0.55\columnwidth}%
+%\definecolor{qqqqww}{rgb}{0,0,0.4}%
+%\definecolor{ffzzqq}{rgb}{1,0.6,0}%
+%\definecolor{fftttt}{rgb}{1,0.2,0.2}%
+%\definecolor{zzzzff}{rgb}{0.6,0.6,1}%
+%\only<1-2>{
+%\begin{itemize}
+%	\item We can iterate the process for the $4r$ approximations in the interval $n \in \{ 4r,\ldots,8r-1\}$, together
+%	with the partial sums $S_{4r}(n,0,4r-1)$, $S_{2r}(n,4r,6r-1)$, $S_{r}(n,6r,7r-1)$ that can be evaluated in
+%	$O(8r \log_2(8r))$, $O(4r \log_2(4r))$ and $O(2r \log_2(2r))$ respectively,
+%	\item<2-> At each level we have to complete the recursion by computing\vspace{-1em}
+%	\[
+%	\begin{split}
+%	T_r(p,n) = & \sum_{j=p}^{n} c_{n-j} f_j, \; p = \ell r, \\ n \in & \{\ell r, \ell r + 1,\ldots,(\ell+1)r-1\}, \\ \ell = & 0,1,2,\ldots.
+%	\end{split}
+%	\]
+%\end{itemize}}%
+%\only<3->{
+%To determine the whole cost we just have to sum the various components
+%\begin{itemize}
+%	\item<4-> Assume that $N = 2^{n_t}$
+%	\item<5-> $O(N \log_2 N)$ for \textcolor{ffzzqq}{$S_{4r}$},
+%	\item[$+$]<6-> $O( \nicefrac{N}{2} \log_2 \nicefrac{N}{2})$ for $2$ \textcolor{fftttt}{$S_{2r}$}
+%	\item[$+$]<7-> $O( \nicefrac{N}{4} \log_2 \nicefrac{N}{4})$ for $4$ \textcolor{zzzzff}{$S_r$}
+%	\item[$+$]<8-> $\nicefrac{r(r+1)}{2}$ for the $N/r$ convolutions \textcolor{qqqqww}{$T_r$}
+%	\item<9-> In general:
+%\only<9>{\[
+%	\begin{split}
+%	N \log_2 N + 2 \frac{N}{2} \log_2 \frac{N}{2} + 4 \frac{N}{4}\log_2 \frac{N}{4} + \cdots \\ + p \frac{N}{p} \log_2 \frac{N}{p} + \frac{N}{r} \frac{r(r+1)}{2}, \quad p = \frac{N}{2r} 
+%	\end{split}
+%	\]}
+%\only<10>{
+%\[
+%\begin{split}
+%\sum_{j=0}^{\log_2 p} N \log_2 \frac{N}{2^j} + N \frac{r+1}{2} = O(N (\log_2 N)^2 ).
+%\end{split}
+%\]
+%}
+%\end{itemize}
+%}
+%\end{column}
+%\end{columns}
+%\end{frame}
+%
+%\begin{frame}{Short-memory principle~\parencite{FordSpeedAccuracy}}
+%We can try to use a ``fixed memory length'' to reduce the computational (and memory) load.
+%\[
+%\begin{split}
+%y(t_{n+1}) =  y(t_n) & + \frac{1}{\Gamma(\alpha)} \int_{t_n}^{t_{n+1}} (t_{n+1}-\tau)^{\alpha-1} f(\tau,x(\tau))\,\textrm{d}\tau \\
+%& + \frac{1}{\Gamma(\alpha)} \int_{0}^{t_n} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} ) f(\tau,y(\tau))\,\textrm{d}\tau, \quad \alpha \in (0,1).
+%\end{split} 
+%\]
+%\only<2->{Let us introduce now a fixed window $T_M$ of memory, then}
+%\only<2-7>{
+%\[
+%\begin{split}
+%E = & \left| \frac{1}{\Gamma(\alpha)} \int_{0}^{t_n - T_M} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} ) f(\tau,y(\tau))\,\textrm{d}\tau \right| \\ \leq &  \frac{M}{\Gamma(\alpha)} \left| \int_{0}^{t_n - T_M} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} )\,\textrm{d}\tau \right|\only<3>{\\
+%= & \frac{M}{\alpha \Gamma(\alpha)} \left| (\tau + T_M)^\alpha - t_{n+1}^{\alpha} - T^\alpha + t_n^\alpha \right| }\only<4-5>{\\
+%= & \frac{M}{\Gamma(\alpha)} \left| \int_{T_M}^{T_M + \tau} z^{\alpha-1}\,\textrm{d}z - \int_{t_n}^{t_{n+1}} z^{\alpha-1}\,\textrm{d}z \right| \only<5>{ (Mean Value Theorem) } }\only<6>{ \\
+%= & \frac{M}{\Gamma(\alpha)} \left| (z_1^*)^{\alpha-1} \tau - (z_2^*)^{\alpha-1} \tau \right| \quad z_1^* \in [T_M,T_M+\tau], \; z_2^* \in [t_n,t_{n+1}]
+%}\only<7>{ \\
+%< & \frac{M}{\Gamma(\alpha)} T_M^{\alpha-1} \tau, \qquad \alpha \in (0,1).
+%}
+%\end{split}
+%\]
+%}\only<8>{
+%\[
+%E = \left| \frac{1}{\Gamma(\alpha)} \int_{0}^{t_n - T_M} ( (t_{n+1} - \tau)^{\alpha-1} - (t_n - \tau)^{\alpha-1} ) f(\tau,y(\tau))\,\textrm{d}\tau \right|  < \frac{M}{\Gamma(\alpha)} T_M^{\alpha-1} \tau, \quad \alpha \in (0,1).
+%\]
+%}\only<9>{
+%If we have a global error bound $E_{\text{global}}$ with step-length $\tau$ we just need to choose
+%\[
+%T_M > \left( \frac{M}{\Gamma(\alpha)E_{\text{global}}} \right)^{\nicefrac{1}{1-\alpha}}, \quad \alpha \in (0,1),
+%\] 
+%while if we have a local error bound $E_{\text{local}}$
+%\[
+%T_M > \left( \frac{M\tau}{\Gamma(\alpha)E_{\text{local}}} \right)^{\nicefrac{1}{1-\alpha}}, \quad \alpha \in (0,1).
+%\]
+%}
+%\end{frame}
+%
+%\begin{frame}{Short-memory principle~\parencite{FordSpeedAccuracy}}
+%
+%\begin{itemize}
+%	\item[\faSmile]<1-> In case $\alpha \in (0,1)$ the short memory method with fixed length can be effective and the length T is independent of the full
+%	interval of integration.
+%	\item[\faSadTear]<2-> Similar bounds can be written for the case $\alpha > 1$, that is
+%	\[
+%	E < \frac{M}{\Gamma(\alpha)} (t_{n+1}^\alpha - T_M^{\alpha-1})\tau, \quad \alpha > 1.
+%	\]
+%	But now to preserve the order of accuracy, we must choose
+%	\[
+%	T_M^{\alpha - 1} > t_{n+1}^{\alpha-1} - \frac{E_{\text{global}} \Gamma(\alpha)}{M}, \quad \alpha > 1,
+%	\]
+%	that we will make us lose all the computational gain.
+%\end{itemize}
+%
+%\onslide<3>{The idea can be refined by using \emph{nested meshes}.}
+%
+%\end{frame}
+%
+%\begin{frame}{Nested meshes}
+%Zeroing out the memory term is too drastic, we may want to relax this.
+%
+%\begin{exampleblock}<2->{Scaling properties}
+%\only<2>{\[I^{\alpha}_{[0,t]} 
+%	f(t) = \int_{0}^{t} 
+%	\frac{f(\tau)}{(t-\tau)^{1-\alpha}}\,\textrm{d}\tau\]}
+%\only<3>{\[
+%	I^{\alpha}_{[0,t]} f(w t) = \int_{0}^{t} \frac{f(\tau)}{(wt-\tau)^{1-\alpha}}\,\textrm{d}\tau\]}
+%\only<4>{\[
+%	I^{\alpha}_{[0,t]} f(w t) = w^\alpha \int_{0}^{t} \frac{f(w\tau)}{(t-\tau)^{1-\alpha}}\,\textrm{d}\tau\]}
+%\only<5->{
+%	Given $p \in \mathbb{N}$ we then have
+%	\[
+%	I^{\alpha}_{[0,t]} f(w^p t) = w^{p\alpha} \int_{0}^{t} \frac{f(w^p \tau)}{(t-\tau)^{1-\alpha}}\,\textrm{d}\tau\]
+%}
+%\end{exampleblock}
+%\begin{itemize}
+%	\item[\faLightbulb]<6-> We can use the weight on the mesh \[\Omega_\tau^\alpha f(n\tau) \approx I^{\alpha}_{[0,t]} f(n\tau), \text{ step length }\tau\] to compute
+%	\[
+%	\Omega^\alpha_{w^p \tau} f(w^p n \tau) \approx I^{\alpha}_{[0,t]} f(nw^p\tau), \text{ step length } w^p \tau
+%	\]
+%	\item<7-> In summary for any $p \in \mathbb{N}$ we get\vspace{-0.5em}
+%	\[
+%	\Omega_\tau^{\alpha} f(n\tau) = \sum_{j=0}^n \omega_{n-j} f(j\tau) \;\Leftrightarrow\; \Omega^\alpha_{w^p \tau} f(n w^p \tau) = w^{p\alpha} \sum_{j=0}^n \omega_{n-j} f(j w^p \tau).
+%	\]
+%\end{itemize}
+%
+%\end{frame}
+%
+%\begin{frame}{Nested meshes~\parencite{FordSpeedAccuracy}}
+%\begin{block}{Nested mesh}
+%Given $\tau \in \mathbb{R}^+$, the mesh $M_\tau = \{ \tau n, \; n \in \mathbb{N} \}$. Selected $w,r,p \in \mathbb{N}$, $w > 0$, $r > p$, we have $M_{w^p \tau} \supset M_{w^r \tau}$ and we decompose the interval as
+%\[
+%[0,t] = [0,t-w^m T] \cup [t - w^mT,t-w^{m-1}T] \cup \cdots \cup [t-wT,t-T]\cup[t-T,t]
+%\]
+%for $m \in \mathbb{N}$ the smallest integer such that $t < w^{m+1} T$.
+%\end{block}
+%
+%\begin{itemize}
+%	\item[\faLightbulb]<2-> This links the \textbf{scaling property} with the singularity of the type $1/(t-\tau)^{1-\alpha}$ suggesting that we should distribute the computational effort logarithmically, and not uniformly.
+%	\item<3-> We rewrite our integral\only<4>{ using the scaling property} as
+%	\[
+%	I_{[0,t]}^\alpha f(t) = \only<3>{I_{[t-T,t]}^\alpha f(t) + \sum_{i=0}^{m-1} I_{[t-w^{i+1}T,t-w^iT]}^\alpha f(t) + I_{[0,t-w^mT]}^\alpha f(t)}
+%	\only<4>{I_{[t-T,t]}^\alpha f(t) + \sum_{i=0}^{m-1} w^{i\alpha} I_{[t-w T,t-T]}^\alpha f(w^i t) + w^{m\alpha}I_{[0,t-T]}^\alpha f(w^m t).}
+%	\]
+%\end{itemize}
+%
+%\end{frame}
+%
+%\begin{frame}{Nested meshes~\parencite{FordSpeedAccuracy}}
+%In the discrete approximation of
+%\[
+%I_{[0,t]}^\alpha f(t) = I_{[t-T,t]}^\alpha f(t) + \sum_{i=0}^{m-1} w^{i\alpha} I_{[t-w T,t-T]}^\alpha f(w^i t) + w^{m\alpha}I_{[0,t-T]}^\alpha f(w^m t).
+%\]
+%we approximate\vspace{-0.5em}
+%\[
+%\Omega_{\tau,[t-w^{i+1} T,t-w^i T]}^\alpha f(t) \approx \Omega_{w^i \tau,[t-w^{i+1} T,t-w^i T]}^\alpha f(t)
+%\]
+%and substitute\vspace{-0.5em}
+%\[
+%w^{i\alpha} \Omega_{\tau,[t-w T,t- T]}^\alpha f(t) = \Omega_{w^i \tau,[t-w^{i+1} T,t- w^{i} T]}^\alpha f(t).
+%\]
+%\begin{alertblock}<2->{Theorem~\parencite[Theorem~1]{FordSpeedAccuracy}}
+%The nested mesh scheme preserves the order of the underlying quadrature
+%rule on which it is based.
+%\end{alertblock}
+%\onslide<3>{\small \textbf{Proof.} For integration over a fixed interval $[0,t]$ the choice of $T$ fixes (independent of $h$) the number of subranges over which the integral is evaluated, on each of them we have en error $O(h^p)$.}
+%
+%\end{frame}
+%
+%\begin{frame}{Nested meshes~\parencite{FordSpeedAccuracy}}
+%
+%\begin{itemize}
+%	\item<1-> The first benefit is that we evaluate a fixed number of quadrature coefficients and then re-use them on all successive intervals,
+%	\item<2->[\faMoneyBillWave] This approach cost $O(w^m)$ with respect to $O(w^{2m})$ of the full method,
+%	\item<3->[\faCog] We could use linear extrapolation techniques to improve the results.
+%	\item<4->[\faCog] Selecting the various parameter may need a bit of tuning.
+%\end{itemize}
+%
+%\end{frame}
+%
+%\section{Codes}
+%
+%\begin{frame}[fragile]{\faCode\;Available codes}
+%With respect to the ordinary case for which there exists many reliable and high-performance codes, the choices for computing the solution of fractional differential equation is much more \emph{sparse}.
+%
+%\begin{itemize}
+%\item From \parencite{garrappa2018numerical}
+%\begin{itemize}
+%	\item[\faCode] \verb|FDE_PI1_Ex.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi1_ex.m}{Explicit Product-Integration of rectanguar type}
+%	\item[\faCode] \verb|FDE_PI1_Im.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi1_im.m}{Implicit Product-Integration of rectanguar type}
+%	\item[\faCode] \verb|FDE_PI2_Im.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi2_im.m}{Implicit Product-Integration of trapezoidal type}
+%	\item[\faCode] \verb|FDE_PI12_PC.m| - \href{https://www.dm.uniba.it/members/garrappa/software_folder/fde_pi12_pc.m}{Product-Integration with predictor-corrector}
+%\end{itemize}
+%\item From \parencite{GarrappaTrapezoidal}
+%\begin{itemize}
+%	\item[\faCode] FLMM2 Matlab code - \href{http://www.mathworks.com/matlabcentral/fileexchange/47081-flmm2}{Three implicit second order Fractional Linear Multistep Methods}.
+%\end{itemize}
+%
+%\begin{block}{\faBinoculars\,A remark}
+%All these methods use direct-solver for the Newton method inside them, there is space to make improvement on the solution strategies. Furthermore, a challenge that yet remains: can we find a strategy that combines the convolution features and savings on the memory?
+%\end{block}
+%
+%\end{itemize}
+%\end{frame}
+%
+%\section{Conclusions}
+%
+%\begin{frame}{Conclusions}
+%\definecolor{success}{HTML}{4a934a}
+%\definecolor{todo}{HTML}{0099cc}
+%
+%We know a general way to obtain FLMM methods of the form\vspace{-0.5em}
+%\[
+%y^{(n)} = T_{m-1}(t_n) + \tau^\beta \sum_{j=0}^{s} {w_{n,j}} f(t_j,y^{(j)}) + \tau^\alpha \sum_{j=0}^{n} {\omega_{n-j}} f(t_j,y^{(j)}),
+%\]
+%\begin{itemize}
+%	\item[\textcolor{success}{\faCheckCircle}] starting from the polynomials $(\rho,\sigma)$ of an implicit order $p$ method,
+%	\item[\textcolor{success}{\faCheckCircle}] we have seen how to compute the convolution coefficients $\omega_n$,
+%	\item[\textcolor{success}{\faCheckCircle}] we have seen how to compute the starting nodes $w_{n,j}$,
+%	\item[\textcolor{success}{\faCheckCircle}] we know how we can compute the starting values for a multi-step method by solving a nonlinear system with Newton,
+%	\item[\textcolor{success}{\faCheckCircle}] we have some hints on how we can efficiently treat the memory term.
+%\end{itemize}
+%
+%\begin{block}<2>{\faLuggageCart\,Things we didn't pack\ldots}
+%There have been some effort in devising methods of Runge-Kutta type~\parencite{FischerRK}, collocation methods, and exponential type integrators. 
+%\end{block}
+%
+%\end{frame}
+%
+%%\begin{frame}[fragile]{The FRF first implementation}
+%%
+%%\begin{columns}
+%%\begin{column}{0.6\columnwidth}\definecolor{bg}{rgb}{0.95,0.95,0.95}
+%%The code is analogous to the one for the fractional integrals 
+%%with Newton-Cotes formulas:
+%%\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%%for i=0:N-1
+%%% These are the values b0,b1,...,bN-1 we need 
+%%% them for all the computations
+%%b(i+1) = ((i+1)^alpha - i^alpha)/alpha; 
+%%end
+%%y(:,1) = y0;
+%%c = (tau^alpha/gamma(alpha));
+%%for j=1:N-1
+%%fy(:,j) = f(t(j),y(:,j)); % New value of f
+%%y(:,j+1) = y(:,1) + c*sum(flipud(b(1:j)).'.*fy(:,1:j));
+%%end
+%%\end{minted}
+%%\end{column}
+%%\begin{column}{0.4\columnwidth}
+%%\begin{itemize}
+%%\item[\faCode]<2-> To build the solution we have to keep in memory either the \textbf{previous solutions} or the \textbf{function evaluations},
+%%\item[\faCode]<3-> We have to compute:
+%%\[
+%%\sum_{j=0}^{n-2} b_{n-j-1}f^{(j)},
+%%\]
+%%this is a \alert{quadratic cost} with $N$.
+%%\item<4-> The $1$-step name is related to the number of initial values to start the computation.
+%%\end{itemize}
+%%\end{column}
+%%\end{columns}
+%%
+%%\end{frame}
+%%
+%%\begin{frame}[fragile]{The FRF consistency order}
+%%\begin{columns}
+%%\begin{column}{0.5\columnwidth}
+%%We need to investigate the order of approximation of this method.
+%%
+%%If we apply it to the case
+%%\[
+%%{}_{CA}D_{[0,t]}^\alpha y(t) = \lambda y(t), \quad y(0) = 0,
+%%\]
+%%for $t \in [0,]
+%%\end{column}
+%%\begin{column}{0.5\columnwidth}
+%%\centering
+%%
+%%\input{fprerror.tikz}
+%%	
+%%\begin{tabular}{ll}
+%%\toprule
+%%$\tau$ & Error\\
+%%\midrule
+%%5.00e-01 & 5.07e-02\\
+%%1.00e-01 & 8.17e-03\\
+%%1.00e-02 & 6.83e-04\\
+%%1.00e-03 & 6.40e-05\\
+%%\bottomrule
+%%\end{tabular}
+%%
+%%\end{column}
+%%\end{columns}
+%%\end{frame}
+%%
+%%\begin{frame}{The Fractional Trapezoidal Formula}
+%%
+%%\end{frame}
+%%
+%%\section{Fractional Linear Multistep Methods}
+%%
+%%\begin{frame}{Fractional Linear Multistep Methods}
+%%To 
+%%\end{frame}
+
+\appendix
+
+\section*{Bibliography}
+{\unnumbered
+	\begin{frame}[allowframebreaks,noframenumbering]{Bibliography}
+	\small
+	\printbibliography
+	
+\end{frame}
+}
+
+\end{document}

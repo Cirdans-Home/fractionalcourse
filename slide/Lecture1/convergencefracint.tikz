@@ -1,0 +1,64 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.8\columnwidth,
+height=1.5in,
+at={(0.772in,0.481in)},
+scale only axis,
+xmode=log,
+xmin=10,
+xmax=100000,
+xminorticks=true,
+xlabel style={font=\color{white!15!black}},
+%xlabel={N},
+ymode=log,
+ymin=1e-12,
+ymax=1,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+title={Relative Error},
+axis background/.style={fill=white},
+legend style={at={(0.03,0.03)}, anchor=south west, legend cell align=left, align=left, draw=none, fill=none}
+]
+\addplot [color=mycolor1, line width=2.0pt, mark=o, mark options={solid, mycolor1}]
+  table[row sep=crcr]{%
+10	0.122076348118973\\
+100	0.0124693871170266\\
+1000	0.00124968951478086\\
+10000	0.000124996881371206\\
+100000	1.24999687702464e-05\\
+};
+\addlegendentry{$\lambda\text{ = 1}$}
+
+\addplot [color=mycolor2, dashed, line width=2.0pt, mark=x, mark options={solid, mycolor2}]
+  table[row sep=crcr]{%
+10	0.127923651881027\\
+100	0.0125306128829735\\
+1000	0.00125031048521914\\
+10000	0.000125003118628905\\
+100000	1.25000312301153e-05\\
+};
+\addlegendentry{$\lambda\text{ = 0}$}
+
+\addplot [color=mycolor3, dashdotted, line width=2.0pt, mark=square, mark options={solid, mycolor3}]
+  table[row sep=crcr]{%
+10	0.00292365188102693\\
+100	3.06128829734672e-05\\
+1000	3.10485219139851e-07\\
+10000	3.11862875745755e-09\\
+100000	3.12300266581296e-11\\
+};
+\addlegendentry{$\lambda\text{ = 0.5}$}
+
+\end{axis}
+\end{tikzpicture}%

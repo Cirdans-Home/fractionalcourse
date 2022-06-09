@@ -4,6 +4,8 @@
 \usepackage[english]{babel}
 \usepackage{microtype}
 \usepackage{authblk}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
 
 \usepackage[giveninits,maxbibnames=1000]{biblatex}
 \bibliography{references}
@@ -17,9 +19,9 @@
 
 \title{An introduction to fractional calculus:\\fundamental ideas and numerics}
 \author[1]{Fabio Durastante}
-\affil[1]{Università di Pisa, Dipartimento di Matematica}
+\affil[1]{Università di Pisa, Dipartimento di Matematica, \href{mailto:fabio.durastante@unipi.it}{fabio.durastante@unipi.it}}
 
-\date{Course 20 hrs - 10 Lectures}
+\date{Course 30 hrs - 15 Lectures}
 
 \begin{document}
 	
@@ -52,9 +54,25 @@ operations according to Riemann-Liouville, Caputo, and Riesz. With these
 instruments we will first discuss the formulation of ordinary fractional
 equations and their solution~\cite{DiethelmBook}, then their use in the
 definition of fractional diffusion problems as a fractional partial differential
-equation~\cite{PodlubnyBook}. In the final part, we will briefly touch on some questions concerning
+equation~\cite{PodlubnyBook}. Regarding numerical methods, we will focus on finite 
+difference and multi-step methods for simulating initial value problems with time-fractional
+derivatives. Regarding the solution of boundary value problems with space-fractional derivatives, 
+we will focus on the use of finite difference methods and on the connection between 
+the properties of the resulting discretization matrices and the analytic 
+properties of the operators.
+
+In the final part, we will briefly touch on some questions concerning
 the definition of the fractional Laplacian and some of its applications within
 modeling for complex networks~\cite{ArrigoDurastante,cnaa017,RiascosBook}.
+
+\paragraph{Prerequisites.} The course makes use of some basic concepts about 
+Lebesgue integration -- e.g., $\mathbb{L}^p$ spaces, Fubini's Theorem. Regarding the computational parts, some basic knowledge of quadrature formulas, finite differences for ordinary differential operators, and multi-step methods for initial value problems. For the final parts, it is useful to have some skills with Krylov type projective methods for the solution of linear systems and the concept of preconditioning.
+
+\paragraph{Scheduling.} The course will be divided into two parts, the first in May (6 lessons 2h, 3 weeks) 
+and in the months of September/October (9 lessons 2h, 5 weeks).
+
+\paragraph{Modalities.} Compatibly with the evolution of the pandemic situation, the rules, and the number of participants, we intend to carry out the course in face-to-face mode. If it is necessary for organizational reasons, it is expected 
+to have it also in streaming mode.
 
 \printbibliography
 

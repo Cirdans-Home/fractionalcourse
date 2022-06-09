@@ -1,0 +1,713 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+% Math
+\usepackage{nicefrac}
+
+% Tipography stuff
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{fontawesome5}
+\usepackage{soul}
+\usepackage{euler}
+
+% Bibliography
+\usepackage[giveninits,style=authoryear-comp,backend=biber]{biblatex}
+\addbibresource{../fracbiblio.bib}
+\newcommand\unnumbered{\setbeamertemplate{footline}{}\addtocounter{framenumber}{-1}}
+\renewcommand*{\bibfont}{\normalfont\small}
+
+% Figures
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{calc,arrows}
+\usepackage{subfig}
+\usepackage{graphicx} % Allows including images
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks,linkcolor=,urlcolor=MidnightBlue}
+
+% Code
+\usepackage{minted}
+
+
+\author{Fabio Durastante}
+\title{An introduction to fractional calculus}
+\subtitle{Fundamental ideas and numerics}
+\institute{Università di Pisa\\\href{mailto:fabio.durastante@unipi.it}{\faEnvelope\;fabio.durastante@unipi.it}\\\href{https://fdurastante.github.io}{\faFirefox\;fdurastante.github.io}}
+\date{May 2, 2022}
+
+\newcommand{\de}{{\rm d}}
+
+
+\begin{document}
+
+\begin{frame}[t,plain]
+\titlepage
+\vspace{-4em}\includegraphics[width=2cm]{frame.png}
+\end{frame}
+
+\begin{frame}{The original idea}
+The \alert{concept of differentiation and integration to noninteger order} goes as far back as the concept we are used to work with. Leibniz mentions it in a letter to L'H\^{o}spital in 1695:\vspace{0.5em}
+
+\begin{columns}
+\begin{column}{0.7\columnwidth}
+\begin{quote}
+\small ``John Bernoulli seems to have told you of my having mentioned to him a
+marvelous analogy which makes it possible to
+say in a way that successive differentials are
+in geometric progression. \textbf{One can ask what
+would be a differential having as its exponent
+a fraction}. You see that the result can be expressed
+by an infinite series. Although this
+seems removed from Geometry, which does
+not yet know of such fractional exponents, \textbf{it
+appears that one day these paradoxes will
+yield useful consequences, since there is hardly
+a paradox without utility}. Thoughts that
+mattered little in themselves may give occasion
+to more beautiful ones.''
+\end{quote}
+\end{column}
+\begin{column}{0.25\columnwidth}
+\centering\footnotesize
+\includegraphics[width=\columnwidth]{Leibniz.jpg}
+
+(Leibniz, 1646-1716)
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Who cares?}
+Derivatives of non integer order help
+\begin{itemize}
+	\item modeling of \emph{viscoelastic} phenomena, \emph{e.g.}, \parencite{MULLER20112938,BagleyTorvik}
+	\item restate fundamental model from physics [gravity~\parencite{Giusti2020}, Schr\"odinger~\parencite{PhysRevE.66.056108}, waves~\parencite{LuchkoWave}, \ldots],
+	\item modeling of heterogeneous cardiac tissues~\parencite{Cusimano2015},
+	\item describing phenomena with \emph{memory} and \emph{non locality} aspects, \emph{e.g.}, \parencite{Riascos2014,BenziDurastante}\\
+	\begin{center}
+		\vdots
+	\end{center}
+\end{itemize}
+This is a \textbf{booming topic}, and many new applications frequently arise.
+\end{frame}
+
+\section{Fractional integrals}
+
+\begin{frame}{Fractional integrals}
+
+\begin{columns}
+\begin{column}{0.58\columnwidth}
+\begin{alertblock}{Euler $\Gamma$-function}
+The \textbf{$\Gamma$ function} $\Gamma(z)$ is defined for complex numbers with a
+positive real part via the convergent improper integral:
+\[
+\Gamma(z) = \int_{0}^{+\infty} x^{z-1} e^{-x}\,{\rm d}x, \qquad \Re(z) > 0,
+\]
+and then extended by \textbf{analyitic continuation} to a \emph{meromorphic} function that is holomorphic in the whole complex plane except zero and the negative integers, where the function has simple poles.
+\end{alertblock}
+\end{column}
+\begin{column}{0.4\columnwidth}
+\centering
+
+\input{gamma.tikz}
+
+$\Gamma(z + 1) = z\, \Gamma(z)$
+
+Bounded in: $S = \{z \in \mathbb{C} \,:\, \Re z \in [1,2)\}$
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{A formula for repeated integration}
+
+\begin{columns}
+\begin{column}{0.65\columnwidth}
+\begin{block}{Swapping Integrals}
+If $G(x,t)$ is jointly continuous on $[c,b]\times[c,b]$:
+\[
+\int_{c}^{x} {\rm d}x_1 \int_{c}^{x_1} G(x_1,x_2) {\rm d}x_2 = \int_{c}^{x} {\rm d}x_2 \int_{x_2}^{x}G(x_1,x_2) {\rm d}x_1.
+\]
+\end{block}
+\begin{alertblock}<2->{Fubini's Theorem}\small
+Given $(X,\mathfrak{S}_X,\mu_x)$, $(Y,\mathfrak{S}_Y,\mu_y)$ measure spaces with $\sigma$-finite complete measures $\mu_x$, $\mu_y$ on the $\sigma$-algebras $\mathfrak{S}_X$, and $\mathfrak{S}_Y$. If the
+function $f(x,y)$ is integrable on the product $X \times Y$ w.r.t. the product measure $\mu = \mu_x \times \mu_y$, then the following equality
+holds true
+\[ 
+\int_{X \times Y} f(x,y)\,\textrm{d}\mu = \int_{Y} \textrm{d}\mu_y \int_X f(x,y) \textrm{d}\mu_x.
+\]
+\end{alertblock}
+\end{column}
+\begin{column}{0.35\columnwidth}
+\begin{onlyenv}<2>
+	\definecolor{cccccc}{rgb}{0.8,0.8,0.8}
+	\definecolor{tttttt}{rgb}{0.2,0.2,0.2}
+	\begin{tikzpicture}[line cap=round,line join=round,>=triangle 45,x=0.9623075747282611cm,y=0.9545261118598385cm]
+	\draw[->,color=black] (-0.15,0) -- (4.52,0);
+	\foreach \x in {,1,2,3,4}
+	\draw[shift={(\x,0)},color=black] (0pt,2pt) -- (0pt,-2pt);
+	\draw[->,color=black] (0,-0.13) -- (0,4.58);
+	\foreach \y in {,1,2,3,4}
+	\draw[shift={(0,\y)},color=black] (2pt,0pt) -- (-2pt,0pt);
+	\clip(-0.15,-0.13) rectangle (4.52,4.58);
+	\fill[color=cccccc,fill=cccccc,fill opacity=0.1] (1,1) -- (3,3) -- (1,3) -- cycle;
+	\draw [dash pattern=on 3pt off 3pt,domain=-0.15:4.52] plot(\x,{(-0--2*\x)/2});
+	\draw [dash pattern=on 3pt off 3pt] (1,1)-- (1,0);
+	\draw [dash pattern=on 3pt off 3pt] (0,1)-- (1,1);
+	\draw [dash pattern=on 3pt off 3pt] (0,3)-- (3,3);
+	\draw [dash pattern=on 3pt off 3pt] (3,3)-- (3,0);
+	\draw (3.04,3.4) node[anchor=north west] {$x_1 = x_2$};
+	\draw [color=cccccc] (1,1)-- (3,3);
+	\draw [color=cccccc] (3,3)-- (1,3);
+	\draw [color=cccccc] (1,3)-- (1,1);
+	\begin{scriptsize}
+	\fill [color=tttttt] (1,1) circle (1.5pt);
+	\fill [color=tttttt] (3,3) circle (1.5pt);
+	\fill [color=tttttt] (1,0) circle (1.5pt);
+	\draw[color=tttttt] (1.09,0.16) node {c};
+	\fill [color=tttttt] (0,1) circle (1.5pt);
+	\draw[color=tttttt] (0.09,1.17) node {c};
+	\fill [color=tttttt] (3,0) circle (1.5pt);
+	\draw[color=tttttt] (3.09,0.16) node {x};
+	\fill [color=tttttt] (0,3) circle (1.5pt);
+	\draw[color=tttttt] (0.09,3.16) node {x};
+	\end{scriptsize}
+	\end{tikzpicture}
+\end{onlyenv}
+\begin{onlyenv}<3>
+	\definecolor{cccccc}{rgb}{0.8,0.8,0.8}
+	\definecolor{tttttt}{rgb}{0.2,0.2,0.2}
+	\begin{tikzpicture}[line cap=round,line join=round,>=triangle 45,x=0.9623075747282611cm,y=0.9545261118598385cm]
+	\draw[->,color=black] (-0.15,0) -- (4.52,0);
+	\foreach \x in {,1,2,3,4}
+	\draw[shift={(\x,0)},color=black] (0pt,2pt) -- (0pt,-2pt);
+	\draw[->,color=black] (0,-0.13) -- (0,4.58);
+	\foreach \y in {,1,2,3,4}
+	\draw[shift={(0,\y)},color=black] (2pt,0pt) -- (-2pt,0pt);
+	\clip(-0.15,-0.13) rectangle (4.52,4.58);
+	\fill[color=cccccc,fill=cccccc,fill opacity=0.1] (1,1) -- (3,3) -- (3,1) -- cycle;
+	\draw [dash pattern=on 3pt off 3pt,domain=-0.15:4.52] plot(\x,{(-0--2*\x)/2});
+	\draw [dash pattern=on 3pt off 3pt] (1,1)-- (1,0);
+	\draw [dash pattern=on 3pt off 3pt] (0,1)-- (1,1);
+	\draw [dash pattern=on 3pt off 3pt] (0,3)-- (3,3);
+	\draw [dash pattern=on 3pt off 3pt] (3,3)-- (3,0);
+	\draw (3.04,3.4) node[anchor=north west] {$x_1 = x_2$};
+	\draw [color=cccccc] (1,1)-- (3,3);
+	\draw [color=cccccc] (3,3)-- (1,3);
+	\draw [color=cccccc] (1,3)-- (1,1);
+	\begin{scriptsize}
+	\fill [color=tttttt] (1,1) circle (1.5pt);
+	\fill [color=tttttt] (3,3) circle (1.5pt);
+	\fill [color=tttttt] (1,0) circle (1.5pt);
+	\draw[color=tttttt] (1.09,0.16) node {c};
+	\fill [color=tttttt] (0,1) circle (1.5pt);
+	\draw[color=tttttt] (0.09,1.17) node {c};
+	\fill [color=tttttt] (3,0) circle (1.5pt);
+	\draw[color=tttttt] (3.09,0.16) node {x};
+	\fill [color=tttttt] (0,3) circle (1.5pt);
+	\draw[color=tttttt] (0.09,3.16) node {x};
+	\end{scriptsize}
+	\end{tikzpicture}
+\end{onlyenv}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{A formula for repeated integration}
+\begin{alertblock}{Cauchy's formula}
+	The indefinite integral of order $n \in \mathbb{N}$ of function $f(t)$ is given by
+\only<1>{\begin{eqnarray*}
+	\displaystyle I_{c,t}^{n} f(t) = & \displaystyle \int_{c}^{t}\cdots \int_{c}^{t} f(t)\,\textrm{d}t\cdots\textrm{d}t = \frac{1}{(n-1)!} \int_{c}^{t} (t-\tau)^{n-1} f(\tau)\,\textrm{d}\tau, \\
+	\displaystyle I_{t,c}^{n} f(t) = & \displaystyle \int_{t}^{c}\cdots \int_{t}^{c} f(t)\,\textrm{d}t\cdots\textrm{d}t = \frac{1}{(n-1)!} \int_{c}^{t} (\tau-t)^{n-1} f(\tau)\,\textrm{d}\tau. 
+	\end{eqnarray*}}%
+\only<2->{
+	\begin{eqnarray*}
+	\displaystyle I_{c,t}^{n} f(t) = & \displaystyle \int_{c}^{t}\cdots \int_{c}^{t} f(t)\,\textrm{d}t\cdots\textrm{d}t = \frac{1}{\alert{\Gamma(n)}} \int_{c}^{t} (t-\tau)^{n-1} f(\tau)\,\textrm{d}\tau, \\
+	\displaystyle I_{t,c}^{n} f(t) = & \displaystyle \int_{t}^{c}\cdots \int_{t}^{c} f(t)\,\textrm{d}t\cdots\textrm{d}t = \frac{1}{\alert{\Gamma(n)}} \int_{c}^{t} (\tau-t)^{n-1} f(\tau)\,\textrm{d}\tau. 
+	\end{eqnarray*}
+}
+\end{alertblock}
+\begin{itemize}
+\item<1-> Can be proved \textbf{by induction} using Fubini's Theorem/the previous formula, 
+\item<2-> We have introduced the $\Gamma$ function so let's use it,
+\item<3-> Now we use it to move from the integer case to the \textbf{real one}.
+\end{itemize}
+%\begin{columns}
+%\begin{column}{0.6\columnwidth}
+%
+%\end{column}
+%\end{columns}
+\end{frame}
+
+\begin{frame}{Riemann--Liouville Fractional Integrals}
+
+\begin{block}{Riemann--Liouville Fractional Integral}
+Let $\Re\alpha > 0$, and let $f \in \mathbb{L}^1([a,b])$. Then for $t \in [a,b]$ we call
+\begin{eqnarray*}
+I_{[a,t]}^\alpha f(t) = {}_{a}{D_t^{-\alpha}}f(t) = & \displaystyle \frac{1}{\Gamma({\alpha})} \int_{a}^{t} (t-\tau)^{{\alpha} - 1} f(\tau) \,{\rm d}\tau,\\
+I_{[t,b]}^\alpha f(t) = {}_{a}{D_t^{-\alpha}}f(t) = & \displaystyle \frac{1}{\Gamma({\alpha})} \int_{t}^{b} (\tau-t)^{{\alpha} - 1} f(\tau) \,{\rm d}\tau.
+\end{eqnarray*}
+the \textbf{Riemann--Liouville} fractional integrals of $f$ of order $\alpha$, we set it to be the identity operator whenever $\alpha = 0$.
+\end{block}
+
+\begin{itemize}
+	\item[{\faLightbulb}] \textbf{the idea} is that we have substituted the integer number  $n$ of repetition of the integral with the real order $\alpha$,
+	\item[{\faQuestionCircle}] but does \alert{this makes sense}?
+\end{itemize}
+ 
+
+\end{frame}
+
+\begin{frame}{RL Fractional Integrals: properties - I}
+
+\begin{alertblock}{Theorem (Existence).}
+Lef $f \in \mathbb{L}^{1}[a,b]$, and $\alpha > 0$. Then, the integral $I_{[a,t]}^{\alpha}f(t)$ exists for almost every $t \in [a,b]$. Moreover, the function $I_{[a,t]}^{\alpha}f$ itself is also an element of $\mathbb{L}^{1}[a,b]$.
+\end{alertblock}
+
+\textbf{Proof.} It is sufficient to recognize that we can write the integral in question as
+a convolution on $\mathbb{R}$, indeed:
+\[
+\int_{0}^{t} (t-\tau)^{{\alpha} - 1} f(\tau) {\rm d}\tau = \int_{-\infty}^{+\infty} \Phi_1(t-\tau) \Phi_2(\tau)\,{\rm d}\tau,
+\]
+where
+\[
+\Phi_1(u) = \begin{cases}
+	u^{\alpha - 1}, & \text{ for } 0 < t \leq b-a,\\
+	0, \text{ otherwise},
+\end{cases} \text{ and } \Phi_2(u) = \begin{cases}
+	f(u), & \text{ for } u \in [a,b],\\
+	0, & \text{ otherwise}.
+\end{cases}
+\]
+By construction both the $\Phi_j$, $j=1,2$, are in $\mathbb{L}^1(\mathbb{R})$, and thus the integral exists and is a member of $\mathbb{L}^1$ as a convolution of $\mathbb{L}^1$ functions (We are using again \emph{Fubini's Theorem}).
+\end{frame}
+
+\begin{frame}{RL Fractional Integrals: properties - II}
+\begin{onlyenv}<1-6,8->
+\begin{alertblock}{Theorem (Semigroup property).}
+The RL fractional integral operators $\{ I_c^{\alpha} : \mathbb{L}^1[a,b] \rightarrow \mathbb{L}^1[a,b], \; \alpha \geq 0 \}$ form a commutative semigroup with respect to the concatenation operation, that is
+\[
+I_c^{\alpha}(I_c^{\beta} f(t)) =  I_c^{\alpha+\beta} f(t)), \text{ and }
+I_c^{\beta}(I_c^{\alpha} f(t)) =  I_c^{\alpha+\beta} f(t)).
+\]
+The neutral element of this semigroup is the $I^0_{c}$ operator.
+\end{alertblock}
+\end{onlyenv}
+\begin{onlyenv}<7>
+\begin{exampleblock}{Euler's $\beta$-function}
+The Euler's $\beta$-function is defined as:
+\[\beta(x,y) \triangleq \int_{0}^{1} u^{x-1} (1-u)^{y-1}\,du = \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)} \quad \Re x > 0, \Re y > 0,\]
+\end{exampleblock}
+\end{onlyenv}
+\textbf{Proof.} \only<1>{We prove it for one side, the other is analogous.}\only<2->{
+We have just proved that the integral exists, then by using \emph{Fubini's theorem} we can interchange the order of integration}\only<2>{:
+\[I_{[a,t]}^\alpha I_{[a,t]}^\beta f(x) = \frac{1}{\Gamma(\alpha)\Gamma(\beta)} \int_{a}^{x}\int_{\tau}^{x} (x-t)^{\alpha - 1} (t-\tau)^{\beta-1} f(\tau)\,{\rm d}\tau\,{\rm d}t \]
+}\only<3-4>{:
+\[I_{[a,t]}^\alpha I_{[a,t]}^\beta f(x) = \frac{1}{\Gamma(\alpha)\Gamma(\beta)} \int_{a}^{x} f(\tau) \int_{\tau}^{x} (x-\alert<4>{t})^{\alpha - 1} (\alert<4>{t}-\tau)^{\beta-1} \alert<4>{\,{\rm d}t}\,{\rm d}\tau.\]
+}\only<5->{.}
+\only<4->{We now use the substitution $\alert<4>{t} = \tau + s(x-\tau)$, $\alert<4>{{\rm d}t} = (x-\tau){\rm d}s$.}\only<5->{ We obtain:}
+\only<5>{
+\[
+I_{[a,t]}^\alpha I_{[a,t]}^\beta f(x) = \frac{1}{\Gamma(\alpha)\Gamma(\beta)} \int_{a}^{x} f(\tau) \int_{0}^{1}[(x-\tau)(1-s)]^{\alpha - 1} [s(x-\tau)]^{\beta-1}(x-\tau) \,{\rm d}s\,{\rm d}\tau \\
+\]
+}\only<6-7>{
+\[
+I_{[a,t]}^\alpha I_{[a,t]}^\beta f(x) = \frac{1}{\Gamma(\alpha)\Gamma(\beta)} \int_{a}^{x} f(\tau) (x-\tau)^{\alpha+\beta-1} \alert<7>{\int_{0}^{1} (1-s)^{\alpha-1}s^{\beta-1} \,{\rm d}s}\,{\rm d}\tau.
+\]
+}
+\only<8>{
+\[I_{[a,t]}^\alpha I_{[a,t]}^\beta f(x) = \frac{1}{\Gamma(\alpha + \beta)}  \int_{a}^{x} (x-\tau)^{\alpha+\beta-1} f(\tau) \,{\rm d}\tau = I_{[a,t]}^{\alpha + \beta} f(x), \quad \text{a.e. on }[a,b]. \]
+The same works also if we exchange $\alpha$ and $\beta$, while we have the $0$th order operator being the neutral
+element by definition.
+}
+\end{frame}
+
+\begin{frame}{RL Fractional Integrals: properties - III}
+\begin{exampleblock}{A note on regularity.}
+Observe that in the proof we could say something
+more on the regularity of the resulting functions. Indeed if $f$ is a continuous
+function on $[a,b]$, then also $I_{[a,t]}^\alpha f$ is continuous. Therefore we have
+that also the concatenation $I^\alpha_{[a,t]} I^\beta_{[a,t]}$ and $I_{[a,t]}^{\alpha+\beta}$ are
+continuous. Then what we have proved is that we have two continuous function that
+are \textbf{almost everywhere equal}, and therefore they most coincide everywhere.
+Furthermore, if $f \in \mathbb{L}^1[a,b]$ and $\alpha+\beta \geq 1$ we can use \alert{Semigroup property} to write
+\[
+I_{[a,t]}^\alpha I_{[a,t]}^\beta f = I_{[a,t]}^{\alpha + \beta} f  = I_{[a,t]}^{\alpha + \beta - 1} I_{[a,t]}^{1} f, \textit{ a.e.}
+\]
+Now, since $I_{[a,t]}^1 f$ is continuos, we also get that the other two way of writing
+it are continuous, and thus we can conclude the equality everywhere by the same
+argument as before.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{Computing a Riemann--Liouville fractional integral.}
+\[
+I_{[0,t]}^\alpha t^\mu = \frac{1}{\Gamma({\alpha})} \int_{0}^{t} (t-\tau)^{{\alpha} - 1} \tau^\mu \,d\tau \only<2->{= \frac{\Gamma(\mu+1)}{\Gamma(\alpha+\mu+1)}t^{\alpha+\mu}},
+\]
+\only<1>{This should be the simplest possible example, and indeed it is as simple as using again the \textbf{Euler $\beta$ Function}:
+\[
+  \beta(x,y) \triangleq \int_{0}^{1} u^{x-1} (1-u)^{y-1}\,du = \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)} \quad \Re x > 0, \Re y > 0.
+\]
+To obtain it, we do the substitution for $u = \frac{\tau}{t}$, then
+\[
+\begin{split}
+I_{[0,t]}^\alpha t^\mu = & \frac{t^{\alpha+\mu}}{\Gamma(\alpha)} \int_{0}^{1} u^\mu (1-u)^{\alpha-1} \,du \\ = & \frac{t^{\alpha+\mu}}{\Gamma(\alpha)} \frac{\Gamma(\mu+1)\Gamma(\alpha)}{\Gamma(\alpha+\mu+1)} =
+\frac{\Gamma(\mu+1)}{\Gamma(\alpha+\mu+1)}t^{\alpha+\mu}.
+\end{split}
+\]}
+\begin{onlyenv}<2->
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+t = linspace(0,1,100);
+I = @(alpha,mu,t) gamma(mu+1)*t.^(alpha+mu)/ gamma(alpha+mu+1);
+mu = 1.5;
+alpha = 1.5;
+plot(t,t.^mu,'r-',t,I(alpha,mu,t), 'b-','Linewidth',2);
+legend('Function','Integral');
+\end{minted}
+
+\onslide<3>{\alert{\faSadTear}\,They are hard to compute!}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\input{examplefracintegral.tikz}
+\end{column}
+\end{columns}
+\end{onlyenv}
+\end{frame}
+
+\section{Quadratures for Fractional Integrals}
+
+\begin{frame}{Quadratures for Fractional Integrals}
+\begin{block}{\faLightbulb[regular]\, Quadrature idea}
+Let us assume that $f(t)$  is suitably smooth on an interval $(a,b)$. Let\vspace{-0.5em}
+\[
+h = \frac{b-a}{N}, \quad t_k = a + kh, \quad \text{ with } k=0,1,2,\ldots,N, \quad N \in \mathbb{N}
+\]
+\vspace{-0.5em}then we can approximate for $t = t_N$ the fractional integral as\vspace{-0.5em}
+\[
+\begin{split}
+\left. {}_{a}D_{b}^{-\alpha} f(t)\right\rvert_{t = t_N} = & \frac{1}{\Gamma(\alpha)} \int_{a}^{t_N} (t_N - \tau)^{\alpha - 1} f(\tau)\,{\rm d}\tau %\\
+= \frac{1}{\Gamma(\alpha)} \sum_{k=0}^{N-1} \int_{t_k}^{t_{k+1}} (t_k - \tau)^{\alpha-1} f(\tau)\,{\rm d}\tau.\vspace{-0.5em}
+\end{split}
+\]
+We approximate $f(x)$ with a polynomial $p(x)$ such that we can compute exactly the involved integrals, this yields quadratures by the usual look\vspace{-0.5em}
+\[
+\left. {}_{a}D_{b}^{-\alpha} f(t)\right\rvert_{t = t_N}  \approx \sum_{k=0}^{N-1} \omega_k f(t_k).
+\]
+\end{block}
+
+\end{frame}
+
+\subsection{Piecewise constant approximation}
+
+\begin{frame}{Piecewise constant approximation}
+We approximate $f(t)$ on the intervals $[t_k,t_k+1)$, $k=0,\ldots,N-1$, selecting
+\[
+f(t) \approx p(t) \equiv p(t_k), \quad t \in [t_k,t_k+1), \; k=0,1,\ldots,N-1,
+\]
+from which we get the formula
+\[
+\begin{split}
+\left. {}_{a}D_{b}^{-\alpha} f(t)\right\rvert_{t = t_N} \approx \only<1>{& \frac{1}{\Gamma(\alpha)} \sum_{k=0}^{N-1} f(t_k) \int_{t_k}^{t_k+1}(t_N - \tau)^{\alpha - 1}\,{\rm d}\tau   
+=  \frac{1}{\Gamma(\alpha)} \sum_{k=0}^{N-1} f(t_k) \left[ -\frac{1}{\alpha}(t_N - \tau)^{\alpha} \right]_{t_k}^{t_{k+1}} \\
+= & \sum_{k=0}^{N-1} f(t_k) \frac{1}{\alpha \Gamma(\alpha)} \left[ (t_N - t_k)^{\alpha} - (t_N - t_{k+1})^{\alpha} \right] \\
+= & \sum_{k=0}^{N-1} f(t_k) \frac{1}{\alpha \Gamma(\alpha)} \left[ ( a + hn - a -kh)^{\alpha} - (a + hn -a -(k+1)h)^{\alpha} \right] \\
+= & \sum_{k=0}^{N-1} f(t_k) \frac{h^\alpha}{\Gamma(\alpha+1)} \left[ (n-k)^\alpha - (N-k-1)^\alpha \right] 
+= } \sum_{k=0}^{N-1} b_{N-k-1}f(t_k), \only<3->{\qquad b_k = \frac{h^\alpha}{\Gamma(\alpha + 1)} [ (k+1)^\alpha - k^\alpha].}
+\end{split}
+\]
+\only<2>{where we have defined
+\[b_k = \frac{h^\alpha}{\Gamma(\alpha + 1)} [ (k+1)^\alpha - k^\alpha], \qquad 0 \leq k \leq N-1.\]}
+\only<3>{Analogously we get the case in which we select the \textbf{right approximation}
+\[
+f(t) \approx p(t) \equiv p(t_{k+1}), \quad t \in [t_k,t_k+1), \; k=0,1,\ldots,N-1,
+\]
+and, more generally, for the \textbf{weighted formula} in which we select
+\[
+f(t) \approx p(t) \equiv \lambda p(t_{k}) + (1-\lambda)p(t_{k+1}), \quad t \in [t_k,t_k+1), \; k=0,1,\ldots,N-1, \; \lambda \in [0,1].
+\]
+}\only<4>{The general \textbf{weighted formula} is then given by
+\[
+\left. {}_{a}D_{b}^{-\alpha} f(t)\right\rvert_{t = t_N} \approx \sum_{k=0}^{N-1} b_{N-k-1} \left[ \lambda p(t_{k}) + (1-\lambda)p(t_{k+1}) \right], \quad \lambda \in [0,1].
+\]
+}
+\end{frame}
+
+\begin{frame}{Implementation}
+This is a simple procedure to implement
+\inputminted[bgcolor=bg,fontsize=\footnotesize,breaklines]{matlab}{constfracint.m}
+\end{frame}
+
+\begin{frame}[fragile]{Implementation - II}
+And we can \textbf{test the results} using the fractional integral we have computed by hand
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\footnotesize,breaklines]{matlab}
+f     = @(t,mu) t.^mu;
+Itrue = @(alpha,mu,t) gamma(mu+1)*t.^(alpha+mu)/ gamma(alpha+mu+1);
+mu    = 1;
+alpha = 1.5;
+
+N = 100;
+lambda = 1;
+I = constfracint(@(t) f(t,mu),0,1,alpha,N,1);
+fprintf('Relative error is: %e\n',abs(I-Itrue(alpha,mu,1))./abs(Itrue(alpha,mu,1)));
+\end{minted}
+That returns us
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\footnotesize,breaklines]{bash}
+Relative error is: 1.246939e-02
+\end{minted}
+But \alert{what about convergence}?
+\end{frame}
+
+\begin{frame}{Convergence}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{block}{Fractional Newton-Cotes formula}
+Lef $f(t)$ be approximated by a polynomial $p_{k,r}(t)$ of degree $r$ on the
+grid points $\{t_k = t_0^{(k)},\ldots,t_{r}^{(k)} = t_{k+1}\}$. Then the error
+estimate for an $f \in \mathcal{C}^{r+1}([a,b])$ on each sub-interval $[t_k,t_{k+1}]$ is given by
+\[ f(t)-p_{k,r}(t) = \frac{f^{(r+1)}(\tau_k)}{(r+1)!} \prod_{j=0}^{r} (t - t_j^{(k)}), \]
+for $r \in \mathbb{N}$, $t,\tau_k \in [t_k,t_{k+1}]$, i.e., the formula is of order $O(h^{r+1})$.
+\end{block}
+
+\end{column}
+\begin{column}{0.35\columnwidth}
+\scriptsize\centering
+\input{convergencefracint.tikz}
+\begin{tabular}{cccc}
+\toprule
+$N$/$\lambda$ & $0$ & $1$ & $\nicefrac{1}{2}$ \\
+\midrule
+1e+01 & 1.3e-01 & 1.2e-01 & 2.9e-03 \\
+1e+02 & 1.3e-02 & 1.2e-02 & 3.1e-05 \\
+1e+03 & 1.3e-03 & 1.2e-03 & 3.1e-07 \\
+1e+04 & 1.3e-04 & 1.2e-04 & 3.1e-09 \\
+1e+05 & 1.3e-05 & 1.2e-05 & 3.1e-11 \\
+\bottomrule
+\end{tabular}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Convergence}
+\textbf{Proof.}\only<1>{The interpolating polynomial can be expressed in the \textbf{Lagrange basis}
+\[
+p_{k,r}(t) = \sum_{i=0}^{r} l_{k,i}(t) f(t_i^{(k)}), \quad l_{k,i}(t) = \prod_{\substack{j=0\\j\neq i}}^r \frac{t - t_j^{(k)}}{t_i^{(k)}-t_j^{(k)}}, \quad 0 \leq i \leq r, \; t \in [t_{k},t_{k+1}].
+\]
+}Then the \alert{fractional Newton-Coates} formula si given by
+\[
+\left. {}_{a}D_{b}^{-\alpha} f(t)\right\rvert_{t = t_N} \approx \left. {}_{a}D_{b}^{-\alpha} p_{k,r}(t)\right\rvert_{t = t_N} = \sum_{k = 0}^{N-1} \sum_{i=0}^{r} C_{i,N}^{(k)} f(t_i^{(k)}),
+\]
+\only<1>{for
+\[
+C_{i,N}^{(k)} = \frac{1}{\Gamma(\alpha)} \int_{t_k}^{t_{k+1}}(t_N - \tau)^{\alpha-1} l_{k,i}(\tau)\,\textrm{d}\tau.
+\]}
+\only<2->{from which we obtain the error estimate as
+\[
+\begin{split}
+\left| {}_{a}D_{b}^{-\alpha} f(t) - {}_{a}D_{b}^{-\alpha} p_{k,r}(t) \right| \only<2-3>{\leq & \frac{1}{\Gamma(\alpha)} \sum_{k=0}^{N-1} \int_{t_k}^{t_{k+1}} (t_N - \tau)^{\alpha-1} \left| f(\tau) - p_{k,r}(\tau) \right|\,\textrm{d}\tau \\
+\leq & \max_{t \in [a,t_N]} \frac{|f^{(r+1)}(t)|}{ (r+1)! \Gamma(\alpha)} \sum_{k=0}^{N-1} \int_{t_k}^{t_{k+1}} (t_N - \tau)^{\alpha-1} \prod_{j=0}^{r} |\tau - t_j^{(k)}|\,\textrm{d}\tau \\
+\leq & \max_{t \in [a,t_N]} \left| f^{(r+1)}(t) \right| \frac{h^{r+1}}{(r+1)! \Gamma(\alpha\only<3>{+1})} \only<2>{\sum_{k=0}^{N-1} \int_{t_k}^{t_{k+1}} (t_N - \tau)^{\alpha-1}\,\textrm{d}\tau}\only<3>{(t_N - t_0)^{\alpha}}.}\only<4->{\in O(h^{r+1}).} 
+\end{split}
+\]
+}
+\begin{onlyenv}<4>
+\begin{exampleblock}{Remark}
+The error estimate does not coincide completely with the classical one for Newton-Coates formulas, this is due to the nonsymmetry of the integral kernel $(t_N' - t)^{\alpha-1}$.
+\end{exampleblock}
+\end{onlyenv}
+\end{frame}
+
+\begin{frame}{Suggested exercises, and some extensions}
+\definecolor{danger}{HTML}{f0ad4e}
+\begin{enumerate}[(i)]
+\item Rewrite (and implement) the fractional weighted constant approximation for the \emph{other-sided} Riemann-Liuoville fractional integral,
+\item Denote with $t_{k + \nicefrac{1}{2}} = \nicefrac{t_{k} + t_{k+1}}{2}$ on each sub-interval $[t_k,t_{k+1}]$, approximate $f(t)$ with a \emph{piecewise quadratic polynomial}, derive and implement the fractional Simpson's formula -- \textcolor{danger}{\faExclamationTriangle} The closed form of the coefficients for this case is cumbersome\ldots
+\end{enumerate}
+
+\begin{block}{Extensions}
+By mimicking the usual procedure for deriving collocation/spectral type quadrature formulas, we could approximate $f(t)$ by using, e.g., Jacobi polynomials to obtain the related quadrature formulas (when you have obtained formulas for Jacobi, then \emph{Chebyshev} and \emph{Legendre} follow with relative ``ease'').
+\end{block}
+
+\end{frame}
+
+\section{Riemann--Liouville Fractional Derivatives}
+
+\begin{frame}{Riemann--Liouville Fractional Derivatives}
+Now that we've gotten a little bit of familiarity with Riemann--Liouville integral operators, we can finally \textbf{introduce the corresponding differential operators}.
+
+\begin{block}{\faLightbulb[regular]\,The key idea \only<2>{ \alert{now we go from integers to real numbers!} }}
+Let $f$ be a function having a continuous $n$th derivative on the interval $[a,b]$, and let $m \in \mathbb{N}$ be such that $m > n$, then
+\[
+ \frac{d^n}{d t^n} f(t) = \frac{1}{(m-n-1)!} \frac{d^m}{d t^m} \int_{a}^{t} (t-\tau)^{m-n-1} f(\tau)\,{\rm d}\tau = \frac{d^m}{d t^m}  I_a^{m-n} f,
+\]
+simply by employing the \alert{Fundamental Theorem of (Classical) Calculus}
+\[
+f = \frac{d^{m-n}}{d t^{m-n}} I_a^{m-n}f,
+\]
+and applying the operator $\frac{d^n}{d t^n}$ to both side of it.
+\end{block}
+\end{frame}
+
+\begin{frame}{Riemann--Liouville Fractional Derivatives}
+\definecolor{danger}{HTML}{f0ad4e}
+Substitute the integer $n$ with a real positive number $\alpha$ and select an $m \in \mathbb{N}$ s.t. $m > \alpha$.
+
+\begin{block}{RL Derivative}
+Let $\alpha \in \mathbb{R}_+$ and $m = \lceil \alpha \rceil$, we define the Riemann-Liouville operator ${}_\text{RL}D_a^\alpha$ as
+\[
+{}_\text{RL}D_a^\alpha f(t) \triangleq \frac{d^m}{d t^m} I_a^{m-\alpha} f(t),
+\]
+and we set ${}_\text{RL}D_a^0$ to the identity operator.
+\end{block}
+
+\begin{itemize}
+	\item[{\textcolor{danger}{\faExclamationTriangle}}] The right-hand side of our definition remains valid, \alert{\textbf{but}} now the resulting operator \alert{depends on the choice of the point $a$}.
+	\item<2>[{\faQuestionCircle}] for what functions $f$ does this definition make sense?
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Riemann--Liouville Fractional Derivatives Existence}
+
+\begin{block}{The $\mathbb{A}^n$ functions}
+We call $\mathbb{A}^n[a,b]$, or simply $\mathbb{A}^n$ when the interval is
+clear from the context, the space of function with an \textbf{absolutely continuous}
+$(n-1)$st derivative, i.e., the functions $f$ for which there exists almost
+everywhere a (generalized) $n$th derivative function $g \in \mathbb{L}^1[a,b]$ for which holds
+\[
+f^{(n-1)}(t) = f^{(n-1)}(a) + \int_{a}^{t} g(\tau)\,{\rm d}\tau.
+\]
+\end{block}
+
+\begin{description}
+	\item[Remind:] For a compact interval:
+	\begin{center}
+		    continuously differentiable $\subseteq$ Lipschitz continuous $\subseteq$ absolutely continuous $\subseteq$ bounded variation $\subseteq$ differentiable almost everywhere
+	\end{center}
+	\item[Example:] $f(t) = \sqrt[3]{t}$ is absolutely continuous on any bounded interval $I$ \textbf{but} not Lipschitz continuous on any interval $I$ such that $0 \in I$.
+\end{description}
+
+\end{frame}
+
+\begin{frame}{Riemann--Liouville Fractional Derivatives Existence}
+\begin{alertblock}{Theorem (Existence)}
+Lef $f \in \mathbb{A}^1[a,b]$, and $0 < \alpha < 1$. Then ${}_\text{RL}D_a^\alpha f(t)$ exists almost everywhere in $[a,b]$. Moreover, ${}_\text{RL}D_a^\alpha f(t) \in \mathbb{L}^p$ for $1 \leq p < \alpha^{-1}$ and
+\[
+{}_\text{RL}D_a^\alpha f(t) = \frac{1}{\Gamma(1-\alpha)} \left( \frac{f(a)}{(t-a)^\alpha} + \int_{a}^{t} f'(\tau)(t-\tau)\,{\rm d}\tau \right).
+\]
+\end{alertblock}
+
+\textbf{Proof.} We use directly the two definitions\only<3>{, and apply again \emph{Fubini's Theorem}}\only<4>{, and finally Leibniz rule for the derivative of integral functions,}
+\[
+\begin{split}
+{}_\text{RL}D_a^\alpha f(t) \only<1>{
+= & \frac{1}{\Gamma(1-\alpha)} \frac{d}{d t} \int_{a}^{t} f(\tau)(t-\tau)^{-\alpha}\,{\rm d}\tau \\
+= & \frac{1}{\Gamma(1-\alpha)} \frac{d}{d t} \int_{a}^{t} \left( f(a) + \int_{a}^{\tau} f'(s)\,{\rm d}s \right)(t-\tau)^{-\alpha}\,{\rm d}\tau \\
+}
+\only<2>{
+= & \frac{1}{\Gamma(1-\alpha)} \frac{d}{d t} \int_{a}^{t} \left( f(a) + \int_{a}^{\tau} f'(s)\,{\rm d}s \right)(t-\tau)^{-\alpha}\,{\rm d}\tau \\
+= & \frac{1}{\Gamma(1-\alpha)} \frac{d}{d t} \left( f(a)\int_{a}^{t} \frac{{\rm d}t}{(x-t)^\alpha} + \int_{a}^{t}\int_{a}^{\tau} f'(s)(t-\tau)^{-\alpha}\,{\rm d}s\,{\rm d}\tau\right) \\
+}
+\only<3>{
+= & \frac{1}{\Gamma(1-\alpha)} \frac{d}{d t} \left( f(a)\int_{a}^{t} \frac{{\rm d}t}{(x-t)^\alpha} + \int_{a}^{\tau}\int_{a}^{t} f'(s)(t-\tau)^{-\alpha}\,{\rm d}s\,{\rm d}\tau\right) \\
+= & \frac{1}{\Gamma(1-\alpha)} \left( \frac{f(a)}{(t-a)^{\alpha}} + \frac{d}{dt} \int_{a}^{\tau} \int_{a}^{t} f'(s)(t-\tau)^{-\alpha}\,{\rm d}s\,{\rm d}\tau \right) \\
+\text{(Fubini) }= &  \frac{1}{\Gamma(1-\alpha)} \left( \frac{f(a)}{(t-a)^\alpha} + \frac{d}{dt} \int_{a}^{t} f'(s) \frac{(t-s)^{1-\alpha}}{1-\alpha}\,{\rm d}s \right),
+}
+\only<4>{
+= & \frac{1}{\Gamma(1-\alpha)} \left( \frac{f(a)}{(t-a)^\alpha} + \frac{d}{dt} \int_{a}^{t} f'(s) \frac{(t-s)^{1-\alpha}}{1-\alpha}\,{\rm d}s \right), \\
+\text{(Leibniz) }= & \frac{1}{\Gamma(1-\alpha)} \left( \frac{f(a)}{(t-a)^\alpha} + \int_{a}^{t} f'(\tau)(t-\tau)\,{\rm d}\tau \right).
+}
+\end{split}
+\]
+\end{frame}
+
+\begin{frame}{Computing our first RL derivatives}
+To keep things simple we can compute, first of all, the fractional derivative of order $\alpha \in (0,1)$ of the \textcolor{blue}{\textbf{constant function}} $f(t) = 1$ in $[0,t]$:
+
+\begin{columns}
+\begin{column}{0.6\columnwidth}
+We simply apply the previous representation theorem, and thus:
+\[
+\begin{split}
+{}_\text{RL}D_{[0,1]}^\alpha f(t) = & \frac{1}{\Gamma(1-\alpha)} \left( \frac{f(0)}{(t-0)^\alpha} + \int_{0}^{t} f'(\tau)(t-\tau)\,{\rm d}\tau \right) = \\
+= & \frac{1}{\Gamma(1-\alpha)} \frac{1}{(t-0)^\alpha} = \frac{t^{-\alpha}}{\Gamma(1-\alpha)}
+\end{split}
+\]
+\end{column}
+\begin{column}{0.3\columnwidth}
+\input{derivativeofconstant.tikz}
+\end{column}
+\end{columns}
+\vfill
+
+\onslide<2>{\centering \alert{The RL derivative of a constant is not zero!}}
+
+\end{frame}
+
+\begin{frame}{Computing our first RL derivatives}
+Let $f(t) = (t-a)^\beta$ for some $\beta > -1$ and compute its RL derivative of order $\alpha > 0$ on an interval $[a,b]$.
+
+First we compute the \textbf{fractional integral} part of the definition:
+\[
+\begin{split} 
+I_{[a,t]}^\alpha f(t) = \only<1>{& \frac{1}{\Gamma(\alpha)} \int_{a}^{t} (\tau - a)^\beta (t - \tau)^{\alpha - 1}\,\textrm{d}\tau = \\
+= & \frac{1}{\Gamma(\alpha)} \int_{0}^{t-a} s^\beta (t-a-s)^{\alpha-1} \,\textrm{d}s = \textcolor{gray}{\leftarrow \left( \int_{0}^{x} s^{\beta - 1}(x-s)^{\alpha - 1} \textrm{d}s = \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}x^{\alpha+\beta-1}  \right)} \\
+= &} \frac{\Gamma(\beta + 1)}{\Gamma(\alpha + \beta + 1)} (t - a)^{\alpha+\beta},
+\end{split}
+\]
+\only<2>{Then we just have to compute the derivative with the correct indexes
+\[
+\begin{split}
+{}_\text{RL}D_{[0,1]}^\alpha f(t) = & \frac{d^{\lceil \alpha \rceil}}{d t^{{\lceil \alpha \rceil}} } I_{[a,t]}^{{\lceil \alpha \rceil} - \alpha} f(t) = \frac{\Gamma(\beta + 1)}{\Gamma(\lceil \alpha \rceil - \alpha + \beta + 1) } \left.\frac{d^{\lceil \alpha \rceil}}{d t^{{\lceil \alpha \rceil}} } (\cdot - a)^{\lceil \alpha \rceil - \alpha + \beta}\right|_t,
+\end{split}
+\]
+now, if $\alpha - \beta \in \mathbb{N}$ the right-hand side vanishes ($\lceil\alpha\rceil$-derivative of a polynomial of lower degree), if $\alpha - \beta \not\in \mathbb{N}$, we find
+\[
+\begin{split}
+{}_\text{RL}D_{[0,1]}^\alpha f(t) = \frac{\Gamma(\beta + 1)}{\Gamma(\beta + 1 - \alpha)} (t-a)^{\beta - \alpha}.
+\end{split}
+\]
+}
+ 
+\end{frame}
+
+\begin{frame}{Summary and anticipations}
+\definecolor{success}{HTML}{4a934a}
+\definecolor{todo}{HTML}{0099cc}
+
+We did
+\begin{itemize}
+	\item[\textcolor{success}{\faCheckCircle}] Definition and properties of Riemann--Liouville Integrals,
+	\item[\textcolor{success}{\faCheckCircle}] Some examples of Fractional Newton-Cotes formulas for RL integral computations,
+	\item[\textcolor{success}{\faCheckCircle}] Definition and  existence of Riemann--Liouville Derivatives,
+	\item[\textcolor{success}{\faCheckCircle}] A couple of by-hand computations of RL derivatives of simple functions.
+\end{itemize}
+
+Next up
+\begin{itemize}
+	\item[\textcolor{todo}{\faClipboardList}] Properties and interactions between Riemann--Liouville Integrals and Derivatives,
+	\item[\textcolor{todo}{\faClipboardList}] The Caputo fractional derivative,
+	\item[\textcolor{todo}{\faClipboardList}] An introduction to Fractional Differential Equations.
+\end{itemize}
+
+\end{frame}
+
+\appendix
+
+\section*{Bibliography}
+{\unnumbered
+\begin{frame}[allowframebreaks]{Bibliography}
+\small
+\printbibliography
+
+\end{frame}
+}
+\end{document}
+

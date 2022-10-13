@@ -1,0 +1,1601 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+% Math
+\usepackage{nicefrac}
+
+% Tipography stuff
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{fontawesome5}
+\usepackage{soul}
+\usepackage{euler}
+\usepackage{algorithm2e}
+\usepackage{animate}
+\usepackage{ifthen}
+\usepackage{multirow}
+
+% Bibliography
+\usepackage[giveninits,style=authoryear-comp,backend=biber]{biblatex}
+\addbibresource{../fracbiblio.bib}
+\newcommand\unnumbered{\setbeamertemplate{footline}{}}%\addtocounter{framenumber}{-1}
+\renewcommand*{\bibfont}{\normalfont\small}
+
+% Figures
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{calc,arrows,patterns,matrix,external}
+\usepackage{subfig}
+\usepackage{graphicx} % Allows including images
+\usepackage[american]{circuitikz}
+\usepackage{tikz-network}
+\tikzexternalize[prefix=Figures/] % activate and define figures/ as cache folder
+\usepackage{mathtools}
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks,linkcolor=,urlcolor=MidnightBlue}
+
+% Code
+\usepackage{minted}
+
+% Block matrices
+\newcommand{\bigzero}{\mbox{\normalfont\Large\bfseries 0}}
+\newcommand{\rvline}{\hspace*{-\arraycolsep}\vline\hspace*{-\arraycolsep}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\bone}{{\bf 1}}
+\newcommand{\evec}{{\bf e}}
+\newcommand{\dvec}{{\bf d}}
+\newcommand{\xvec}{{\bf x}}
+\newcommand{\yvec}{{\bf y}}
+\newcommand{\qvec}{{\bf q}}
+\newcommand{\svec}{{\bf s}}
+\newcommand{\pvec}{{\bf p}}
+\newcommand{\tvec}{{\bf t}}
+\definecolor{Ao}{rgb}{0.0, 0.5, 0.0}
+\setlength{\tabcolsep}{0.3em}
+
+
+\author{Fabio Durastante}
+\title{An introduction to fractional calculus}
+\subtitle{Fundamental ideas and numerics}
+\institute{Università di Pisa\\\href{mailto:fabio.durastante@unipi.it}{\faEnvelope\;fabio.durastante@unipi.it}\\\href{https://fdurastante.github.io}{\faFirefox\;fdurastante.github.io}}
+\date{September, 2022}
+
+\newcommand{\de}{{\rm d}}
+
+
+\begin{document}
+
+{\unnumbered
+\begin{frame}[t,plain,noframenumbering]
+\titlepage
+\vspace{-4em}\includegraphics[width=2cm]{frame.png}
+\end{frame}
+}
+
+\section{Solving linear system with Toeplitz-like matrices}
+
+\begin{frame}{Solving linear system with Toeplitz-like matrices}
+
+In the last lecture we discretized
+\begin{equation*}
+	\begin{cases}\frac{\partial W}{\partial t} = \theta\,{}^{\only<1>{RL}\only<2->{\alert<2>{GL}}}D_{[0,x]}^\alpha W(x,t) + (1-\theta) {}^{\only<1>{RL}\only<2->{\alert<2>{GL}}}D_{[x,1]}^\alpha W(x,t), \qquad \theta \in [0,1],\\
+		W(0,t) = W(1,t) = 0, \qquad W(x,t) = W_0(x).	
+	\end{cases}
+\end{equation*}
+\onslide<2>{Obtaining
+\[
+\left( I_N - \frac{\Delta t}{h_N^\alpha} \left[ \theta G_N + (1-\theta) G_N^T \right] \right) \mathbf{w}^{n+1} = \mathbf{w}^n
+\]
+with
+\[
+G_N = \begin{bmatrix}
+	1 & 0 & \cdots & \cdots & 0 \\
+	g_2 & g_1 & g_0 \\
+	\vdots & \ddots & \ddots & \ddots\\
+	\vdots &  & \ddots &  \ddots & g_0 \\
+	g_{N-1} & \cdots & g_3 & g_2 & g_1 \\
+	0 & \cdots & \cdots & 0 & 1
+\end{bmatrix}.
+\]}
+\end{frame}
+
+\begin{frame}{Solving linear system with Toeplitz-like matrices}
+The matrix
+\[
+A_N = I_N - \frac{\Delta t}{h_N^\alpha} \left[ \theta G_N + (1-\theta) G_N^T \right],
+\]
+is a \textbf{Toepltiz} matrix plus some \alert{rank corrections}.
+\begin{itemize}
+	\item[\faEye] By rearranging the right-hand side or restricting to solve only for the internal nodes we can avoid the rank corrections.
+	\item<2->[\faQuestionCircle] How do we solve such systems?
+	\begin{itemize}
+		\item<3->[\faDoorOpen] Direct methods \onslide<5->{$\Rightarrow$ fast and superfast Toeplitz solvers}
+		\item<4->[\faDoorOpen] Iterative methods \onslide<6->{$\Rightarrow$ preconditioned Krylov methods, multigrid solvers/preconditioners}
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Direct Toeplitz solvers}
+
+Direct Toeplitz solver are \emph{mostly} based on the answer to the following question:
+\begin{itemize}
+	\item[\faQuestionCircle] is the inverse of a Toeplitz matrix still a Toeplitz matrix?
+\end{itemize}
+\only<2>{
+\begin{equation*}
+	T_n = \vcenter{\hbox{\includegraphics[height=10em]{Figures/originalmat.png}}}
+\end{equation*}
+}%
+\only<3->{
+\begin{equation*}
+	T_n^{-1} = \vcenter{\hbox{\includegraphics[height=10em]{Figures/invmat.png}}}
+\end{equation*}
+}
+\onslide<4->{So the answer is \alert{\textbf{no}}, but$\ldots$ it seems that there is still some structure there, doesn't it?}
+
+
+\end{frame}
+
+\begin{frame}{The Gohberg--Semencul formula}
+$\ldots$ starting from a \textbf{displacement representation} of $T_n$, i.e., 
+\[\hspace{-1.9em}\scriptsize
+t_0 T_n = \begin{bmatrix}
+	t_0 & 0 & \cdots & 0 \\
+	t_1 & t_0 & \ddots & \vdots \\
+	\vdots & \vdots & \ddots & 0 \\
+	t_{n-1} & t_{n-2} & \cdots & t_0 
+\end{bmatrix}\hspace{-0.2em}\begin{bmatrix}
+t_0 & t_{-1} & \cdots & t_{1-n} \\
+0 & t_0 & \cdots & t_{2-n} \\
+0 & 0 &  & \vdots \\
+\vdots & \vdots & & t_{-1} \\
+0 & 0 & \cdots & t_0
+\end{bmatrix} - \begin{bmatrix}
+0 & 0 & \cdots & 0  & 0 \\
+t_1 & 0 & \cdots & 0 & 0 \\
+t_2 & t_1 & \ddots & \vdots & \vdots \\
+\vdots & \vdots & \ddots & 0 & 0 \\
+t_{n-1} & t_{n-2} & \cdots & t_1 & 0
+\end{bmatrix}\hspace{-0.2em}\begin{bmatrix}
+0 & t_{-1} & t_{-2} & \cdots & t_{1-n} \\
+0 & 0 & t_{-1} & \cdots & t_{2-n} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & 0 & & t_{-1} \\
+0 & 0 & 0 & \cdots & 0
+\end{bmatrix}
+\]
+\cite{MR0353038} obtained a \textbf{displacement representation} of the \textbf{inverse}
+\[\hspace{-1.9em}\scriptsize
+z_1 T_n^{-1} = \begin{bmatrix}
+	z_1 & 0 & \cdots & 0 \\
+	z_2 & z_1 & \ddots & \vdots \\
+	\vdots & \vdots & \ddots & 0 \\
+	z_{n-1} & z_{n-2} & \cdots & 0 \\
+	z_{n} & z_{n-1} & \cdots & z_1 
+\end{bmatrix}\hspace{-0.2em}\begin{bmatrix}
+	v_{n} & v_{n-1} & \cdots & v_{1} \\
+	0 & v_n & \cdots & v_{2} \\
+	0 & 0 &  & \vdots \\
+	\vdots & \vdots & & v_{n-1} \\
+	0 & 0 & \cdots & v_n
+\end{bmatrix} - \begin{bmatrix}
+	0 & 0 & \cdots & 0  & 0 \\
+	v_1 & 0 & \cdots & 0 & 0 \\
+	v_2 & v_1 & \ddots & \vdots & \vdots \\
+	\vdots & \vdots & \ddots & 0 & 0 \\
+	v_{n-1} & v_{n-2} & \cdots & v_1 & 0
+\end{bmatrix}\hspace{-0.2em}\begin{bmatrix}
+	0 & z_{n} & z_{n-1} & \cdots & z_{1} \\
+	0 & 0 & z_{n} & \cdots & z_{2} \\
+	\vdots & \vdots & \vdots & \ddots & \vdots \\
+	0 & 0 & 0 & & z_{n} \\
+	0 & 0 & 0 & \cdots & 0
+\end{bmatrix}
+\]
+with $z_1 = v_n$.
+\end{frame}
+
+\begin{frame}{Direct Toeplitz solvers}
+By cleverly computing the vectors $\mathbf{z}$ and $\mathbf{v}$ from the $\{t_n\}_n$ coefficients, one obtains several ``fast'' and ``superfast'' algorithms:
+\begin{center}
+\begin{tabular}{lc}
+	\toprule
+	Algorithm & Complexity \\
+	\midrule
+	\cite{levinson1946wiener} & $O(n^2)$ \\
+	\cite{trench1964algorithm} & $O(n^2)$ \\
+	\cite{zohar1974solution} & $O(n^2)$ \\
+	\cite{bitmead1980asymptotically} & $O(n \log^2(n))$\\
+	\cite{brent1980fast} & $O(n\log^2(n))$ \\
+	\cite{de1987new} & $O(n\log^2(n))$ \\
+	\cite{ammar1988superfast} & $O(n \log^2(n))$\\
+	\cite{chan1992look} & $O(n^2)$ \\
+	\midrule
+	\cite{MR1685049} & $O(n \log m + m \log^2 m \log \nicefrac{n}{m})$\\
+	\bottomrule
+\end{tabular}
+
+$n$ size of the matrix, $m$ size of the bandwidth.
+\end{center}
+\end{frame}
+
+\begin{frame}{In our case}
+To treat our case
+\[
+\left( I_N - \frac{\Delta t}{h_N^\alpha} \left[ \theta G_N + (1-\theta) G_N^T \right] \right) \mathbf{w}^{n+1} = \mathbf{w}^n
+\]
+we can then apply one of those algorithms (some of them use \emph{symmetry}).
+\begin{itemize}
+	\item[\faQuestionCircle]<2-> What happens if we need to treat the case
+	\[
+	\left( I_N - \frac{\Delta t}{h_N^\alpha} \left[ D_n^{(1)} G_N + D_n^{(2)} G_N^T \right] \right) \mathbf{w}^{n+1} = \mathbf{w}^n
+	\]
+	with $D_n^{(\cdot)}$ diagonal matrices coming from the discretization of \textbf{anisotropic space-variant diffusion coefficients}?
+	\item[\faQuestionCircle]<3-> What happens if we need to treat \textbf{multi-dimensional cases}?
+\end{itemize} 
+\end{frame}
+
+\subsection{Iterative methods for Toeplitz-like linear systems}
+
+\begin{frame}{Krylov subspace methods}
+To overcome these challenges, we use an iterative approach based on \textbf{Krylov subspaces}.
+
+\begin{block}{Krylov subspace}
+A \emph{Krylov subspace} $\mathcal{K}$ for the matrix $A$ related to
+a non null vector $\mathbf{v}$ is defined as
+\begin{equation*}
+	\mathcal{K}_m(A,\mathbf{v})=\operatorname{Span}\{ \mathbf{v},A \mathbf{v},A^2 \mathbf{v},\ldots,A^{m-1} \mathbf{v} \}.
+\end{equation*}
+\end{block}
+
+\begin{itemize}
+	\item[\faExclamationCircle]<2-> The fundamental operation is the \textbf{matrix-vector} product.
+	\item[\faLightbulb]<3-> Their use is \emph{effective} when these \textbf{products are cheap}.
+	\item[\faMoneyBillWave]<4-> We can compute $T_n(f)\mathbf{v}$ in $O(n\log(n))$ operations!
+	\[
+	\hspace{-2em}C_{2n} \begin{bmatrix}
+		\mathbf{v} \\
+		\mathbf{0}_{n} \end{bmatrix}
+	= \underbrace{\begin{bmatrix}
+		T_n(f) & E_n \\
+		E_n & T_n(f)
+	\end{bmatrix}}_{\text{Circulant}}\begin{bmatrix}
+		\mathbf{v} \\
+		\mathbf{0}_{n} \end{bmatrix} = \begin{bmatrix}
+		T_n(f) \mathbf{v} \\
+		 E_n \mathbf{v} \end{bmatrix}, \quad     {\small E_n = \begin{bmatrix}
+		0 & t_{n-1} & \ldots & t_{2} & t_{1} \\
+		t_{1-n} & 0 & t_{n-1} & \ldots & t_{2}  \\
+		\vdots & t_{1-n} & 0 & \ddots &  \vdots \\
+		t_{-2} & \ldots & \ddots & \ddots & t_{n-1} \\
+		t_{-1} & t_{-2} & \ldots & t_{1-n} & 0
+	\end{bmatrix}}.
+	\] 
+\end{itemize}
+
+\end{frame}
+
+\subsection{The Conjugate Gradient Method}
+
+\begin{frame}{The Conjugate Gradient Method}
+
+\begin{columns}
+\begin{column}{0.56\columnwidth}
+When $A$ is \alert{\textbf{symmetric positive definite}} the method of choice is the \textbf{C}onjugate \textbf{G}radient.
+
+\begin{alertblock}{Theorem.}
+Let $A$ be SPD and $k_2(A)=\lambda_n/\lambda_1$ be the $2$--norm
+condition number of $A$. We have:\vspace{-0.5em}
+\begin{equation*}
+	\frac{\|\mathbf{r}^{(m)}\|_2}{\|\mathbf{r}^{(0)}\|_2}\leq
+	\sqrt{k_2(A)}
+	\frac{\|\mathbf{x}^{*}-\mathbf{x}^{(m)}\|_A}{\|\mathbf{x}^{*}-\mathbf{x}^{(0)}\|_A}.
+\end{equation*}
+\end{alertblock}
+
+\begin{alertblock}{Corollary.}
+If $A$ is SPD with eigenvalues $0<\lambda_1\leq\ldots\leq\lambda_n$, we have\vspace{-0.5em}
+\begin{equation*}
+	\frac{\|\mathbf{x}^*-\mathbf{x}^{(m)}\|_A}{\|\mathbf{x}^*-\mathbf{x}^{(0)}\|_A}
+	\leq 2\left ( \frac{\sqrt{k_2(A)}-1}{\sqrt{k_2(A)}+1}\right)^m.
+\end{equation*}
+\end{alertblock}
+
+\end{column}
+\begin{column}{0.38\columnwidth}
+\begin{algorithm}[H]\scriptsize
+	\KwIn{$A \in \R^{n\times n}$ SPD, $N_{max}$, $\mathbf{x}^{(0)}$}
+	\KwOut{$\tilde{\mathbf{x}}$, candidate approximation.}
+	$\mathbf{r}^{(0)}\leftarrow \|\mathbf{b}-A \mathbf{x}^{(0)}\|_2 $, $\mathbf{r}=\mathbf{r}^{(0)}$, $\mathbf{p}\leftarrow \mathbf{r}$\;
+	$\rho_0\leftarrow\|\mathbf{r}^{(0)}\|^2$\;
+	\For{$k=1,\ldots,N_{{max}}$}{
+		\If{$k=1$}{
+			$\mathbf{p} \leftarrow \mathbf{r}$\;
+		}\Else{
+			$\beta\leftarrow\nicefrac{\rho_1}{\rho_0}$\;
+			$\mathbf{p}\leftarrow\mathbf{r}+\beta\, \mathbf{p}$\;
+		}
+		$\mathbf{w}\leftarrow A\,\mathbf{p}$\;
+		$\alpha\leftarrow\nicefrac{\rho_1}{\mathbf{p}^T \mathbf{w}}$\;
+		$\mathbf{x}\leftarrow \mathbf{x}+\alpha \mathbf{p}$\;
+		$\mathbf{r}\leftarrow \mathbf{r}-\alpha \mathbf{w}$\;
+		$\rho_1\leftarrow\|\mathbf{r}\|_2^2$\;
+		\If{<Stopping criteria satisfied>}{
+			\textbf{Return:} $\tilde{\mathbf{x}} = \mathbf{x}$\; 
+		}
+	}
+\end{algorithm}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{The Conjugate Gradient Method}
+\alert{\faExclamationTriangle} The bound in the corollary is \textbf{descriptive} of the convergence behavior.
+
+\begin{alertblock}{Theorem.}<2->
+Let $A \in \mathbb{R}^{n \times n}$ be SPD. Let $m$ an integer,
+$1<m<n$ and $c>0$ a constant such that for the eigenvalues of $A$ we
+have 
+$$
+0<\lambda_1\leq \lambda_2\leq \lambda_3\leq \ldots \leq
+\lambda_{n-m+1} \leq c < \ldots \leq \lambda_n.
+$$
+Fixed $\varepsilon>0$ an upper bound in exact arithmetic
+for the minimum number of iterations $k$ reducing the relative error
+in energy norm form the approximation $\mathbf{x}^{(k)}$ generated by CG by
+$\varepsilon$ is given by
+\begin{equation*}
+	\min \left\{ \left\lceil \frac12 \sqrt{c/\lambda_1} \log{\left(
+		\frac{2}{\varepsilon} \right)}+m+1\right\rceil,n \right\}
+\end{equation*}
+\end{alertblock}
+
+\onslide<3>{\faQuestionCircle\; How can we put ourselves in the hypotheses of the Theorem?}
+
+\end{frame}
+
+\begin{frame}{Clustered spectra}
+
+\begin{block}{A proper cluster}
+	    A sequence of matrices $\{A_n\}_{n \geq 0}$, $A_n \in
+	\mathbb{C}^{n \times
+		n}$, has a \textbf{proper cluster} of eigenvalues in $p \in
+	\mathbb{C}$
+	if, $\forall \varepsilon > 0$, if the number of eigenvalues of
+	$A_n$
+	\textbf{not in} $D(p,\varepsilon) = \{z \in \mathbb{C}\,|\;
+	|z-p|<\varepsilon\}$ is
+	bounded by a constant $r$ that does not depend on $n$. Eigenvalues
+	not in the \emph{proper cluster} are called \textbf{outlier}
+	eigenvalues.
+\end{block}
+
+\begin{itemize}
+	\item[\faQuestionCircle]<2-> Do the matrices
+	\[
+	A_N = I_N - \frac{\Delta t}{2 h_N^\alpha} \left[ G_N + G_N^T \right]
+	\]
+	have a \textbf{clustered spectra}?
+	\item[\faEye]<3-> We can investigate this question by looking again at the \alert{\textbf{spectral distribution}} of the sequence $\{A_N\}_N$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Asymptotic distribution: the symmetric case}\vspace{-0.5em}
+	\[
+A_N = I_N - \frac{\Delta t}{2 h_N^\alpha} \left[ G_N + G_N^T \right],
+\]
+the sequence $\{A_N\}_N$ is \textbf{not} yet \textbf{ready} for the \textbf{analysis}, we have the coefficient $\nicefrac{\Delta t}{2 h_N^\alpha}$ that varies with $N$.
+\begin{itemize}
+	\item[\faExclamationCircle] For \emph{consistency} reason it makes sense to select $\Delta t \equiv h_N \equiv \nu_N$, then, since $\alpha \in (1,2]$ we have that $\nu^{1-\alpha}$ for $\nu \rightarrow 0^+$ goes to $+\infty$.
+	\item[$\Rightarrow$]<2-> We look instead at the sequence:
+	\[
+	\{ \nu_N^{\alpha-1} A_N \}_N = \{ \nu_N^{\alpha-1}I_N - \nicefrac{(G_N + G_N^T)}{2}  \}_N,
+	\]
+	and is such that $\|\nu^{\alpha-1} I_N\| = \nu^{\alpha-1} < C$ independently of $N$.
+	\item[\faArrowCircleUp]<3-> $\{ -\nicefrac{(G_N + G_N^T)}{2} \}_N$ is now a \emph{symmetric} Toeplitz sequence with \textbf{known generating function}:
+	\[
+	p_\alpha(\theta) = f(\theta) + f(-\theta) = -e^{-i\theta}(1-e^{i\theta})^\alpha - e^{i\theta}(1-e^{-i\theta})^\alpha.
+	\]
+	\item[$\Rightarrow$]<4-> We have just discovered that: $\{\nu_N^{\alpha-1} A_N\}_N \sim_\lambda p_\alpha(\theta)$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Asymptotic distribution: the symmetric case}\vspace{-1em}
+\[
+\{ \nu_N^{\alpha-1} A_N\} = \left\lbrace \nu_N^{\alpha-1} I_N - \frac{1}{2} \left[ G_N + G_N^T \right] \right\rbrace_N \sim_\lambda p_\alpha(\theta) = -e^{-i\theta}(1-e^{i\theta})^\alpha - e^{i\theta}(1-e^{-i\theta})^\alpha,
+\]
+
+\begin{columns}
+\begin{column}{0.55\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+N = 100; alpha = 1.3;
+hN = 1/(N-1); dt = hN; nu = dt;
+G = glmatrix(N,alpha); I = eye(N,N);
+A = nu^(alpha-1)*I-0.5*(G+G');
+ev = eig(A);
+f = @(t)-exp(-1i*t).*(1-exp(1i*t)) .^alpha;
+p = @(t)nu^(alpha-1)+0.5*(f(t) +conj(f(t)));
+t = linspace(-pi,pi,N);
+plot(t,ev,'o',t,sort(p(t),'ascend'),'-')
+\end{minted}
+\end{column}
+\begin{column}{0.45\columnwidth}\centering
+\includegraphics[width=0.8\columnwidth]{Figures/spectrumsym.png}
+
+\onslide<2>{\alert{\faExclamationTriangle} the spectrum is \textbf{not clustered}!}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{CG with a non clustered spectra}
+
+Let us test the CG with different values of $\alpha$ and $N$.\\[0.5em]
+
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+\centering
+
+\begin{tabular}{rrrr}
+	\toprule
+	$\alpha$	& 1.8 & 1.5 & 1.2 \\
+	\midrule
+	$N$ & \multicolumn{3}{c}{Iteration} \\
+	\midrule
+	100 & 49 & 34 & 16\\
+	200 & 87  & 42 & 17 \\
+	500 & 155 & 53 & 18\\
+	1000 & 209 & 63 & 19 \\
+	5000 & 398 & 92 & 21\\
+	10000 & 523 & 108 & 22\\
+	\bottomrule
+\end{tabular}
+\end{column}
+\begin{column}{0.6\columnwidth}
+\begin{itemize}
+	\item[\faEye] The number if iterations grows with $N$,
+	\item[\faEye] Smaller values of $\alpha$ seem to be easier.
+	\item[\faAward]<2-> We would like \textbf{number of iterations} \alert{independent} on both \alert{\textbf{size}} and value of \alert{$\alpha$}.
+	In this case this is called having a method with a \textbf{superlinear convergence} and \textbf{robust with respect to the parameters}.
+	\item[\faQuestionCircle]<3-> Can we?
+\end{itemize}
+\end{column}
+\end{columns}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+A = nu^(alpha-1)*I-0.5*(G+G'); b = nu^(alpha-1)*ones(N,1);
+[x,flag,relres,iter,resvec] = pcg(A,b,1e-6,N)
+\end{minted}
+
+\end{frame}
+
+\subsection{Preconditioned Conjugate Gradient}
+
+\begin{frame}{Preconditioned CG}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{itemize}
+	\item[\faWrench] To try and achieve this result we need to \emph{modify the spectrum of the system}, i.e., we need to \alert{\textbf{precondition}}.
+	\item[\faLightbulb]<2-> We modify the system
+	\[
+	A \mathbf{x} = \mathbf{b},
+	\]
+	into
+	\[
+	M^{-1} A \mathbf{x} = M^{-1} \mathbf{b},
+	\]
+	with $M$ SPD and such that $M^{-1}A$ has a \textbf{clustered spectra}.
+\end{itemize}
+\end{column}
+\begin{column}{0.5\columnwidth}\onslide<2->{
+\begin{algorithm}[H]\scriptsize
+	\KwIn{$A \in \R^{n\times n}$ SPD, $N_{max}$, $\mathbf{x}^{(0)}$, $M \in \mathbb{R}^{n\times n}$ SPD preconditioner}
+	$\mathbf{r}^{(0)} \leftarrow \mathbf{b}-A\mathbf{x}^{(0)}$,
+	$\textbf{z}^{(0)} \leftarrow M^{-1}\mathbf{r}^{(0)}$,
+	$\mathbf{p}^{(0)} \leftarrow \mathbf{z}^{(0)}$\;
+	\For{$j=0,\ldots,N_{\text{max}}$}{
+		$\alpha_j \leftarrow \nicefrac{<\mathbf{r}^{(j)},\mathbf{z}^{(j)}>}{A\mathbf{p}^{(j)},\mathbf{p}^{(j)}}$\;
+		$\mathbf{x}^{(j+1)} \leftarrow \mathbf{x}^{(j)} + \alpha_j \mathbf{p}^{(j)}$\;
+		$\mathbf{r}^{(j+1)} \leftarrow \mathbf{r}^{(j)} - \alpha_j A \mathbf{p}^{(j)}$\;
+		\If{<Stopping criteria satisfied>}{
+			\textbf{Return:} $\tilde{\mathbf{x}} = \mathbf{x}^{(j+1)}$\;
+		}
+		$\mathbf{z}^{(j+1)} \leftarrow \alert<2-3>{M^{-1} \mathbf{r}^{(j+1)}}$\;
+		$\beta_{j} \leftarrow \nicefrac{<\mathbf{r}^{(j+1)},\mathbf{z}^{(j+1)}>}{<\mathbf{r}^{(j)},\mathbf{z}^{(j)}>}$\;
+		$\mathbf{p}^{(j+1)} \leftarrow \mathbf{z}^{(j+1)}+\beta_j \mathbf{p}^{(j)}$\;
+	}
+\end{algorithm}}
+\end{column}
+\end{columns}
+\vfill
+
+\onslide<3>{\alert{\textbf{\faExclamationTriangle}} $M^{-1}$ has to be easy to apply, possibly it has to have the \emph{same cost of multiplying by~$A$}.}
+\end{frame}
+
+\begin{frame}{Circulant preconditioners for Toeplitz matrices}
+
+\textcolor{yellow}{\faLightbulb} If $M$ is \alert{circulant} than applying $M^{-1}$ costs $O(n \log n)$ operations, same as applying $A$.
+
+\onslide<2->{\faEye\,Observe that, nevertheless, this \textbf{doubles the cost per iteration}, can we do better?}
+
+\begin{block}<3->{$\omega$-circulant matrices}
+Let $\omega = \exp(i\theta)$ for $\theta \in [-\pi,\pi]$. A matrix
+$W_n^{(\omega)}$ of size $n$ is said to be an \textbf{$\omega$--circulant
+	matrix} if it has the spectral
+decomposition \begin{equation*}
+	W_n^{(\omega)} = \Omega_n^H F_n^H \Lambda_n F_n \Omega_n,
+\end{equation*}
+where $F_n$ is the Fourier matrix and $\Omega_n =
+\operatorname{diag}(1,\omega^{\nicefrac{-1}{n}},\ldots,\omega^{\nicefrac{-(n-1)}{n}})$
+and $\Lambda_n$ is the diagonal matrix of the eigenvalues. In
+particular $1$--circulant matrices are circulant matrices while
+$\{-1\}$--circulant matrices are the skew--circulant matrices.
+\end{block}
+
+\onslide<4->{\faLightbulb[regular] We can use them to reduce the overall cost of the preconditioning step!}
+
+\end{frame}
+
+\begin{frame}{Circulant preconditioners for Toeplitz matrices}
+
+The \alert{\faKey\,key idea} is observing that we can decompose any Toeplitz matrix into the \textbf{sum of a circulant and of a skew-circulant matrix}
+\begin{equation*}
+	T_n = U_n + V_n, \; U_n = F_n^H \Lambda_n^{(1)} F_n, \; V_n = \Omega_n^H F_n^H \Lambda_n^{(2)} F_n \Omega_n
+\end{equation*}
+where
+\begin{equation*}
+	\begin{split}
+		\mathbf{e}_1^T U_n = & \nicefrac{1}{2}\left[
+		t_0 , t_{-1} + t_{n-1} , \ldots , t_{-(n-1)+t_1}
+		\right],\\
+		W_n\mathbf{e}_1 = & \nicefrac{1}{2}\left[
+		t_0 , -(t_{n-1}-t_{-1}) , \ldots , -(t_{-1}-t_{n-1})
+		\right]^T.
+	\end{split}
+\end{equation*}
+\onslide<2->{
+Then we can compute the product
+\begin{equation*}
+	\begin{split}
+		C_n^{-1}T_n = \only<2>{\,& C_n^{-1}\left(U_n + V_n\right) = C_n^{-1}\left(F_n^H \Lambda_n^{(1)} F_n + \Omega_n^H F_n^H \Lambda_n^{(2)} F_n \Omega_n\right) \\
+		=\,& F_n^H \Lambda_n^{-1} F_n\left(F_n^H \Lambda_n^{(1)} F_n + \Omega_n^H F_n^H \Lambda_n^{(2)} F_n \Omega_n\right) \\
+		=\,&} F_n^H\left[\Lambda_n^{-1} \left(\Lambda_n^{(1)} + F_n \Omega_n^H F_n^H \Lambda_n^{(2)} F_n \Omega_n F_n^H \right)
+		\right]F_n.
+	\end{split}
+\end{equation*}
+}\only<3->{
+And solve $C_n^{-1}T_n \mathbf{x} = C_n^{-1}\mathbf{b}$ as
+\begin{equation*}
+	\Lambda_n^{-1} \left(\Lambda_n^{(1)} + F_n \Omega_n^H F_n^H
+	\Lambda_n^{(2)} F_n \Omega_n F_n^H \right) \underbrace{F_n
+		\mathbf{x}}_{= \tilde{\mathbf{x}}} = \underbrace{\Lambda_n^{-1} F_n
+		\mathbf{b}}_{= \tilde{\mathbf{b}}} \onslide<4->{ \text{ \alert{4 FFTs per iteration!}} }
+\end{equation*}
+}
+
+\end{frame}
+
+\begin{frame}{Circulant preconditioners for Toeplitz matrices}
+\faQuestionCircle\,This is then \emph{computationally efficient}, can we find the right circulant matrix to have a clustered spectra?
+
+\onslide<2->{\alert{\faWrench}\,We need to change the problem into an equivalent one: the aim is \textbf{discharging everything on the generating functions}!}
+
+\only<3>{
+\begin{block}{Continuous convolution}
+Given two scalar functions $f$ and $g$ in the Schwartz space, i.e.,
+$f,g \in \mathcal{C}^{\infty}(\mathbb{R})$ such that $\exists\,
+C_{\alpha,\beta}^{(f)},  C_{\alpha',\beta'}^{(g)} \in \mathbb{R}$
+with $\|x^{\alpha} \partial_\beta f(x)\|_{\infty} \leq
+C^{\alpha\beta}$ and $\|x^{\alpha'} \partial_{\beta'}
+g(x)\|_{\infty} \leq C^{\alpha'\beta'}$, $\alpha$, $\beta$, $\alpha'$,
+$\beta'$ scalar indices, we define the \textbf{convolution
+	operation}, ``$*$'', as
+\begin{equation*}
+	[f*g](t) = \int_{-\infty}^{+\infty}f(\tau)g(t-\tau)d\,\tau =
+	\int_{-\infty}^{+\infty} g(\tau)f(t-\tau)d\,\tau.
+\end{equation*}
+\end{block}}
+\only<4>{\begin{block}<4->{Discrete convolution}
+For two arbitrary $2\pi$--periodic continuous functions,
+\begin{equation*}
+	f(\theta) = \sum_{k=-\infty}^{+\infty} t_k e^{ik\theta} \text{ and } g = \sum_{k=-\infty}^{+\infty} s_k e^{ik\theta}
+\end{equation*}
+their \textbf{convolution product} is given by
+\begin{equation*}
+	[f*g](\theta) = \sum_{k=-\infty}^{+\infty} s_k t_k e^{ik\theta}.
+\end{equation*}
+\end{block}}
+\only<5->{
+\begin{exampleblock}{\faLightbulb\,Using a Kernel}
+Given a kernel $\mathcal{K}_n(\theta)$ defined on $[0,2\pi]$
+and a generating function $f$ for a Toeplitz sequence $T_n(f)$, we
+consider the circulant matrix $C_n$ with eigenvalues given by
+\begin{equation*}
+	\lambda_j(C_n) = \left[ \mathcal{K}_n * f \right] \left(\frac{2\pi j}{n}\right), 0 \leq j < n,
+\end{equation*}
+\end{exampleblock}
+
+\begin{itemize}
+	\item[\faLightbulb]<6-> We have rewritten the problem of \textbf{finding an appropriate preconditioner} to the problem of \textbf{approximating the generating
+	function} of the underlying Toeplitz matrix.
+\end{itemize}
+
+}
+\end{frame}
+
+\begin{frame}{Circulant preconditioners for Toeplitz matrices}
+
+\begin{alertblock}{Theorem \parencite{MR1173187}}
+Lef $f$ be a $2\pi$--periodic \alert<2>{continuous positive function}. Let
+$\mathcal{K}_n(\theta)$ be a kernel such that $\mathcal{K}_n * f
+\overset{n \rightarrow +\infty}{\longrightarrow} f$ uniformly on
+$[-\pi,\pi]$. If $C_n$ is the sequence of circulant matrices with
+eigenvalues given by
+\[
+\lambda_j(C_n) = \left[ \mathcal{K}_n * f \right] \left(\frac{2\pi j}{n}\right), 0 \leq j < n,
+\]
+then the spectra of the sequence $\{C_n^{-1}T_n(f)\}_n$ is clustered
+around $1$.
+\end{alertblock}
+
+\begin{itemize}
+	\item[\faQuestionCircle] Is this the result we need?
+	\item[\faExclamationCircle]<2> It requires a \emph{continuous positive function} generating function $f$! Ours is:
+	\[
+	 p_\alpha(\theta) = -e^{-i\theta}(1-e^{i\theta})^\alpha - e^{i\theta}(1-e^{-i\theta})^\alpha,
+	\]
+	and it does seem to have a zero.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Circulant preconditioners: cases with a zero}
+
+\begin{block}{Order of the zero}
+Let $f:[a,b] \subset \mathbb{R} \rightarrow \mathbb{R}$ be a continuous nonnegative function. We say that $f$ has a zero order $\beta > 0$ at $\theta_0 \in [a,b]$ if there exist two real constants $C_1,C_2 > 0$ such that
+\[
+\liminf_{\theta \rightarrow \theta_0} \frac{f(\theta)}{|\theta - \theta_0|^\beta} = C_1, \quad \limsup_{\theta \rightarrow \theta_0} \frac{f(\theta)}{|\theta - \theta_0|^\beta} = C_2.
+\]
+\end{block}
+
+\begin{alertblock}<2->{Proposition \parencite{MR3448208}}
+Given $\alpha \in (1,2)$, then the function $p_\alpha(\theta)$ is nonnegative and has a zero of order $\alpha$ at $0$.
+\end{alertblock}
+
+\onslide<3->{\textbf{Proof.} \only<3->{We first prove that is nonnegative by direct computation
+\[
+p_\alpha(\theta) = \only<3>{- \sum_{k=-1}^{+\infty} g_{k+1}^{(\alpha)}(e^{ik\theta} + e^{-ik\theta})} \only<4>{- \left[ 2g_1^{(\alpha)} + (g_0^{(\alpha)} + g_2^{(\alpha)})(e^{i\theta} + e^{-i\theta}) + \sum_{k=2}^{+\infty} g_{k+1}^{(\alpha)} (e^{ik\theta} + e^{-ik\theta})  \right]} \only<5->{- \left[ 2g_1^{(\alpha)} + 2(g_0^{(\alpha)} + g_2^{(\alpha)})\cos\theta + 2\sum_{k=2}^{+\infty} g_{k+1}^{(\alpha)} cos(k\theta)  \right]} \only<6->{ \geq - 2 \sum_{k=-1}^{+\infty} g_{k+1}^{(\alpha)} = 0. } 
+\]
+}
+}
+
+\end{frame}
+
+\begin{frame}{Circulant preconditioners: cases with a zero}
+\begin{alertblock}{Proposition \parencite{MR3448208}}
+	Given $\alpha \in (1,2)$, then the function $p_\alpha(\theta)$ is nonnegative and has a zero of order $\alpha$ at $0$.
+\end{alertblock}
+
+\textbf{Proof.} Then we focus on the zero. Let us rewrite
+\[
+1 - e^{i\theta} = \sqrt{2-2\cos\theta} e^{i\phi}, \quad 1 - e^{-i\theta} = \sqrt{2-2\cos\theta}e^{i\psi},
+\]
+\only<1>{where
+\[
+\phi = \begin{cases}
+	\arctan \left( \frac{- \sin\theta}{1-\cos\theta} \right), & \theta \neq 0,\\
+	\lim_{\theta \rightarrow 0^+} \arctan \left( \frac{- \sin\theta}{1-\cos\theta} \right) = - \frac{\pi}{2}, & \theta = 0.
+\end{cases} \quad \psi = -\phi.
+\]}\only<2>{
+and write
+\[
+\begin{split}
+p_\alpha(\theta) = & - e^{-i\theta} ( \sqrt{2-2\cos\theta} e^{i\phi} )^\alpha - e^{i\theta} ( \sqrt{2-2\cos\theta} e^{-i\phi} )^\alpha \\
+= & - \sqrt{(2 - 2\cos\theta)^\alpha} e^{i(\alpha \phi - \theta)} - \sqrt{(2-2\cos\theta)^\alpha} e^{-i(\alpha\phi - \theta)} \\
+= & -2 \sqrt{(2-2\cos\theta)^\alpha}r_\alpha(\theta), \qquad r_\alpha(\theta) = \cos(\alpha \phi - \theta).
+\end{split}
+\]
+}
+\only<3>{
+and write
+\[
+\begin{split}
+	p_\alpha(\theta) = -2 \sqrt{(2-2\cos\theta)^\alpha}r_\alpha(\theta), \qquad r_\alpha(\theta) = \cos(\alpha \phi - \theta).
+\end{split}
+\]
+Since $\displaystyle \lim_{\theta \rightarrow 0^{-}} r_\alpha(\theta) = \lim_{\theta \rightarrow 0^{+}} r_\alpha(\theta) = \cos(\alpha \nicefrac{\pi}{2})$, we find
+\[
+\lim_{\theta \rightarrow 0} \frac{p_\alpha(\theta)}{|\theta|^\alpha} = - 2 \lim_{\theta \rightarrow 0} \frac{(2-2\cos\theta)^{\nicefrac{\alpha}{2}}}{|\theta|^\alpha} r_\alpha(\theta) = - 2 \cos (\alpha \nicefrac{\pi}{2}) \in (0,2),
+\]
+i.e., $p_\alpha$ has a zero of order $\alpha$ at $0$ according to the definition. \hfil \qedsymbol
+}
+\end{frame}
+
+\begin{frame}[fragile]{Circulant preconditioners: cases with a zero}
+
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{onlyenv}<1>
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+t = linspace(-pi,pi,100);
+f = @(alpha) -exp(-1i*t).*(1-exp(1i*t)).^alpha;
+p = @(alpha) f(alpha) + conj(f(alpha));
+plot(t,p(1.2)./max(p(1.2)),...
+ t,p(1.5)./max(p(1.5)),...
+ t,p(1.8)./max(p(1.8)),
+ t,p(2)./max(p(2)),...
+ 'LineWidth',2);
+legend({'\alpha=1.2','\alpha=1.5',...
+ '\alpha=1.8','\alpha=2'},...
+ 'Location','north');
+\end{minted}
+\end{onlyenv}%
+\only<2->{
+\begin{itemize}
+\item[\faEye] $p_2(\theta)	= 2(2-2\cos\theta)$, i.e., $2 \times $Laplacian generating function,
+\item[\faEye] $p_\alpha(\theta)/\|p_\alpha\|_\infty$ \alert{approaches the order of the zero of the Laplacian} in $0$, i.e., it increases up to $2$ as $\alpha$ tends to 2. 
+\item[\faQuestionCircle]<3-> What can we do for the case in this case?
+\item[\faLightbulb]<4-> \textbf{matching the zeros} of the generating function, \emph{heuristically}, if the preconditioner have a spectrum that behaves as a function $g$ with zeros of the same order, and in the same place of $f$, then $f/g$ no loner have the problematic behavior$\ldots$ 
+\end{itemize}
+}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\centering	
+	
+\only<1>{\input{zeros.tikz}}
+\only<2->{\input{zeroszoom.tikz}}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{Generalized Jackson Kernel}
+	
+\begin{onlyenv}<1>
+\begin{block}{Generalized Jackson Kernel}
+Given $\theta \in [-\pi,\pi]$, $\mathbb{N} \ni r \geq 1$ and
+$\mathbb{N} \ni m > 0$ such that $r(m-1) < n \leq rm$, i.e., $m =
+\lceil\nicefrac{n}{r}\rceil$, the generalized Jackson kernel
+function is defined as,
+\begin{equation*}
+	\mathcal{K}_{m,2r}(\theta) = \frac{k_{m,2r}}{m^{2r-1}}
+	\left(\frac{\sin(\nicefrac{m\theta}{2})}{\sin(\nicefrac{\theta}{2})}\right)^{2r}, \; k_{m,2r} \text{ s.t. }\frac{1}{2\pi}\int_{-\pi}^{\pi}\mathcal{K}_{m,2r}(\theta)d\theta =
+	1.
+\end{equation*}
+\end{block}
+\end{onlyenv}
+
+\begin{onlyenv}<2->
+	\begin{alertblock}{Theorem \parencite{MR1917364}}
+		Let $f$ be a nonnegative $2\pi$--periodic continuous function with a
+		zero of order $2\nu$ at $\theta_0$. Let $r > \nu$ and $m =
+		\lceil\nicefrac{n}{r}\rceil$. Then there exists numbers
+		$a,b$ independent from $n$ and such that the spectrum of
+		$J_{n,m,r}^{-1}T_n(f)$ is clustered in $[a,b]$ and at most
+		$2\nu+1$ eigenvalues are not in $[a,b]$ for $n$
+		sufficiently large.
+	\end{alertblock}
+\end{onlyenv}
+We build a \textbf{circulant preconditioner} $J_{n,m,r}$ from its eigenvalues using the Jackson kernel
+\[
+\lambda_j(J_{n,m,r}) = [\mathcal{K}_{m,2r}*f]\left(\frac{2j\pi}{n}\right), \;\; j=0,\ldots,n-1.
+\]
+\begin{itemize}
+	\item[\faWrench]<3-> With some work can be \textbf{generalized} to the case of \textbf{multiple zeros of different order},
+	\item[\faWrench]<4-> One can prove also that $a$ and $b$ are \textbf{bounded away from zero}. 
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{\faHammer\,Time to do some tests}
+
+We consider the following \textbf{circulant preconditioners},
+\begin{description}
+	\item[Dirichlet] kernel, a.k.a. the Strang circulant preconditioner
+	\only<1>{\[
+	\mathcal{D}_{n}(\theta) = \displaystyle \frac{\displaystyle\sin\left((n+\nicefrac{1}{2})\theta\right)}{\displaystyle \sin\left(\nicefrac{\theta}{2}\right)} \qquad \left\lbrace\begin{array}{ll}
+		t_k, & 0 < k \leq \lfloor\nicefrac{n}{2}\rfloor,\\
+		t_{k-n}, &  \lfloor\nicefrac{n}{2}\rfloor < j < n, \\
+		c_{n+k}, & 0 < -k < n.
+	\end{array}\right.
+	\]}\begin{onlyenv}<2->
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+c = fft([t(1:n/2);0;conj(t(n/2:-1:2))].')';
+\end{minted}
+\end{onlyenv}
+	\item[Modified Dirichlet] kernel, a.k.a. the T. Chan circulant preconditioner
+	\only<1>{\[
+	\displaystyle \nicefrac{1}{2}\left(\mathcal{D}_{n-1}(\theta)+\mathcal{D}_{n-2}(\theta)\right) \qquad \left\lbrace \begin{array}{ll}
+		\displaystyle t_1 + \nicefrac{1}{2}\bar{t}_{n-1}, & k = 1, \\
+		\displaystyle t_k + t_{n-k}, & 2 \leq k \leq n-2, \\
+		\displaystyle \nicefrac{1}{2} t_{n-1} + \bar{t}_1, & k = n-1.
+	\end{array}
+	\right.
+	\]}\begin{onlyenv}<2->
+	\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+coef = (1/n:1/n:1-1/n)';
+c = fft([t(1);(1-coef).*t(2:n)+coef.*t1]);
+\end{minted}
+\end{onlyenv}
+	\item[R.H. Chan] \only<1>{$\mathcal{D}_{n-1}(\theta) \qquad t_k + \bar{t}_{n-k}, \; 0 < k \leq n-1$.} \only<2->{\definecolor{bg}{rgb}{0.95,0.95,0.95} \mintinline[bgcolor=bg,fontsize=\small,breaklines]{matlab}{c = fft([t(1);t(2:n)+t1].')';}}
+	\item[Jackson] with $r = 2$.
+\end{description}
+
+\only<3->{We test both \textbf{clustering properties} and \textbf{convergence behavior} inside the \textbf{P}reconditioned \textbf{C}onjugate \textbf{G}radient algorithm.}
+
+\end{frame}
+
+\begin{frame}[fragile]{\faWrench\;Jackson Kernel Circulant Preconditioner}\vspace{-0.5em}
+
+\begin{columns}
+\begin{column}{0.45\columnwidth}
+For $r=2,3,4$ it can be built~as
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+n = length(t);
+t1 = conj(t(n:-1:2));
+if r == 2 || r == 3 || r == 4
+ coef = convol(n,r).';
+ c = [t(1)*coef(1) (coef(2:n).*t(2:n)...
+ +coef(n:-1:2).*t1).'];
+ c = fft(c)';
+else
+ error('r needs to be 2, 3 or 4');
+end
+c = real(c);
+\end{minted}
+\end{column}
+\begin{column}{0.55\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+function [ c ] = jacksonprec( t,r )
+m = floor(n/r); a = 1:-1/m:1/m; r0 = 1;
+coef = [a(m:-1:2) a];
+while r0 < r
+ M = (2*r0+3)*m; b1 = zeros(M,1);
+ c = zeros(M,1); c(1:m) = a;
+ c(M:-1:M-m+2) = a(2:m);
+ b1(m:m+2*r0*(m-1)) = coef;
+ tp = ifft(fft(b1).*fft(c));
+ coef = real(tp(1:2*(r0+1)*(m-1)+1));
+ r0 = r0+1;
+end
+M = r*(m-1)+1;
+coef = [coef(M:-1:1)' zeros(1,n-M)]';
+coef = coef';
+end
+\end{minted}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{\faHammer\,Back to the example}
+We try to solve again\onslide<2>{ for $\theta = \nicefrac{1}{2}$}
+\only<1>{\[
+\begin{cases}\frac{\partial W}{\partial t} = \theta\,{}^{\only<1>{RL}\only<2->{\alert<2>{GL}}}D_{[0,x]}^\alpha W(x,t) + (1-\theta) {}^{\only<1>{RL}\only<2->{\alert<2>{GL}}}D_{[x,1]}^\alpha W(x,t), \qquad \theta \in [0,1],\\
+	W(0,t) = W(1,t) = 0,\\
+	W(x,t) = W_0(x).	
+\end{cases}
+\]}
+\only<2->{
+\[
+T_{N-2}(p_\alpha(\theta)) \mathbf{w}^{n+1} \equiv \left( \frac{h_N^\alpha}{\Delta t} I_{N-2} -  \frac{1}{2}\left[  G_{N-2} + G_{N-2}^T \right] \right) \mathbf{w}^{n+1} =\frac{h_N^\alpha}{\Delta t} \mathbf{w}^n
+\]
+}
+\begin{itemize}
+	\item[\faCogs]<2-> We have removed the \emph{rank corrections} due to the boundary conditions to have a \textbf{pure Toeplitz} matrix, i.e., we solve the equation only in the inner nodes.
+\end{itemize}
+\begin{onlyenv}<3->\vspace{-1.5em}
+\begin{columns}[t]
+\begin{column}{0.5\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%% Problem data
+theta = 0.5; 
+alpha = 1.8;
+w0 = @(x) 5*x.*(1-x);
+%% Discretization data
+N  = 10;
+hN = 1/(N-1); x = 0:hN:1;
+dt = hN; t = 0:dt:1;
+\end{minted}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%% Discretize
+G = glmatrix(N,alpha);
+Gr = G(2:N-1,2:N-1); Grt = Gr.';
+I = eye(N-2,N-2);
+% Left-hand side
+nu = hN^alpha/dt;
+A = nu*I - (theta*Gr + (1-theta)*Grt);
+% Right-hand side
+w = w0(x).'; 
+\end{minted}
+\end{column}
+\end{columns}
+
+\end{onlyenv}
+\end{frame}
+
+\begin{frame}{\faGhost\,A look at the spectrum}
+
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\centering
+\only<1>{ $N = 100$, $\alpha = 1.8$
+
+\input{spectrum1.tikz}}%
+\only<2>{$N = 100$, $\alpha = 1.5$
+	
+\input{spectrum3.tikz}}%
+\only<3->{$N = 100$, $\alpha = 1.2$
+
+\input{spectrum5.tikz}}
+\end{column}
+\begin{column}{0.5\columnwidth}
+	\centering
+\only<1>{	$N = 1000$, $\alpha = 1.8$
+	
+	\includegraphics[width=0.87\columnwidth]{spectrum2.png}}%
+\only<2>{$N = 1000$, $\alpha = 1.5$
+
+\includegraphics[width=0.87\columnwidth]{spectrum4.eps}
+}%
+\only<3->{$N = 1000$, $\alpha = 1.2$
+	
+	\includegraphics[width=0.87\columnwidth]{spectrum6.eps}
+}
+\end{column}
+\end{columns}
+\onslide<4>{\faQuestionCircle\,Can you guess what is happening with the Jackson Kernel preconditioner?}
+\end{frame}
+
+\begin{frame}{\faArrowDown\,A look at the convergence}
+
+\begin{onlyenv}<1>
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{tabular}{lllllll}
+\toprule
+$\alpha$ & $N$ & PCG & Jackson & T.Chan & R.Chan & Strang \\
+\midrule
+\multirow{7}{*}{2.0} & $2^{5}$ & 15 & 6 & 8 & 2 & 2 \\
+ & $2^{6}$ & 31 & 6 & 10 & 2 & 2 \\
+ & $2^{7}$ & 63 & 6 & 12 & 2 & 2 \\
+ & $2^{8}$ & 127 & 5 & 13 & 2 & 2 \\
+ & $2^{9}$ & 251 & 5 & 14 & 2 & 2 \\
+ & $2^{10}$ & 464 & 5 & 15 & 2 & 2 \\
+ & $2^{11}$ & 713 & 4 & 15 & 2 & 2 \\
+\bottomrule
+\end{tabular}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\centering
+\includegraphics[width=0.9\columnwidth]{N=2048alpha=2.0.png}
+\end{column}
+\end{columns}
+\end{onlyenv}
+\begin{onlyenv}<2>
+	\begin{columns}
+		\begin{column}{0.5\columnwidth}
+			\begin{tabular}{lllllll}
+				\toprule
+				$\alpha$ & $N$ & PCG & Jackson & T.Chan & R.Chan & Strang \\
+				\midrule
+				\multirow{7}{*}{1.8} & $2^{5}$ & 15 & 6 & 8 & 5 & 5 \\
+				 & $2^{6}$ & 31 & 6 & 9 & 5 & 5 \\
+				 & $2^{7}$ & 61 & 6 & 9 & 5 & 5 \\
+				 & $2^{8}$ & 108 & 6 & 11 & 5 & 5 \\
+				 & $2^{9}$ & 174 & 6 & 11 & 6 & 5 \\
+				 & $2^{10}$ & 234 & 6 & 11 & 6 & 6 \\
+				 & $2^{11}$ & 314 & 6 & 10 & 6 & 6 \\
+				\bottomrule
+			\end{tabular}
+		\end{column}
+		\begin{column}{0.5\columnwidth}
+			\centering
+			\includegraphics[width=0.9\columnwidth]{N=2048alpha=1.8.png}
+		\end{column}
+	\end{columns}
+\end{onlyenv}
+\begin{onlyenv}<3>
+	\begin{columns}
+		\begin{column}{0.5\columnwidth}
+			\begin{tabular}{lllllll}
+				\toprule
+				$\alpha$ & $N$ & PCG & Jackson & T.Chan & R.Chan & Strang \\
+				\midrule
+				\multirow{7}{*}{1.6} & $2^{5}$ & 15 & 6 & 7 & 5 & 5 \\
+				 & $2^{6}$ & 31 & 6 & 8 & 5 & 5 \\
+				 & $2^{7}$ & 51 & 6 & 8 & 5 & 5 \\
+				 & $2^{8}$ & 73 & 5 & 8 & 5 & 5 \\
+				 & $2^{9}$ & 91 & 5 & 8 & 6 & 5 \\
+				 & $2^{10}$ & 111 & 6 & 7 & 6 & 6 \\
+				 & $2^{11}$ & 135 & 6 & 7 & 6 & 6 \\
+				\bottomrule
+			\end{tabular}
+		\end{column}
+		\begin{column}{0.5\columnwidth}
+			\centering
+			\includegraphics[width=0.9\columnwidth]{N=2048alpha=1.6.png}
+		\end{column}
+	\end{columns}
+\end{onlyenv}
+\begin{onlyenv}<4>
+	\begin{columns}
+		\begin{column}{0.5\columnwidth}
+			\begin{tabular}{lllllll}
+				\toprule
+				$\alpha$ & $N$ & PCG & Jackson & T.Chan & R.Chan & Strang \\
+				\midrule
+				\multirow{7}{*}{1.4} & $2^{5}$ & 15 & 5 & 7 & 5 & 5 \\
+				 & $2^{6}$ & 27 & 5 & 7 & 5 & 5 \\
+				 & $2^{7}$ & 35 & 5 & 7 & 5 & 5 \\
+				 & $2^{8}$ & 41 & 5 & 6 & 5 & 5 \\
+				 & $2^{9}$ & 46 & 5 & 6 & 5 & 5 \\
+				 & $2^{10}$ & 51 & 5 & 6 & 5 & 5 \\
+				 & $2^{11}$ & 56 & 5 & 6 & 5 & 5 \\
+				\bottomrule
+			\end{tabular}
+		\end{column}
+		\begin{column}{0.5\columnwidth}
+			\centering
+			\includegraphics[width=0.9\columnwidth]{N=2048alpha=1.4.png}
+		\end{column}
+	\end{columns}
+\end{onlyenv}
+\begin{onlyenv}<5->
+	\begin{columns}
+		\begin{column}{0.5\columnwidth}
+			\begin{tabular}{lllllll}
+				\toprule
+				$\alpha$ & $N$ & PCG & Jackson & T.Chan & R.Chan & Strang \\
+				\midrule
+				\multirow{7}{*}{1.2} & $2^{5}$ & 15 & 5 & 6 & 4 & 4 \\
+				 & $2^{6}$ & 19 & 5 & 6 & 5 & 5 \\
+				 & $2^{7}$ & 20 & 5 & 5 & 5 & 5 \\
+				 & $2^{8}$ & 21 & 5 & 5 & 5 & 5 \\
+				 & $2^{9}$ & 22 & 5 & 5 & 5 & 5 \\
+				 & $2^{10}$ & 22 & 5 & 5 & 5 & 5 \\
+				 & $2^{11}$ & 22 & 5 & 5 & 5 & 5 \\
+				\bottomrule
+			\end{tabular}
+		\end{column}
+		\begin{column}{0.5\columnwidth}
+			\centering
+			\includegraphics[width=0.9\columnwidth]{N=2048alpha=1.4.png}
+		\end{column}
+	\end{columns}
+\end{onlyenv}
+\onslide<6->{
+\faEye\; We got \textbf{robustness} with respect to both $\alpha$ and $N$.
+}
+
+\onslide<7->{
+\alert{\faQuestionCircle}\; What do we do in the \alert{non symmetric case}, i.e., $\theta \neq \nicefrac{1}{2}$?
+}
+
+\end{frame}
+
+\subsection{Non symmetric Toeplitz system}
+
+\begin{frame}{Non symmetric Toeplitz system}
+
+If $T_n(f)$ is non symmetric (or more generally, non Hermitian), then $f$ is a complex-valued function then
+\begin{itemize}
+	\item[\faBomb] we \textbf{no longer} have information on the asymptotic \textbf{spectral distribution}, but only on the singular values,
+	\item[\faBomb] we can \textbf{no longer} apply \textbf{fast} direct Toeplitz \textbf{solvers},
+	\item[\faBomb] we can \textbf{no longer} apply the \textbf{CG} to $T_n(f)\mathbf{x} = \mathbf{b}$.
+\end{itemize}
+\alert{\faQuestionCircle}\; What to do?
+\begin{itemize}
+	\item[\faDoorOpen]<2-> Apply the PCG to the normal equations (CGNR):
+	\[
+	T_n(f)^H T_n(f) \mathbf{x} = T_n(f)^H \mathbf{b},
+	\]
+	\item[\faDoorOpen]<3-> Use another Krylov method: GMRES or TFQMR 
+	
+	\onslide<4->{ \faQuestionCircle[regular] do we know \alert{how to precondition} these methods? }
+\end{itemize}
+
+\end{frame}
+
+\subsection{The GMRES method}
+
+\begin{frame}{The GMRES method \parencite{GMRES}}
+
+The \textbf{G}eneralized \textbf{M}inimum \textbf{Res}idual (GMRES) is a Krylov projection method
+approximating the solution of linear system 
+\[A\mathbf{x}=\mathbf{b}\] 
+on the \textbf{affine subspace} 
+\[\mathbf{x}^{(0)}+\mathcal{K}_m(A,\mathbf{v}_1), \quad \mathbf{r}^{(0)} = \mathbf{b}-A\,\mathbf{x}^{(0)}, \quad \mathbf{v}_1 = 
+\nicefrac{\mathbf{r}^{(0)}}{\|\mathbf{r}^{(0)}\|_2} \],  
+for $\mathbf{x}^{(0)}$ a \emph{starting guess} for the solution.
+
+By this choice, we enforce the \textbf{Arnoldi relation}:
+\begin{equation*}
+	A\, V_m = V_m H_m+\mathbf{w}_m \mathbf{e}_m^T=V_{m+1}\overline{H}_m, \quad \operatorname{Span} V_m= \operatorname{Span}\{\mathbf{v}_1 \  \cdots \  \mathbf{v}_m\} = \mathcal{K}_m(A,\mathbf{v}_1),
+\end{equation*}
+and $H_m$ $m\times m$ Hessenberg submatrix extracted from $\overline{H}_m$ by deleting the $(m+1)$th
+line.
+
+
+\end{frame}
+
+\begin{frame}{The GMRES method \parencite{GMRES}}
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+	\begin{algorithm}[H]\small
+		\KwIn{$A\in \mathbb{R}^{n\times n}$,$\mathbf{b}\in \mathbb{R}^{n}$, $m$, $\mathbf{x}^{(0)}$} 
+		$\mathbf{r}^{(0)} \leftarrow \mathbf{b}-A\,\mathbf{x}^{(0)}$, 
+		$\beta\leftarrow\|\mathbf{r}^{(0)}\|_2$\; $\mathbf{v}_1\leftarrow
+		\nicefrac{\mathbf{r}^{(0)}}{\beta}$\; 
+		\For{$j=1,\ldots,m$}{
+			$\mathbf{w}_j\leftarrow A\,\mathbf{v}_j$\; \
+			\For{$i=1,\ldots,j$}{
+				$h_{i,j}\leftarrow<\mathbf{w}_j,\mathbf{v}_i>$\;
+				$\mathbf{w}_j\leftarrow\mathbf{w}_j-h_{i,j} \, \mathbf{v}_i$\; }
+			$h_{j+1,j}\leftarrow\|\mathbf{w}_j\|_2$\; 
+			\If{$h_{j+1,j}=0$ or \emph{convergence}}
+			{ $m=j$\; 
+				\textbf{break}\; 
+			}
+			$\mathbf{v}_{j+1}=\nicefrac{\mathbf{w}_j}{\|\mathbf{w}_j\|_2}$\; 
+		} 
+	\end{algorithm}
+\end{column}
+\begin{column}{0.6\columnwidth}
+\begin{algorithm}[H]
+Compute $\mathbf{y}^{(m)}$  such that
+$\|\mathbf{r}^{(m)}\|_2=\|\mathbf{b}-A\,\mathbf{x}^{(m)}\|_2= \|\beta \mathbf{e}_1-\underline{H}_m
+\mathbf{y}\|_2=\min_{\mathbf{y}\in\mathbb{R}^m}$\;
+Build candidate approximation $\tilde{\textbf{x}}$\;
+\end{algorithm}
+\vspace{-0.5em}
+\begin{block}<2->{Minimizing the residual}
+At step $m$, the candidate solution $\mathbf{x}^{(m)}$ is the vector
+minimizing the $2$--norm residual:\vspace{-0.5em}
+\begin{equation*}
+	\|\mathbf{r}^{(m)}\|_2=\|\mathbf{b}-A\,\mathbf{x}^{(m)}\|_2,\vspace{-0.5em}
+\end{equation*}
+with\vspace{-0.5em}
+\[
+\mathbf{b}-A\,\mathbf{x}^{(m)}  = V_{m+1} (\beta \textbf{e}_1 - \overline{H}_m \textbf{y}).
+\]
+\end{block}
+\vspace{-0.5em}
+\begin{block}<3->{GMRES variants}
+\alert{Variants} obtained by different \alert{least square} problem \alert{solutions}, and \alert{different orthogonalization} algorithms.
+\end{block}
+
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{The GMRES convergence theory (or lack thereof$\ldots$)}
+
+\begin{alertblock}{Theorem (Convergence, diagonalizable)}
+If  $A$ can be diagonalized, i.e. if we can find $X\in \mathbb{R}^{n
+	\times n}$ non singular and such that
+$$
+A=X\,\Lambda\,X^{-1}, \  \Lambda=\operatorname{diag}(\lambda_1,\ldots,\lambda_n), \
+K_2(X)=\|X\|_2\,\|X^{-1}\|_2,
+$$
+$K_2(X)=\|X\|_2\,\|X^{-1}\|_2$ condition number of $X$, then at step
+$m$, we have
+\begin{equation}\tag{DiagGMRES}
+	\|r\|_2\leq K_2(X) \|\mathbf{r}^{(0)}\|_2
+	\min_{\substack{\mathrm{p}(z)\in\mathbb{P}_m\\\mathrm{p}(0)=1}} \max_{i=1,\ldots,n}
+	|\mathrm{p}(\lambda_i)|, \label{3:norm-res-GMRES}
+\end{equation}
+where $\mathrm{p}(z)$ is the polynomial of degree less or equal to  $m$
+such that $\mathrm{p}(0)=1$ and the expression in the right hand side
+of \eqref{3:norm-res-GMRES} is minimum.
+\end{alertblock}
+
+\begin{itemize}
+	\item[\faExclamationTriangle] The \alert{eigenvectors} can be \alert{arbitrarily \emph{ill-conditioned}}, i.e., $K_2(X) \ggg 1$,
+	\item[\faExclamationCircle] being \textbf{diagonalizable} can be a \textbf{strong assumption}.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The GMRES convergence theory (or lack thereof$\ldots$)}
+
+\begin{alertblock}{Theorem (Almostr everything is possible) \parencite{doi:10.1137/S0895479894275030}}
+	Given a non-increasing positive sequence $\{f_k\}_{k=0,\ldots,n-1}$
+	with $f_{n-1} > 0$ and a set of non--zero complex numbers
+	$\{\lambda_i\}_{i=1,2,\ldots,n} \subset \mathbb{C}$, there exist a matrix $A$
+	with eigenvalues $\lambda_1,\lambda_2,\ldots,\lambda_n$ and a
+	right-hand side $\textbf{b}$ with $\|\textbf{b}\| = f_0$ such that the
+	residual vectors $\textbf{r}^{(k)}$ at each step of the
+	GMRES
+	algorithm applied to solve $A\textbf{x} = \textbf{b}$ with
+	$\textbf{x}^{(0)} = \textbf{0}$, satisfy $\|\textbf{r}^{(k)}\| = f_k$,
+	$\forall \, k=1,2,\ldots,n-1$.
+\end{alertblock}
+
+\begin{itemize}
+	\item[\faBomb] ``Any non-increasing convergence curve is possible for GMRES''.
+	\item[\faQuestionCircle]<2-> What happens if we have \textbf{a clustered spectrum}?
+	\item[\faLightbulb] In the clustered case we can partition $\sigma(A)$ as follows
+	$$
+	\sigma(A) = \sigma_c(A) \cup \sigma_{0}(A) \cup \sigma_{1}(A),
+	$$
+	where 
+	\begin{itemize}
+		\item $\sigma_c(A)$ denotes the \textbf{clustered set} of eigenvalues of $A$,
+		\item $\sigma_{0}(A) \cup \sigma_{1}(A)$ denotes the \textbf{set of the
+		outliers}.
+	\end{itemize} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{GMRES in the clustered and diagonalizable case}
+\[
+\sigma(A) = \underbrace{\sigma_c(A)}_{\text{clustered}} \cup \underbrace{\sigma_{0}(A) \cup \sigma_{1}(A)}_{\text{outliers}},
+\]	
+we assume that 
+\begin{enumerate}
+	\item the clustered set $\sigma_c(A)$ of eigenvalues is contained in a convex set $\Omega$,
+	\item and, that denoting two sets of $j_0$ and $j_1$ outliers as
+	\[
+	\sigma_{0}(A) = \{ \hat{\lambda}_1, \hat{\lambda}_2, \ldots ,
+	\hat{\lambda}_{j_0} \} \quad {\rm and} \quad \sigma_{1}(A) = \{
+	\tilde{\lambda}_1, \tilde{\lambda}_2, \ldots , \tilde{\lambda}_{j_1} \}
+	\]
+	where if
+	$\hat{\lambda}_j \in \sigma_{0}(A)$, we have
+	$$
+	1 < \left\lvert 1- \nicefrac{z}{\hat{\lambda}_j} \right\rvert \leq c_j, \quad
+	\forall z \in \Omega,
+	$$
+	while, for $\tilde{\lambda}_j \in \sigma_{1}(A)$,
+	$$
+	0<\left\lvert 1- \nicefrac{z}{\tilde{\lambda}_j} \right\rvert < 1, \quad \forall
+	z \in \Omega,
+	$$
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{GMRES in the clustered and diagonalizable case}
+\begin{alertblock}{Theorem}
+The number of full GMRES iterations $j$ needed to attain a tolerance
+$\varepsilon$ on the relative residual in the 2-norm
+$\nicefrac{\|\mathbf{r}^{(j)}\|_2}{\|\mathbf{r}^{(0)}\|_2}$ for the linear system $A \mathbf{x} =\mathbf{b}$, where $A$ is
+diagonalizable, is bounded above by
+\begin{equation*}
+	\min \left\{j_0+ j_1 + \left\lceil
+	\frac{\log(\varepsilon)-\log(\kappa_2(X))}{\log(\rho)}-
+	\sum_{\ell=1}^{j_0} \frac{\log(c_{\ell})}{\log(\rho)} \right\rceil,
+	n\right\}, \label{bound-it-eig}
+\end{equation*}
+where
+\begin{equation*}
+	\rho^k=\frac{\left(a/d+\sqrt{(a/d)^2-1}\right)^k+\left(a/d+\sqrt{(a/d)^2-1}\right)^{-k}}
+	{\left(c/d+\sqrt{(c/d)^2-1}\right)^k+\left(c/d+\sqrt{(c/d)^2-1}\right)^{-k}},
+	\label{eq:ellipse-rho}
+\end{equation*}
+and the set $\Omega\in\mathbb{C}^+$ is the ellipse with center $c$,
+focal distance $d$ and major semi axis $a$.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{GMRES the non-diagonalizable case}
+
+In this case we have to turn to either the \textbf{field of values} or the \textbf{$\varepsilon$-pseudospectra} of $A$.
+
+We need to bound the right-hand side of
+\[
+\|\mathbf{r}_m\|_2\leq 
+\min_{\substack{\mathrm{p}(z)\in\mathbb{P}_m\\\mathrm{p}(0)=1}} \|\mathrm{p}(A)\mathbf{r}_0\|, \quad m=1,2,\ldots
+\]
+or in the \alert{worst case scenario}
+\[
+\frac{\|\mathbf{r}_m\|_2}{\|\mathbf{r}_0\|} \leq \max_{\substack{\mathbf{v} \in \mathbb{C}^n\\\|\mathbf{v}\|=1}} \min_{\substack{\mathrm{p}(z)\in\mathbb{P}_m\\\mathrm{p}(0)=1}} \|\mathrm{p}(A)\mathbf{v}\| , \quad m=1,2,\ldots
+\]
+\begin{itemize}
+	\item[\faCog] If $A$ is real, and $M = \nicefrac{(A+A^T)}{2}$ is SPD, then \parencite{MR694523}
+	\[
+	\max_{\substack{\mathbf{v} \in \mathbb{R}^n\\\|\mathbf{v}\|=1}} \min_{\substack{\mathrm{p}(z)\in\mathbb{P}_m\\\mathrm{p}(0)=1}} \|\mathrm{p}(A)\mathbf{v}\| \leq \left(1 - \frac{\lambda_{\min}(M)^2}{\lambda_{\max}(A^TA)}\right)^{\nicefrac{m}{2}}.
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{GMRES the non-diagonalizable case}
+\[
+\|\mathbf{r}_m\|_2\leq 
+\min_{\substack{\mathrm{p}(z)\in\mathbb{P}_m\\\mathrm{p}(0)=1}} \|\mathrm{p}(A)\mathbf{r}_0\|, \quad m=1,2,\ldots
+\]
+we recall that the \textbf{field of values} of $A$ is given by
+\[
+W(A) = \{ <A\mathbf{v},\mathbf{v}> \,:\, \mathbf{v} \in \mathbb{C}^n, \; \|\mathbf{v}\| = 1  \}, \qquad \nu(A) = \min_{z \in W(A)} |z|,
+\]
+with $\nu(A)$ the distance of $W(A)$ from the origin.
+\begin{itemize}
+	\item[\faCog]<2-> For a general nonsingular $A$ \parencite{MR2009695}
+	\[
+	\max_{\substack{\mathbf{v} \in \mathbb{C}^n\\\|\mathbf{v}\|=1}} \min_{\substack{\mathrm{p}(z)\in\mathbb{P}_m\\\mathrm{p}(0)=1}} \|\mathrm{p}(A)\mathbf{v}\| \leq ( 1 - \nu(A)\nu(A^{-1}) )^{\nicefrac{m}{2}}.
+	\]
+	\item[\alert{\faExclamationTriangle}]<3-> This bound is useful only when $0 \notin W(A)$ and $0 \notin W(A^{-1})$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Some experimentation with the FOV in our case}
+\[
+\nu_N^{\alpha-1} A_N = \nu_N^{\alpha-1} I_N - \theta G_N + (1-\theta)G_N^T,
+\]
+\only<1>{\begin{columns}
+\begin{column}{0.5\columnwidth}
+\centering
+$\theta = 0.2$, $\alpha=1.2$, $N=100$
+
+\includegraphics[width=0.95\columnwidth]{fovcase1.pdf}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\centering
+$\theta = 0.2$, $\alpha=1.2$, $N=1000$
+
+\includegraphics[width=0.95\columnwidth]{fovcase2.pdf}	
+\end{column}
+\end{columns}}
+\only<2->{\begin{columns}
+		\begin{column}{0.5\columnwidth}
+			\centering
+			$\theta = 0.2$, $\alpha=1.8$, $N=100$
+			
+			\includegraphics[width=0.95\columnwidth]{fovcase3.pdf}
+		\end{column}
+		\begin{column}{0.5\columnwidth}
+			\centering
+			$\theta = 0.2$, $\alpha=1.8$, $N=1000$
+			
+			\only<2>{\includegraphics[width=0.95\columnwidth]{fovcase4.pdf}}%
+			\only<3>{\includegraphics[width=0.95\columnwidth]{fovcase4bis.pdf}}
+		\end{column}
+\end{columns}}
+
+\end{frame}
+
+\begin{frame}{Some experimentation with the FOV in our case}
+
+\begin{exampleblock}{\faSadTear\,Unfortunate truth}
+In general it is difficult to say something about the Field of Value of preconditioned matrices.
+\end{exampleblock}
+
+\begin{itemize}
+	\item[\faQuestionCircle]<2-> What do we do in practice?
+	\begin{quote}
+		``To speed up the CG-like methods, we can choose a matrix $C$ such that the singular values of the preconditioned matrix $C^{-1}A$ are clustered.'' -- \parencite[P. 439]{MR1409592}
+	\end{quote}
+	\item[\faQuestionCircle]<3-> How do we build a \textbf{Circulant preconditioner} for a \textbf{our non-symmetric Toeplitz} matrix?
+	\item[\faLightbulb]<4-> We can use a suitably modified Strang preconditioner for our case \parencite{MR3062056}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{\faHammer\,A Circulant preconditioner \parencite{MR3062056}}
+
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+We can build a circulant preconditioner as
+\[
+P = \frac{h_N^\alpha}{\Delta t} I_{N} + \theta \alert<1>{s(G_{N})} + (1-\theta) \alert<2>{s(G_{N}^T)},
+\]
+\only<1-2>{where\vspace{-1em}
+\[
+\only<1>{(s(G_N))_{:,1} = - \begin{bmatrix}
+g_1^{(\alpha)} \\
+\vdots \\
+g_{\lfloor \nicefrac{(N+1)}{2} \rfloor}^{\alpha} \\
+0 \\
+\vdots \\
+0 \\
+g_0^{(\alpha)} 
+\end{bmatrix},}\only<2>{(s(G_N^T))_{:,1} = - \begin{bmatrix}
+g_1^{(\alpha)} \\
+g_0^{(\alpha)} \\
+0 \\
+\vdots \\
+0 \\
+g_{\lfloor \nicefrac{(N+1)}{2} \rfloor}^{\alpha} \\
+\vdots \\
+g_2^{(\alpha)} 
+\end{bmatrix}.}
+\]}\only<3-4>{\vspace{-1em}
+\begin{itemize}
+	\item[\faCog] It uses the \textbf{construction of the Strang preconditioner} using only \emph{half o the bandwidth} of the Toeplitz matrices.
+	\item[\faCog]<4-> All the eigenvalues of $s(G_N)$ and $s(G_N^T)$ fall inside the open disc $\{z \in \mathbb{C} \,:\, |z-\alpha| < \alpha\}$ by Gershgorin theorem, indeed:\vspace{-0.8em}
+	\[
+	\hspace{-1em}r_N = g_0^{\alpha} + \sum_{k=2}^{\lfloor \nicefrac{(N+1)}{2} \rfloor} < \sum_{\substack{k = 0\\k\neq 1}} g_k^{(\alpha)} = - g_1^{(\alpha)} = \alpha.
+	\]
+\end{itemize}
+}%
+\only<5>{
+\centering
+
+\includegraphics[width=0.65\columnwidth]{strangev.pdf}
+}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+function [ev,evt] = sunprec(N,alpha)
+g = gl(N,alpha);
+v = zeros(N,1);
+v(1:floor((N+1)/2)) = g((1:floor((N+1)/2))+1);
+v(end) = g(1);
+ev = fft(-v);
+v = zeros(N,1);
+v(1) = g(2);
+v(2) = g(1);
+v(end:-1:floor((N+1)/2)+2) = g(3:floor((N+1)/2)+1);
+evt = fft(-v);
+end
+\end{minted}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{\faHammer\,A Circulant preconditioner \parencite{MR3062056}}
+\faQuestionCircle\;Will it work?
+
+We can always write:
+\[
+P^{-1} A_{N} - I_N = P^{{-1}} ( A_N - P) \onslide<2->{ = \alert<3>{P_N^{-1} U_N} - \alert<5>{P_N^{-1} V_N}} \only<6>{ \Rightarrow \text{``small rank'' }+\text{ ``small norm''}},
+\]
+now for the Strang preconditioner of a Toeplitz matrix with with generating function in the Wiener class, it holds that for any $\varepsilon > 0$ exists $N'$ and $M'$ such that
+\[
+A_N - s(A_N) = U_N + V_N, \quad \operatorname{rank}(U_N) \leq M' \text{ and } \|V_N\|_2 < \varepsilon \; \forall N > N'.
+\]\vspace{-1em}
+\begin{itemize}
+	\item[\faWrench]<3-> $\operatorname{rank}(P_N^{-1} U_N) \leq \operatorname{rank}(U_N) \leq M'$,
+	\only<4>{\item[\faCog]<4-> $\forall\,k=1,2,\ldots,N$, $ | \lambda(P_N) | \geq \Re( \Lambda(P_N)_{k,k} ) = \nicefrac{h_N^\alpha}{\Delta t} + \theta \Re( \Lambda( s(G_N) )_{kk}  ) + (1-\theta) \Re( \Lambda(s(G_N^T))_{kk} ) \geq \nicefrac{h_N^\alpha}{\Delta t}  > 0$ and thus $\| P^{-1}_N \|_2 \leq \nicefrac{\Delta t}{h_N^\alpha}$}
+	\only<5->{
+	\item[\faWrench] $\|P_N^{-1} V_N \| \leq \| P_N^{-1} \|_2 \| V_N \|_2 < \nicefrac{\varepsilon \Delta t}{ h_N^\alpha }$.
+	\item[\faLightbulb]<6-> If we select $\Delta t$ and $h_N$ in such a way that $\nicefrac{h_N^\alpha}{\Delta t}$ is bounded and bounded away from zero we have the result.
+	}
+\end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Results with GMRES}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\only<1>{
+\[
+\left( \frac{h_N^\alpha}{\Delta t} I_{N-2} -  \left[ \theta G_{N-2} + (1-\theta) G_{N-2}^T \right] \right) \mathbf{w}^{n+1} =\frac{h_N^\alpha}{\Delta t}, \quad \theta = 0.2
+\]}
+\begin{onlyenv}<2->
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+[ev,evt] = sunprec(N,alpha);
+c = nu + theta*ev + (1-theta)*evt;
+P = @(x) cprec(c,x);
+[X,FLAGsun,RELRESsun,ITERsun,RESVECsun] = gmres(A,(nu*w),[],1e-9,N,P);
+\end{minted}
+\end{onlyenv}
+\onslide<2>{
+\begin{columns}
+\begin{column}{0.25\columnwidth}
+\begin{tabular}{llcl}
+\toprule
+$\alpha$ & $N$ & GMRES & P \\
+\midrule
+\multirow{7}{*}{1.2} & $2^{5}$ & 28 & 6 \\
+& $2^{6}$ & 31 & 6 \\
+& $2^{7}$ & 33 & 6 \\
+& $2^{8}$ & 34 & 6 \\
+& $2^{9}$ & 35 & 6 \\
+& $2^{10}$ & 36 & 6 \\
+& $2^{11}$ & 36 & 6 \\
+\bottomrule
+\end{tabular}
+\end{column}
+
+\begin{column}{0.25\columnwidth}
+\begin{tabular}{llcl}
+\toprule
+$\alpha$ & $N$ & GMRES & P \\
+\midrule
+\multirow{7}{*}{1.4} & $2^{5}$ & 31 & 6 \\
+& $2^{6}$ & 46 & 6 \\
+& $2^{7}$ & 54 & 6 \\
+& $2^{8}$ & 62 & 7 \\
+& $2^{9}$ & 69 & 7 \\
+& $2^{10}$ & 78 & 7 \\
+& $2^{11}$ & 87 & 7 \\
+\bottomrule
+\end{tabular}
+\end{column}
+
+\begin{column}{0.25\columnwidth}
+\begin{tabular}{llcl}
+\toprule
+$\alpha$ & $N$ & GMRES & P \\
+\midrule
+\multirow{7}{*}{1.6} & $2^{5}$ & 32 & 6 \\
+& $2^{6}$ & 59 & 6 \\
+& $2^{7}$ & 82 & 7 \\
+& $2^{8}$ & 105 & 7 \\
+& $2^{9}$ & 128 & 7 \\
+& $2^{10}$ & 156 & 7 \\
+& $2^{11}$ & 189 & 7 \\
+\bottomrule
+\end{tabular}
+\end{column}
+
+\begin{column}{0.25\columnwidth}
+\begin{tabular}{llcl}
+\toprule
+$\alpha$ & $N$ & GMRES & P \\
+\midrule
+\multirow{7}{*}{1.8} & $2^{5}$ & 32 & 6 \\
+& $2^{6}$ & 64 & 6 \\
+& $2^{7}$ & 109 & 6 \\
+& $2^{8}$ & 162 & 7 \\
+& $2^{9}$ & 222 & 7 \\
+& $2^{10}$ & 287 & 7 \\
+& $2^{11}$ & 372 & 7 \\
+\bottomrule
+\end{tabular}
+\end{column}
+
+\end{columns}}
+
+\end{frame}
+
+
+\section{Conclusion and summary}
+
+\begin{frame}{Conclusion and summary}
+	\definecolor{success}{HTML}{4a934a}
+	\definecolor{todo}{HTML}{0099cc}
+	
+	\begin{itemize}
+		\item[\textcolor{success}{\faCheckCircle}] We have discussed the solution of Toeplitz linear systems,
+		\item[\textcolor{success}{\faCheckCircle}] Studied the usage and convergence of PCG and GMRES method,
+		\item[\textcolor{success}{\faCheckCircle}] Tested the usage of Circulant preconditioners for Toeplitz linear systems.
+	\end{itemize}
+
+Next up
+	\begin{itemize}
+		\item[\textcolor{todo}{\faClipboardList}] We need to discuss the next problem in difficulty
+		\begin{equation*}
+			\begin{cases}\frac{\partial W}{\partial t} = \alert{d^+(x,t)} \,{}^{\only<1>{RL}}D_{[0,x]}^\alpha W(x,t) + \alert{d^-(x,t)} {}^{\only<1>{RL}}D_{[x,1]}^\alpha W(x,t), \qquad \theta \in [0,1],\\
+				W(0,t) = W(1,t) = 0, \qquad W(x,t) = W_0(x).	
+			\end{cases}
+		\end{equation*}
+		\item[\textcolor{todo}{\faClipboardList}] What happens if we go to \textbf{more than one spatial dimension}?
+	\end{itemize}
+
+\end{frame}
+
+\appendix
+
+\section*{Bibliography}
+{\unnumbered
+	\begin{frame}[allowframebreaks,noframenumbering]{Bibliography}
+	\small
+	\printbibliography
+	
+\end{frame}
+}
+
+\end{document}

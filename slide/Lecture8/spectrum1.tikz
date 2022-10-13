@@ -1,0 +1,1983 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.7\columnwidth,
+height=0.7\columnwidth,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=0,
+xmax=6,
+ymin=0,
+ymax=6,
+ytick={1,2,3,4,5},
+yticklabels={{Original},{T.Chan},{Strang},{R.Chan},{Jackson}},
+axis background/.style={fill=white}
+]
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0270643983658141	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0317073248557843	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.038774622995275	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0480840017882059	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0594958837438935	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0729181366493851	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.088268074784983	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.105481096830689	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.124495696799788	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.145259301183831	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.167720297051649	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.191832044513797	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.217547950778655	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.244824358449488	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.273617214741408	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.303884236274661	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.33558251822707	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.368670210707546	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.403104728681857	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.438844084727785	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.475845506535805	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.51406651945609	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.553463853403623	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.593994337919354	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.635614022103934	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.678278925770341	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.721944320819715	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.766565369652505	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.812096531862633	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.858492112757805	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.905705769300867	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.95369098585383	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0024006600609	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.05178751887358	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.10180376975905	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.15240146712995	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.20353221759518	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.25514750475474	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.30719843963218	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.35963605017215	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.41241106978812	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.46547419666403	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.51877591470314	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.57226672678028	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.62589700341261	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.67961719336201	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.73337769615148	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.78712905282691	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.84082183907337	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.89440683847384	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.94783495348114	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.00105736313096	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.05402544952764	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.10669094166036	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.15900585538731	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.21092262475129	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.26239405371394	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.31337343615934	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.36381451785031	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.41367160613663	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.46289954078888	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.511453794285	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.55929045033102	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.6063662954804	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.65263880428091	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.69806622288161	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.74260755985562	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.7862226623661	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.82887221180932	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.8705177930411	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.91112189406612	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.95064796876772	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+2.9890604399402	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.02632475591589	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.06240739629903	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.09727592284325	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.13089898729981	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.16324637686502	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.19428902360335	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.22399904475677	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.25234975324577	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.2793156931101	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.30487265062848	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.32899768514272	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.35166914037061	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.3728666708517	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.39257125305803	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.41076520769002	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.42743221021688	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.44255730924417	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.45612693614009	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.46812891969259	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.47855249449961	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.48738831213227	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.49462844798689	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.50026640917207	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.50429713953766	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+3.50671702450715	1\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+4.45079217611089	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.525299403332454	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.574936159438683	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.620977748039417	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.670162551081611	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.71926126325422	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.764857767682059	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.799690716829191	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.833961913062129	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.856062596818084	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.880539124581313	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.894348655655434	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.911869075165912	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.92064793497572	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.933427541495044	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.939160697709497	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.948694794211374	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.952546828665969	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.95981683658232	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.96247587830254	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.96813060990829	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.970012153922261	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.974488679929929	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.97585017272675	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.979449453257078	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.980454636296124	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.983388476752589	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.98414412160717	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.986564666870106	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.987142030700961	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.989160641277287	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.989608306764817	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.991307893404943	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.991659639479947	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.993102892180929	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99338263044739	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.994617618049974	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.994842556126869	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.995906607675711	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.996089317340059	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.997011758767244	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.997161553471541	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.997965667764085	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.998089536134409	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.998793987777078	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.998897236434813	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999517120428177	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99960382328725	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00015144723875	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00022476391877	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00071023778535	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0007726421977	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00120432768486	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00125777411919	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00164263048861	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00168867565239	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00203252823606	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00207242187681	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00238017233524	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00241492519907	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00269071745568	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00272115272229	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00296850487383	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00299529742208	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00321720731341	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00324091393744	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00343994419202	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00346102702383	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00363937393117	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00365821871366	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00381776834861	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00383469876375	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00397707295091	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00399236188536	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00411895605778	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00413283444508	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00424484903454	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00425751271691	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00435597943051	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00436759430578	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0044533984879	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00446410401054	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00453800429712	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00454791512345	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0046105618745	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00461976695263	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00467172177379	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00468027918876	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00472203987904	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00472996360718	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00476200354764	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0047692334918	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00479207414372	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00482469061624	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00482735578951	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00479841108311	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00481275881519	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00481773328282	2\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+5.9301265799314	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.546060723207366	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.03415897343728	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.968057943183	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00437673100803	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99566923667398	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00046390849062	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999536716855553	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00020675071969	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999790577373261	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00007440734088	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99992583833614	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00003308802465	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999966518182192	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00002324351515	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999976809225928	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00001351444702	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999986364013379	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00001118051921	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999988832981959	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999992270603664	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000767578559	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999326799594	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000673665738	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999994856109888	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000511521143	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999995386524717	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0000046154731	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999996243023206	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000373981994	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999996572638398	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000342835464	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999997084143753	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000290486569	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999997309161169	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000269138332	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999763721749	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0000023554306	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999997800274579	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000220004475	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998021998045	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.0000019729454	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998144889905	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000185530641	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998300848766	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000169561188	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998395942008	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000160418279	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998509094909	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000148840284	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998583979823	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000141610137	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998668072385	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999712828296	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998727695374	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000026819072	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000133015224	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000127235826	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998791329269	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000120741463	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000116097129	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999991325617	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000000793232	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000111130653	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000107398103	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000103577647	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000100595077	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000097660786	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000095309239	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000093082015	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000091273737	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000089629711	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000088300729	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000087155114	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000086260504	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000084773322	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000085068263	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000085557229	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998839064432	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998887813764	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998926042789	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998963619456	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998994065031	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999022990851	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999046917959	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999068927296	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999087269272	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999103557641	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999116996878	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999128377962	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999137397549	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999152265416	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999149319087	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999144403676	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999999976822	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000000001951	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999999996629	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00000000000043	3\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+5.93252502849722	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.546057379466223	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.03488979729002	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.967891656321545	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00561080229242	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.995248480868546	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00114475442906	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999239640372036	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00016158427977	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999877345540094	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999966226236687	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999971521007716	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+1.00001023846678	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999989006009249	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999991076208023	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999441180138	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999995665837661	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999996612312301	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999997336497241	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999997701104925	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998151332606	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998319011547	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998618970807	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999870528174	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998916393553	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999998964274661	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999119349784	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999147270706	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999265094909	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999281893947	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999373876076	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999384138485	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999457555719	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999463815058	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999523502873	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999527231232	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999576514892	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999578603221	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999620842851	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999619836963	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999965601774	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999655735497	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999685631494	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999968583662	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999710800432	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999711334291	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999732368485	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999733122838	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999750983924	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999751883919	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999767151816	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999768145107	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999781270638	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999782320284	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999901107786	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999793658342	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999794738067	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999804571195	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999805662178	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999814217644	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999815306307	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999822768594	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999823845061	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.99999983036522	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999831422214	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999837124874	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999838156919	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999843145679	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999844148522	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999848510071	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999849480239	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999853287596	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999854222057	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999857537129	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999858433021	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999861308617	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999862163023	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999864644504	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999865454262	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999867580852	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999868342379	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999870148272	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999870857412	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999872372655	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999873024529	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999874275782	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999874864663	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999875875806	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999876394999	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999877187651	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999877629406	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999878223319	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999878578756	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999879754248	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999879652474	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999879500953	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999878992139	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.999999879251221	4\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.176028501843139	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0166851017119887	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0288377759145498	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0286864061222419	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0295295404022436	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0296434943486448	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0312102167997967	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0299639175520646	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0300667916766503	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0302028487518246	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0302754234615169	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0303382149572309	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0303877518545177	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0304193213122269	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0304536273739041	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0304707403862806	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0304951547966668	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305050177692788	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305228810599868	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305288568924314	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030542269620605	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030546037786426	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305563416631641	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305587959390526	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305668728174869	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305685128547309	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305749566158711	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305760750409801	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305812961304977	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305820705554492	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305863590145678	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305869010419448	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305904661412993	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305908477875296	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305938434132345	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305941123907971	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305966535708049	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305968421409416	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305990162563564	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0305991466819034	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306010209700694	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306011088616991	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306027357820542	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306027922616289	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306042131581028	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306042462514446	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306054941026313	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306055096742268	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306066109938335	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306066133737466	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306075821215685	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306075897045381	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306084359566263	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306084510739376	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306091912508753	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306092120612777	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030609861454954	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.03060988655194	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030610457716082	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306104860175326	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306109893106914	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306110199778722	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306114640175287	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306114963948629	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030611888377677	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306119219477553	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306150721139886	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306122679277882	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306123022763594	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306126073611208	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306126421506132	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306129106776643	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306129456246939	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306131812864163	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030613216144392	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306134221043364	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306134566461561	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306136356226344	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306136696263229	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306138239731391	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306138572043217	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306139889718885	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306140211672117	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306141321640328	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030614163008004	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306142548526788	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306142839533579	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.030614358129116	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306143849844617	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306144428917613	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306144668556154	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306145098658759	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306145301092243	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306146089582904	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306146020357575	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306145925556213	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306145596155978	5\\
+};
+\addplot [color=black, only marks, mark=asterisk, mark options={solid, black}, forget plot]
+  table[row sep=crcr]{%
+0.0306145751020353	5\\
+};
+\end{axis}
+\end{tikzpicture}%

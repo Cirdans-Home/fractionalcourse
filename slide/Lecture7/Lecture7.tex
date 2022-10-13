@@ -1,0 +1,1066 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+% Math
+\usepackage{nicefrac}
+
+% Tipography stuff
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{fontawesome5}
+\usepackage{soul}
+\usepackage{euler}
+\usepackage{algorithm2e}
+\usepackage{animate}
+\usepackage{ifthen}
+
+% Bibliography
+\usepackage[giveninits,style=authoryear-comp,backend=biber]{biblatex}
+\addbibresource{../fracbiblio.bib}
+\newcommand\unnumbered{\setbeamertemplate{footline}{}}%\addtocounter{framenumber}{-1}
+\renewcommand*{\bibfont}{\normalfont\small}
+
+% Figures
+\usepackage{tikz,pgfplots}
+\usetikzlibrary{calc,arrows,patterns,matrix,external}
+\usepackage{subfig}
+\usepackage{graphicx} % Allows including images
+\usepackage[american]{circuitikz}
+\usepackage{tikz-network}
+\tikzexternalize[prefix=Figures/] % activate and define figures/ as cache folder
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks,linkcolor=,urlcolor=MidnightBlue}
+
+% Code
+\usepackage{minted}
+
+% Block matrices
+\newcommand{\bigzero}{\mbox{\normalfont\Large\bfseries 0}}
+\newcommand{\rvline}{\hspace*{-\arraycolsep}\vline\hspace*{-\arraycolsep}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\bone}{{\bf 1}}
+\newcommand{\evec}{{\bf e}}
+\newcommand{\dvec}{{\bf d}}
+\newcommand{\xvec}{{\bf x}}
+\newcommand{\yvec}{{\bf y}}
+\newcommand{\qvec}{{\bf q}}
+\newcommand{\svec}{{\bf s}}
+\newcommand{\pvec}{{\bf p}}
+\newcommand{\tvec}{{\bf t}}
+\definecolor{Ao}{rgb}{0.0, 0.5, 0.0}
+
+
+\author{Fabio Durastante}
+\title{An introduction to fractional calculus}
+\subtitle{Fundamental ideas and numerics}
+\institute{Università di Pisa\\\href{mailto:fabio.durastante@unipi.it}{\faEnvelope\;fabio.durastante@unipi.it}\\\href{https://fdurastante.github.io}{\faFirefox\;fdurastante.github.io}}
+\date{September, 2022}
+
+\newcommand{\de}{{\rm d}}
+
+
+\begin{document}
+
+{\unnumbered
+\begin{frame}[t,plain,noframenumbering]
+\titlepage
+\vspace{-4em}\includegraphics[width=2cm]{frame.png}
+\end{frame}
+}
+
+\section{Fractional Diffusion Equation}
+
+\begin{frame}{Fractional Diffusion Equation}
+
+Starting from the past$\ldots$
+
+\begin{itemize}
+	\item[\faMemory]<2-> We have seen in \textbf{Lecture 5} that there is a connection between \alert<2>{\textbf{diffusion equations}} and \alert<2>{\textbf{random walks}},
+	\item[\faLightbulb]<3-> Given a \textbf{particle} we can act either on the \faWalking\,\alert<3>{jump length} or on the \faClock\,\alert<3>{waiting time}. 
+\end{itemize}
+
+\onslide<4->{The \alert{\textbf{C}}ontinuous \alert{\textbf{T}}ime \alert{\textbf{R}}andom \alert{\textbf{W}}alk model (CTRW):
+\begin{itemize}
+	\item[\faLightbulb] Both the \textbf{length of a given jump}, and the \textbf{waiting time}
+	elapsing between two successive jumps are drawn from a pdf $\psi(x,t)$
+	\item[\faWalking]<5-> $\displaystyle \lambda(x) = \int_{0}^{+\infty} \psi(x,y)\,\textrm{d}t,$ \emph{jump length},
+	\begin{onlyenv}<5>
+		\begin{exampleblock}{Jump length}
+			$\lambda(x) \textrm{d}x$ produces the probability for a jump length in the interval $(x,x+\textrm{d}x)$.
+		\end{exampleblock}
+	\end{onlyenv}
+	\item[\faClock]<6-> $\displaystyle w(t) = \int_{-\infty}^{+\infty} \psi(x,t)\,\textrm{d}x,$ \emph{waiting time},
+	\begin{onlyenv}<6>
+		\begin{exampleblock}{Waiting time}
+			$w(t) \textrm{d}t$ produces the probability for a waiting time in the interval $(t,t+\textrm{d}t)$.
+		\end{exampleblock}
+	\end{onlyenv}
+	\only<7->{
+		\item If the jump length and
+		waiting time are \textbf{independent random variables} then: \[\psi(x,t) = w(t)\lambda(x).\]
+	}
+\end{itemize}}
+
+\end{frame}
+
+
+\begin{frame}{Characterization of CTRW}
+	To categorise different CTRW one can look at the quantities
+	\[
+	T = \int_{0}^{+\infty} t w(t)\,\textrm{d}t, \text{ (Characteristic waiting time)},
+	\]
+	and 
+	\[
+	\Sigma^2 = \int_{-\infty}^{+\infty} x^2\lambda(x)\,\textrm{d}x\, \text{ (Jump length variance)},
+	\]
+	specifically, are they \textbf{finite}? Do they \textbf{diverge}?
+	
+	\onslide<2->{
+		The \alert{master} (Langevin) \alert{equation} for this process is then given by
+		\[
+		\alert<3>{\eta(x,t)} = \int_{-\infty}^{+\infty} \textrm{d}x' \int_{0}^{+\infty} \textrm{d}t'\,\alert<4>{\eta(x',t')} \psi(x-x',t-t') + \delta(x)\delta(t),
+		\]
+		\only<3->{Pdf of having arrived at position $x$ at time $t$ -- $\eta(x,t)$ --}\only<4->{ having just arrived at $x'$ at time $t'$ -- $\eta(x',t')$ --}\only<5->{ with initial condition $\delta(x)$.}
+	}
+	
+\end{frame}
+
+\begin{frame}{Characterization of CTRW}
+	Then if we use 
+	\[
+	\eta(x,t) = \int_{-\infty}^{+\infty} \textrm{d}x' \int_{0}^{+\infty} \textrm{d}t'\,\eta(x',t') \psi(x-x',t-t') + \delta(x)\delta(t),
+	\]
+	we can write the pdf of being in $x$ at time $t$ as
+	\[
+	W(x,t) = \int_{0}^{t} \eta(x,t') \Psi(t-t'),\textrm{d}t, \qquad \Psi(t) = 1 - \int_{0}^{t} w(t')\,\textrm{d}t',
+	\]
+	where the latter is the cumulative probability assigned to the probability of \alert{no jump event} during the time interval  $t-t'$.
+	\begin{onlyenv}<1>
+	\begin{alertblock}{Fact I - Ordinary Diffusion}
+		If both $T$ and $\Sigma^2$ are finite the long-time limit corresponds to Brownian motion, e.g., $w(t) = \tau^{-1} exp(-\nicefrac{t}{\tau})$, $T = \tau$, $\lambda(x) = (4\pi \sigma^2)^{-\nicefrac{1}{2}} \exp(-\nicefrac{x^2}{4\sigma^2})$, $\Sigma^2 = 2 \sigma^2$, we recover the standard diffusion equation.
+	\end{alertblock}
+	\end{onlyenv}
+	\begin{onlyenv}<2>
+	\begin{alertblock}{Fact II - Subdifussion}
+		The \textbf{characteristic waiting time} $T = \int_{0}^{+\infty} t w(t)\,\textrm{d}t$ \textbf{diverges}, but the jump length variance $\Sigma^2 = \int_{-\infty}^{+\infty} x^2\lambda(x)\,\textrm{d}x$ is finite, we obtain a \textbf{subdiffusive process}. Particles make long rests.
+	\end{alertblock}
+	\end{onlyenv}
+\end{frame}
+
+\begin{frame}{Long jumps: L\'evy Flights}
+	What if we take a \textbf{finite waiting time} and a \textbf{diverging jump length}?
+	\begin{itemize}
+		\item[\faClock]<2-> Poissonian waiting time, \onslide<5->{\textbf{Rmk:} $T$ is \textbf{finite} and so the process is \textbf{Markovian}!}
+		\item[\faWalking]<3-> L\'evy distribution for the jump length
+		\[
+		\lambda(k) = \exp(-\sigma^\mu |k|^\mu) \sim 1 - \sigma^\mu |k|^\mu, 
+		\]
+	\end{itemize}\vspace{-1em}
+	\begin{block}<4->{Asymptotic}
+	For $|x| \gg \sigma$, $1 < \mu < 2$ $\Rightarrow$ $\lambda(x) \sim A_\mu \sigma^{-\mu} |x|^{-1-\mu}$.
+	\end{block}
+	\begin{itemize}
+		\item<6-> In the \alert{Fourier-Laplace space} we get
+		\[
+		W(k,u) = \frac{1}{u + K^\mu |k|^\mu},
+		\]
+		\item<7-> then after a (double) inversion
+		\only<7>{\[\frac{\partial W}{\partial t} = K^{\mu} \cdot \frac{1}{\Gamma(1-\mu)} \frac{\textrm{d}}{\textrm{d}x}\int_{-\infty}^{x} W(\xi,t){(x-\xi)^\alpha}\,\mathrm{d}\xi, \quad K = \frac{\sigma^\mu}{\tau} \]}
+		\only<8>{\[\frac{\partial W}{\partial t} = K^{\mu}\, {}^{RL}D_{(-\infty,x)}^\mu W(x,t), \quad K = \frac{\sigma^\mu}{\tau} \]}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Brownian jumps vs L\'evy Flights}
+\vspace{-2em}
+\begin{columns}[t]
+\begin{column}{0.35\columnwidth}
+\begin{center}
+	\includegraphics[height=11em]{Figures/brown.eps}
+\end{center}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}\vspace{-1.6em}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%% Brownian motion
+N = 7000;
+x = cumsum(randn(N,1));
+y = cumsum(randn(N,1));
+\end{minted}
+\end{column}
+\begin{column}{0.62\columnwidth}
+\begin{center}
+	\includegraphics[height=11em]{Figures/levy.eps}
+\end{center}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}\vspace{-1.6em}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%% Levy distribution
+N = 7000;
+pd_levy = makedist('Stable','alpha',1.5, 'beta',0,'gam',1, 'delta',0);
+xl = cumsum(random(pd_levy,N,1));
+yl = cumsum(random(pd_levy,N,1));
+\end{minted}
+\end{column}
+\end{columns}	
+
+\end{frame}
+
+\subsection{The (Space) Fractional Diffusion Equations}
+
+\begin{frame}{The (Space) Fractional Diffusion Equations}
+We want to solve our problem in a \textbf{domain of finite size}, therefore we have to move the lower and upper bounds of the Riemann-Liouville integral to a finite domain size and \textbf{select} some \textbf{\alert{boundary conditions}}.
+
+\begin{block}<2->{Absorbing boundary conditions (Dirichlet)}
+A common choice is given by: $W(x_l,t) = W(x_r,T) \equiv 0$
+\end{block}
+
+\onslide<3->{They can be justified in various way
+\begin{itemize}
+	\item<4->[\faFile*] Variational formulation from a generalized \emph{Fickian} law \parencite{MR3378843},
+	\item<5->[\faFile*] Lyapunov inequality \parencite{MR3124347}.
+\end{itemize}
+}
+\onslide<6>{
+\begin{equation}\label{eq:fde1}
+	\begin{cases}\frac{\partial W}{\partial t} = \theta\,{}^{RL}D_{[0,x]}^\alpha W(x,t) + (1-\theta) {}^{RL}D_{[x,1]}^\alpha W(x,t), \qquad \theta \in [0,1] \tag{FDE\textsubscript{1}},\\
+	W(0,t) = W(1,t) = 0,\\
+	W(x,t) = W_0(x).	
+	\end{cases}
+\end{equation}
+}
+
+\end{frame}
+
+\section{Finite Difference Approaches to Riemann--Liouville}
+
+\begin{frame}{Finite Difference Approaches to Riemann--Liouville}
+	
+The \textbf{first approach} we want to discuss is \alert{\textbf{finite differences}}, thus how can we discretize the Riemann-Liouville operators?
+
+\begin{alertblock}<2->{Back to the basics}
+\begin{enumerate}
+	\item<2-> First derivative
+	\[
+	\frac{\mathrm{d} f}{\mathrm{d}x} = \lim_{h \rightarrow 0} \frac{f(x)-f(x-h)}{h},
+	\]
+	\item<3-> $n$th derivative
+	\[
+	\frac{\mathrm{d}^n f}{\mathrm{d}x^n} = \lim_{h \rightarrow 0} \frac{\Delta^n f(x)}{h}, \quad \Delta^n f(x) = \sum_{j=0}^{n}\binom{n}{j}(-1)^j f(x-jh).
+	\]
+\end{enumerate}
+\end{alertblock}
+
+\begin{itemize}
+	\item[\faLightbulb]<4-> Let's use again our favourite trick and replace $n \in \mathbb{N}$ with $\alpha \in \mathbb{R}$!
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+
+\begin{exampleblock}{The Gr\"unwald--Letnikov Fractional Derivative \parencite{grunwald1867uber,letnikov1868theory}}
+Given $\mathbb{R} \ni \alpha > 0$ define the Gr\"unwald--Letnikov fractional derivative of a function $f(x)$~as
+\[
+{}^{GL}D^\alpha f = \lim_{h \rightarrow 0} \frac{\Delta^\alpha f(x)}{h}, \quad \Delta^\alpha f(x) = \sum_{j=0}^{+\infty}\binom{\alpha}{j}(-1)^j f(x-jh), \quad \binom{\alpha}{j} = \frac{\Gamma(\alpha+1)}{j! \Gamma(\alpha-j+1)}.
+\]
+\end{exampleblock}
+
+\begin{itemize}
+	\item[\faQuestionCircle]<2-> For what functions $f$ does it make sense?
+	\item[\faQuestionCircle]<3-> How is it related to the Riemann-Liouville (and henceforth to the Caputo) fractional derivative?
+	\item[\faLightbulb]<4-> If we can find an easy relation with the Riemann-Liouville derivative we can \textbf{use it to discretize} by truncating $\Delta^\alpha$ to a given $N$.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+
+Let us collect the ingredients we need.
+
+\begin{itemize}
+	\item[\faInbox] The \alert{binomial series} 
+	\[
+	(1+z)^\alpha = \sum_{j=0}^{+\infty} \binom{\alpha}{j} z^j,
+	\]
+	converges for any $z \in \mathbb{C}$ with $|z| \leq 1$ and any $\alpha > 0$,
+	\item[\faInbox] The series
+	\[
+	\sum_{j=0}^{+\infty}\left\lvert \binom{\alpha}{j} (-1)^j \right\rvert < +\infty,
+	\]
+	converges, since $(1+(-1))^\alpha = 0$.
+	\item[$\Rightarrow$] If we take $f$ to be bounded then ${}^{GL}D^\alpha f$ exists.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+	
+Let us take the Fourier transform of $\Delta^\alpha f(x)$
+\[
+\begin{split}
+\int e^{-ikx} \sum_{j=0}^{+\infty} \binom{\alpha}{j} (-1)^j f(x-jh)\,\mathrm{d}x \only<1>{= & \sum_{j=0}^{+\infty} \binom{\alpha}{j}(-1)^j \int e^{-ikx}f(x-jh)\,\mathrm{d}x \\
+= & \sum_{j=0}^{\infty} \binom{\alpha}{j}(-1)^j e^{-ikjh}\hat{f}(k) \\}
+= & (1-e^{-ikh})^\alpha \hat{f}(k).
+\end{split}
+\]
+\begin{itemize}
+	\item[\faBook] We are using the \textbf{uniform convergence} of the series $\Delta^\alpha f(x)$,
+	\item[\faExclamationCircle] furthermore we are \textbf{requiring} that each term is integrable.
+\end{itemize}
+\begin{onlyenv}<2->
+If $k \neq 0$ then the Fourier transform of the GL derivative operator is given by
+\[
+h^{-\alpha}(ikh)^{\alpha} \left( \frac{1-e^{-ikh}}{ikh} \right) \hat{f}(k) \rightarrow (ik)^\alpha \hat{f}(k), \text{ for } h \rightarrow 0.
+\]
+The same holds by direct computation for $k=0$.
+\begin{itemize}
+\item[$\Rightarrow$]<3-> The Fourier transform \textbf{converges} \textbf{pointwise} to the same \textbf{Fourier} \textbf{transform} of the \textbf{Riemann-Liouville} derivative (we are also using the \alert{continuity Theorem} of Fourier transform.)
+\end{itemize}
+\end{onlyenv}
+	
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+What is the connection then? 
+\begin{enumerate}
+	\item<2-> Let us look better into the \emph{weights}
+	\[
+	\begin{split}
+	g_j^{(\alpha)} \triangleq  (-1)^j \binom{\alpha}{j} \only<2>{= & \frac{(-1)^j \Gamma(\alpha+1)}{\Gamma(j+1)\Gamma(\alpha-j+1)} = \\
+	= & \frac{(-1)^j\alpha(\alpha-1)\cdots(\alpha-j+1)}{\Gamma(j+1)} \\
+	\text{\scriptsize Distribute $(-1)^j \rightarrow$} = & \frac{(-\alpha)(1-\alpha)\cdot(j-1-\alpha)}{\Gamma(j+1)} \\}
+	= & \frac{-\alpha \Gamma(j-\alpha)}{\Gamma(j+1)\Gamma(1-\alpha)}
+	\end{split}
+	\]
+	\item<3-> Using $\Gamma(x+1)=x\Gamma(x)$ and $\Gamma(x+1) \sim \sqrt{2\pi x} x^x e^{-x}$ for $x\rightarrow+\infty$
+	\[
+	\begin{split}
+	g_j^{(\alpha)} \sim & \only<3>{ \frac{-\alpha}{\Gamma(1-\alpha)} \frac{\sqrt{2\pi(j-\alpha-1)}(j-\alpha-1)^{j-\alpha-1} e^{-(j-\alpha-1)}}{\sqrt{2\pi j} j^j e^{-j}} \\
+	= & \frac{-\alpha}{\Gamma(1-\alpha)} \underbrace{\sqrt{\frac{j-\alpha-1}{j}}}_{\rightarrow 1} \underbrace{\left( \frac{j-\alpha-1}{j} \right)^{j-\alpha-1}}_{\rightarrow e^{-(\alpha+1)}} j^{-\alpha-1}e^{\alpha+1}}
+	\only<4->{ \frac{-\alpha}{\Gamma(1-\alpha)}} j^{-\alpha-1} \qquad j \rightarrow +\infty.
+	\end{split}
+	\]
+	\item<5-> Since $g_0^{(\alpha)} = 1$ we write the quotient
+	\[
+	\frac{\Delta^\alpha f(x)}{\Delta x^\alpha} = (\Delta x)^{-\alpha} \left[ f(x) + \sum_{j=1}^{+\infty} g_j^{(\alpha)} f(x-j\Delta x) \right]
+	\]
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+	What is the connection then? 
+\begin{enumerate}
+	\setcounter{enumi}{2}
+	\item Since $g_0^{(\alpha)} = 1$ we write the quotient
+	\[
+	\frac{\Delta^\alpha f(x)}{\Delta x^\alpha} = (\Delta x)^{-\alpha} \left[ f(x) + \sum_{j=1}^{+\infty} g_j^{(\alpha)} f(x-j\Delta x) \right]
+	\]
+	\item<2-> $\sum_{j=0}^{+\infty}w_j = 0$. Then $g_j^{(\alpha)} < 0$ for all $j \geq 1$ and thus $\sum_{j=1}^{+\infty} g_j^{(\alpha)} = -1$. We \textbf{define} $b_j^{(\alpha)} = - w^{(\alpha)}_j$ for $j \geq 1$, so that
+	\[
+	b_j \sim \frac{\alpha}{\Gamma(1-\alpha)}j^{-\alpha-1} \text{ for } j \rightarrow +\infty, \qquad \sum_{j=1}^{+\infty} b_j = 1.
+	\]
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+Then we take $0 < \alpha < 1$
+\[
+\begin{split}
+\frac{\Delta^\alpha f(x)}{\Delta x^\alpha} = & (\Delta x)^{-\alpha} \sum_{j=1}^{+\infty}[f(x) - f(x-j\Delta x)] b_j \\
+\approx & \sum_{j=1}^{+\infty} [f(x) - f(x-j\Delta x)] \frac{\alpha}{\Gamma(1-\alpha)} (j\Delta x)^{-\alpha-1} \Delta x \\
+\approx & \int_{0}^{+\infty} [f(x)-f(x-y)] \frac{\alpha}{\Gamma(1-\alpha)} y^{-\alpha-1}\,\mathrm{d}y
+\end{split}
+\]
+\begin{itemize}
+	\item<2-> Integrate by parts with $u = f(x) - f(x-y)$\only<4>{$\ldots$ and when you swap the integral and the derivative}
+	\[
+	\only<2-3>{\only<3>{ {}^{CA} D_{[0,+\infty]}^\alpha f(x) =   }\frac{1}{\Gamma(1-\alpha)} \int_{0}^{+\infty} f'(x-y)y^{-\alpha}\,\mathrm{d}y = \frac{1}{\Gamma(1-\alpha)}\int_{0}^{+\infty} \frac{\mathrm{d}}{\mathrm{d}x} f(x-y) y^{-\alpha}\,\mathrm{d}y}
+	\only<4>{
+	{}^{RL} D_{[0,+\infty]}^\alpha = \frac{1}{\Gamma(1-\alpha)} \frac{\mathrm{d}}{\mathrm{d}x} \int_{0}^{+\infty} f(x-y) y^{-\alpha}\,\mathrm{d}y.
+	}
+	\]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Gr\"unwald--Letnikov Fractional Derivative}
+Let us move everything to a fixed interval $[a,b]$.
+\begin{exampleblock}{Gr\"unwald--Letnikov \emph{revisited}}
+Let $\alpha > 0$, $f \in \mathcal{C}^{\lceil \alpha \rceil}([a,b])$, $a < x \leq b$, then
+\[
+{}^{GL}D_{[a,x]}f(x) = \lim_{N \rightarrow + \infty} \frac{\Delta_{h_N}^\alpha f(x)}{h_N^\alpha} = \lim_{N \rightarrow + \infty} \frac{1}{h_N^\alpha}\sum_{k=0}^{N} (-1)^k \binom{\alpha}{k} f(x - k h_N),
+\]
+with $h_N = (x-a)/N$.
+\end{exampleblock}
+
+\alert{\faEye} In the definition we have implicitly extended $f$ (with an abuse of notation) in such a way that
+\[
+f : (-\infty,b] \rightarrow \mathbb{R}, \qquad x \mapsto \begin{cases}
+f(x), & \text{ if } x \in [a,b],\\
+0, & \text{ if } x \in (-\infty,a).
+\end{cases}
+\]
+	
+\end{frame}
+
+\begin{frame}[fragile]{Computing the coefficients}
+
+We can compute $N+1$ $g_j^{(\alpha)}$ coefficients in $3N+1$ flops by using the recurrence relation
+\[
+g_j^{(\alpha)} = \left( 1  - \frac{\alpha+1}{j} \right) g_{j-1}^\alpha, \quad g_0 = 1.
+\]
+\begin{columns}
+\begin{column}{0.55\columnwidth}
+In a line of code
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+function [g] = gl(n,alpha)
+%GL Produces the N+1 Grunwald-Letnikov coefficients for a given alpha
+g = cumprod([1, 1 - ((alpha+1) ./ (1:n))]);
+end
+\end{minted}
+\end{column}
+\begin{column}{0.45\columnwidth}
+\centering
+%\input{coefbound.tikz}
+\includegraphics[width=\columnwidth]{coefbound.eps}
+\end{column}
+\end{columns}
+
+	
+\end{frame}
+
+\subsection{A finite difference discretization}
+
+
+\begin{frame}{A finite difference discretization}
+Before going to the two-sided case in~\eqref{eq:fde1}, let us start with the simpler case
+\[
+\frac{\partial w}{\partial t} = - v(x) \frac{\partial w}{\partial x} + d(x) {}^{RL}D_{[0,x]}^\alpha w + f(x,t), \qquad 1 < \alpha \leq 2, \;v(x),d(x) \geq 0.
+\]
+\begin{enumerate}
+	\item<2-> Substitute the Riemann-Liouville derivative with the \alert<2>{G}r\"unwald--\alert<2>{L}etnikov one,
+	\[
+	\frac{\partial w}{\partial t} = - v(x) \frac{\partial w}{\partial x} + d(x) {}^{\alert<2>{GL}}D_{[0,x]}^\alpha w + f(x,t),
+	\]
+	\item<3-> Choose $N \in \mathbb{N}$ at which to truncate the series expansions
+	\[
+	\frac{\partial w_i}{\partial t} = - v_i \frac{w_i - w_{i-1}}{h_N} + \frac{d_i}{h_N^\alpha} \sum_{k=0}^{i}(-1)^k \binom{\alpha}{k} w_{i-k} + f_i,
+	\]
+	\item<4-> Now we need to select a scheme for discretizing it in time: \emph{explicit}? \emph{implicit}?
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{A finite difference discretization: explicit Euler}
+	Let us select \textbf{explicit Euler}
+	\only<1-2>{\[
+	\frac{w_i^{n+1} - w_i^{n}}{\Delta t} = - v_i \frac{w_i^n - w_{i-1}^n}{h_N} + \frac{d_i}{h_N^\alpha} \sum_{k=0}^{i}\only<1>{(-1)^k \binom{\alpha}{k}}\only<2->{\alert<2>{g_k}} w_{i-k}^n + f_i^n,
+	\]}
+	\only<3>{
+	\[
+	w_i^{n+1} = w_i^n - \Delta t\, v_i \frac{w_i^n - w_{i-1}^n}{h_N} + \Delta t\, \frac{d_i}{h_N^\alpha} \sum_{k=0}^{i} g_k w_{i-k}^n + f_i^n,
+	\] 
+	}
+	\only<4-6>{
+	\[
+	w_i^{n+1} = \left(1 - \frac{\Delta t}{h_N} v_i + \frac{\Delta t}{h_N^\alpha} d_i \right) w_i^n + \left(\frac{v_i}{h_N} - \frac{\alpha}{h_N^\alpha} d_i\right)\Delta t w_{i-1}^n + \frac{d_i \Delta t}{h_N^\alpha} \sum_{k=2}^{i} g_k w_{i-k}^n + f_i^n \Delta t,
+	\] 
+	}
+	\only<7-8>{
+	\[
+	\hat{w}_i^1 = \only<7>{\left(1 - \frac{\Delta t}{h_N} v_i + \frac{\Delta t}{h_N^\alpha} d_i \right)}\only<8->{\mu_i} \hat{w}_i^0 + \left(\frac{v_i}{h_N} - \frac{\alpha}{h_N^\alpha} d_i\right)\Delta t w_{i-1}^n + \frac{d_i \Delta t}{h_N^\alpha} \sum_{k=2}^{i} g_k w_{i-k}^n + f_i^n \Delta t,
+	\]
+	}
+	\only<9->{
+	\[
+	\hat{w}_i^1 =  \mu_i \epsilon_i^0 + c_i^1,
+	\]
+	}
+	\begin{itemize}
+		\item<2-> For convenience we call $\alert<2>{g_k} = (-1)^k \binom{\alpha}{k}$,
+		\item<3-> Rearrange everything to compute $w_i^{n+1}$\only<4->{, and using that $g_0 = 1$, $g_1 = -\alpha$}
+		\item<5-> Is this \emph{stable}? Do we have to put a restriction on the choice of $h_N$ and $\Delta t$?
+		\item<6-> Suppose that $w_i^0$ is affected by an error, i.e., $\hat{w}_i^0 = w_i^0 + \epsilon_i^0$, we can then look at the \textbf{propagation of the error},
+		\item<7-> We call $\mu_i = 1 - \nicefrac{\Delta t}{h_N} v_i + \nicefrac{\Delta t}{h_N^\alpha} d_i$\only<9->{ and get the expression for the new error.}
+		\item<10-> By iterating the argument we found that the error at step $n$ is amplified by the factor $\mu_i$, that is
+		\[
+		\epsilon_i^n = \mu_i^n \epsilon_i^0.
+		\]
+		\item<11-> To have stability we need to require that exist $h_N$ such that $|\mu_i|<1$ for all $h < h_N$.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{A finite difference discretization: \only<1-2>{explicit}\only<3>{implicit}\only<4>{ex/implicit} Euler}
+	\[
+	\mu_i \equiv 1 - \frac{\Delta t}{h_N} v_i + \frac{\Delta t}{h_N^\alpha} d_i < 1 \;\Leftrightarrow\; h_N > \left(\frac{d_i}{v_i}\right)^{\nicefrac{1}{\alpha - 1}}
+	\]
+	\begin{itemize}
+		\item[\alert{\faExclamationTriangle}] The method is not stable as $h$ is refined!
+	\end{itemize}
+	\begin{alertblock}<2->{Theorem~\parencite{MR2091131}}
+	The \textbf{explicit} Euler solution method based on the Gr\"unwald--Letnikov approximation of the Riemann-Liouville fractional derivative is unstable.
+	\end{alertblock}
+
+	\begin{alertblock}<3->{Theorem~\parencite{MR2091131}}
+	The \textbf{implicit} Euler solution method based on the Gr\"unwald--Letnikov approximation of the Riemann-Liouville fractional derivative is unstable.
+	\end{alertblock}
+
+	\only<4>{\faBriefcaseMedical\, And now what? How do we fix it?}
+\end{frame}
+
+\subsection{Shifted Gr\"unwald--Letnikov}
+
+\begin{frame}{The Shifted Gr\"unwald--Letnikov Fractional Derivative}
+
+\begin{exampleblock}{Shifted Gr\"unwald--Letnikov Fractional Derivative}
+Let $\alpha > 0$, $f \in \mathcal{C}^{\lceil \alpha \rceil}([a,b])$, $a < x \leq b$, $\mathbb{N} \ni \alert{p} > 0$ then
+\[
+{}^{GL}D_{[a,x]}f(x) = \lim_{N \rightarrow + \infty} \frac{\Delta_{h_N}^\alpha f(x)}{h_N^\alpha} = \lim_{N \rightarrow + \infty} \frac{1}{h_N^\alpha}\sum_{k=0}^{N} (-1)^k \binom{\alpha}{k} f(x - (k-\alert{p}) h_N),
+\]
+with $h_N = (x-a)/N$.
+\end{exampleblock}
+\only<1-4>{If we \textbf{repeat the argument with the Fourier transform}, we discover
+\[
+\only<1>{\mathfrak{F}\{ {}^{GL}D_{[a,x]}f(x) \}(k) = (-ik)^\alpha \omega( -ikh ) \hat{f}(k),}
+\only<2>{\mathfrak{F}\{ {}^{GL}D_{[a,x]}f(x) \}(k) = (-ik)^\alpha \hat{f}(k) + (ik)^{\alpha} (\omega(-ikh) - 1)\hat{f}(k) }
+\only<3->{\mathfrak{F}\{ {}^{GL}D_{[a,x]}f(x) \}(k) = \mathcal{F}\{ {}^{RL}D_{(-\infty,x]}^\alpha f\}(k) + \hat{\phi}(k,h)  }
+\]
+with
+\only<1-3>{\[
+\omega(z) = \left(\frac{1 - e^{-z}}{z}\right)^\alpha e^{zp} = 1 - \left(p-\frac{\alpha}{2}\right)z + O(|z|^2)\only<2->{ \Rightarrow\, |\omega(-ix)-1| \leq C x \, \forall\,x \in \mathbb{R}}.
+\]}
+\only<4>{
+\[
+|\phi(k,h)| \leq |k|^\alpha C|hk| |\hat{f}(k)|\,\Rightarrow\, |\phi(h,x)| < I C h, \quad I = \int_{-\infty}^{+\infty} (1+|k|)^{\alpha+1} |\hat{f}(k)|\,\mathrm{d}k < +\infty.
+\]
+}}
+\only<5->{
+\begin{itemize}
+	\item<5-> They give the same operator uniformly in $x$ as $h \rightarrow 0$, therefore we can use the shifted version with \emph{any} shift to approximate the Riemann-Liouville derivative,
+	\item<6-> To get the \emph{best constant} $C$ we can minimize the $|p-\nicefrac{\alpha}{2}|$ term in $\omega(z)$, that is, we select $p = 1$.
+	\item[\faQuestionCircle]<7-> Let us see if using the \emph{shifted version} with $p = 1$ solves our \textbf{stability problem}.
+\end{itemize}
+}
+\end{frame}
+
+\begin{frame}{Back to finite differences: implicit Euler}
+
+We use the \textbf{shifted Gr\"unwald--Letnikov} and the \textbf{implicit Euler} method
+\only<1>{\[
+\frac{w_i^{n+1} - w_i^n}{\Delta t} = - v_i \frac{w_i^{n+1} - w_{i-1}^{n+1}}{h_N} + \frac{d_i}{h_N^\alpha} \sum_{k=0}^{i+1} g_k w_{i-k+1}^{n+1} + f_{i}^{n+1}.
+\]}
+\only<2>{\[
+w_i^{n+1} - w_i^n = - \alert{E_i} (w_i^{n+1} - w_{i-1}^{n+1}) + \textcolor{blue}{B_i} \sum_{k=0}^{i+1} g_k w_{i-k+1}^{n+1} + \Delta t f_{i}^{n+1}.
+\]}
+\only<3->{
+\[
+-g_0 B_i w_{i+1}^{n+1} + (1+E_i -g_i B_i) w_i^{n+1} - (E_i + g_2 B_i) w_{i-1}^{n+1} - B_{i} \sum_{k=3}^{i+1} g_k w_{i-k+1}^{n+1} = c_i^n + \Delta t \, f_i^{n+1}.
+\]
+}
+\begin{columns}
+\begin{column}{0.3\columnwidth}
+	\begin{itemize}
+		\item<2-> Set $\alert{E_i} = \nicefrac{v_i \Delta t}{h_N}$, $\textcolor{blue}{B_i} = \nicefrac{d_i \Delta t}{h_N^\alpha}$, 
+		\item<3-> reorder the system of equations,
+		\item<4-> and obtain
+		\[
+		\hspace{-1.5em} \alert<5>{A_N} \mathbf{w}^{n+1} = \mathbf{w}^n + \Delta t\,\mathbf{f}^{n+1}.
+		\]
+	\end{itemize}
+\end{column}	
+\begin{column}{0.7\columnwidth}\small
+\only<5>{\[\hspace{-1.5em}
+\begin{bmatrix}
+	1 & 0  & 0 & \cdots & \cdots & 0\\
+-E_1 - g_2 B_1 & 1 + E_1 -g_1 B_1	 & -g_0 B_1 & \ddots \\
+-g_3 B_2 & -E_2 - g_2 B_2 & 1 + E_2 -g_1 B_2	 & -g_0 B_2 & \ddots \\
+\vdots & \ddots & \ddots & \ddots & \ddots & \vdots \\
+-g_N B_{N-1} & \cdots & \cdots & \cdots & \cdots & - g_0 B_{N-1} \\
+0 & \cdots & \cdots & \cdots & \cdots & 1 
+\end{bmatrix}
+\]}
+\only<6->{\[
+\begin{split}
+{\mathbf{w}^{n+1}} = & [w_0^{n+1},w_1^{n+1},\ldots,w^{n+1}_N]^T,\\
+{\mathbf{w}^{n}} = & [w_0^{n},w_1^{n},\ldots,w^{n}_N]^T,\\
+\mathbf{f}^{n+1} = & \Delta t [0,f_1^n,\ldots,f_{N-1}^n,0]^T.
+\end{split}
+\]
+
+\onslide<7>{\centering \faWrench\;To prove \textbf{stability} we need to have $\rho(A_N^{-1}) \leq 1$: \[\boldsymbol{\epsilon}^1 = A_N^{-1} \boldsymbol{\epsilon}^0. \]}
+}
+\end{column}
+\end{columns}
+
+
+\end{frame}
+
+\begin{frame}{Back to finite differences: implicit Euler}
+
+Let $(\lambda,\mathbf{x})$ be an eigencouple of $A_N$, i.e., $A_N \mathbf{x} = \lambda \mathbf{x}$, $\mathbf{x} \neq \mathbf{0}$.
+\begin{enumerate}
+	\item<2-> Choose $i$ such that $|x_i| = \max\{ |x_j| \,:\; j=0,\ldots,N \}$,
+	\item<3-> Then $\displaystyle \sum_{j=0}^{N} (A_N)_{i,j} x_j = x_i$, and thus
+	\[
+	\lambda = A_{i,i} + \sum_{\substack{j=0\\j\neq i}}^N (A_N)_{i,j} \frac{x_j}{x_i},
+	\] 
+	\item<4-> If $i = 0$ or $i = N$ then $\lambda = 1$, otherwise
+	\only<4>{\[
+	\lambda = 1 + E_i - g_1 B_1 - g_0 B_i \frac{x_{i+1}}{x_i}  (E_i + g_2 B_i) \frac{x_{i-1}}{x_i} - B_i \sum_{j=0}^{i-2} h_{i-j+1} \frac{x_j}{x_i}
+	\]}
+	\only<5>{
+	\[
+	\lambda = 1 + E_i(1 - \nicefrac{x_{i-1}}{x_i}) - B_i \left[ g_1 + \sum_{\substack{j=0\\j\neq i}}^{i+1} g_{i-j+1} \frac{x_j}{x_i} \right]
+	\]
+	}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Back to finite differences: implicit Euler}
+	\begin{enumerate}
+	\setcounter{enumi}{3}
+	\item We have $\sum_{k \geq 0} g_k = 0$, $\alpha \in (1,2]$ and thus $g_1 = -\alpha$ and $g_k \geq 0$ for $k \neq 1$, thus
+	\[
+	-g_1 \geq \sum_{\substack{k=0\\k\neq 1}}^j g_k \qquad \forall\,j=0,1,2,\ldots
+	\]
+	furthermore $|\nicefrac{x_j}{x_i}| < 1$, and thus
+	\[
+	\sum_{\substack{j=0\\j\neq i}}^{i+1} g_{i-j+1} \left|\frac{x_j}{x_i}\right| \leq \sum_{\substack{j=0\\j\neq i}}^{i+1} g_{i-j+1} \leq - g_1.
+	\]
+	\setcounter{enumi}{2}
+	\item<2-> If $i = 0$ or $i = N$ then $\lambda = 1$, otherwise
+	\[
+		|\lambda| \geq 1 + \underbrace{E_i}_{\geq 0}(1 - \underbrace{\nicefrac{x_{i-1}}{x_i}}_{\leq 1}) + \underbrace{B_i}_{\geq 0} \left[ g_1 + \sum_{\substack{j=0\\j\neq i}}^{i+1} g_{i-j+1} \left|\frac{x_j}{x_i}\right| \right] \geq 1.
+	\]
+	\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Back to finite differences: implicit Euler}
+	\begin{alertblock}{Theorem \parencite{MR2091131}}
+	The implicit Euler method solution to
+	\[
+	\frac{\partial w}{\partial t} = - v(x) \frac{\partial w}{\partial x} + d(x) {}^{RL}D_{[0,x]}^\alpha w + f(x,t), \qquad 1 < \alpha \leq 2, \;v(x),d(x) \geq 0.
+	\]
+	with boundary conditions $w(0,t) = 0$, $w(1,t) = 0$ for all $t \geq 0$, based on the shifted Gr\"unwald--Letnikov approximation with $h_N = 1/N$, is consistent
+	of order $O(h + \Delta t)$ and \emph{unconditionally stable}.
+	
+	\end{alertblock}
+\begin{itemize}
+	\item[\faEye] We have only a left-sided fractional derivative, we could put a non-homogeneous condition on the right-hand side,
+	\item[\faMagic] We can now start \textbf{looking into the matrices} to devise solution strategies for the \emph{sequence of linear systems}
+	\[
+	A_N \mathbf{w}^{n+1} = \mathbf{w}^n + \Delta t\,\mathbf{f}^{n+1}.
+	\]  
+\end{itemize}
+\end{frame}
+
+\subsection{Gr\"unwald--Letnikov matrices}
+
+\begin{frame}{Gr\"unwald--Letnikov matrices}
+To look at the matrices we go back to the first form of the diffusion equation~\eqref{eq:fde1}
+	\begin{equation*}
+	\begin{cases}\frac{\partial W}{\partial t} = \theta\,{}^{\only<1>{RL}\only<2->{\alert<2>{GL}}}D_{[0,x]}^\alpha W(x,t) + (1-\theta) {}^{\only<1>{RL}\only<2->{\alert<2>{GL}}}D_{[x,1]}^\alpha W(x,t), \qquad \theta \in [0,1],\\
+	W(0,t) = W(1,t) = 0,\\
+	W(x,t) = W_0(x).	
+	\end{cases}
+	\end{equation*}
+\begin{enumerate}
+	\item<2-> Substitute the Riemann-Liouville derivative with the \alert<2>{G}r\"unwald--\alert<2>{L}etnikov one,
+	\item<3-> Choose $N \in \mathbb{N}$ at which to truncate the \emph{shifted} series expansions
+	\only<3>{\[
+	h_N^\alpha \, \frac{\partial W_{i}}{\partial t} = \theta \sum_{k=0}^{i+1} (-1)^k \binom{\alpha}{k} W_{i-k+1} + (1-\theta)  \sum_{k=0}^{N-i+2} (-1)^k \binom{\alpha}{k} W_{i+k-1}, \; i=0,\ldots,N.
+	\]}
+	\item<4-> Apply, e.g., \emph{backward Euler} to discretize the derivative w.r.t. time
+	\only<4>{
+	\[
+	\hspace{-3.2em}\frac{h_N^\alpha}{\Delta t} (W_{i}^{j+1} - W_i^{j}) = \theta \sum_{k=0}^{i-k+1} (-1)^k \binom{\alpha}{k} W_{i-k+1}^{j} + (1-\theta)  \sum_{k=0}^{N+i-2} (-1)^k \binom{\alpha}{k} W_{i+k-1}^j, \begin{array}{l}i=0,\ldots,N,\\j=0,\ldots,M-1.\end{array}
+	\]
+	}
+\end{enumerate}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{The matrix formulation}
+
+We call again $\mathbf{w}^{j}$, $\mathbf{w}^{j+1}$ the vectors containing the solution \textbf{on inner grid points}, then we can rewrite the set of linear equations as
+\[
+\left( I_N - \frac{\Delta t}{h_N^\alpha} \left[ \theta G_N + (1-\theta) G_N^T \right] \right) \mathbf{w}^{n+1} = \mathbf{w}^n
+\]
+where
+\begin{columns}
+\begin{column}{0.4\columnwidth}
+\[
+G_N = \begin{bmatrix}
+	1 & 0 & \cdots & \cdots & 0 \\
+	g_2 & g_1 & g_0 \\
+	\vdots & \ddots & \ddots & \ddots\\
+	\vdots &  & \ddots &  \ddots & g_0 \\
+	g_{N-1} & \cdots & g_3 & g_2 & g_1 \\
+	0 & \cdots & \cdots & 0 & 1
+\end{bmatrix}
+\]
+\end{column}
+\begin{column}{0.6\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+function G = glmatrix(N,alpha)
+%%GLMATRIX produces the GL discretization of  
+% the Riemann-Liouville derivative
+g = gl(N,alpha);
+c = zeros(N,1); r = zeros(1,N);
+r(1:2) = g(2:-1:1); 
+c(1:N) = g(2:end);
+G = toeplitz(c,r);
+end
+\end{minted}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{The matrix formulation}
+To obtain a simple code for the complete problem
+\begin{columns}
+\begin{column}{0.6\columnwidth}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+%% Discretization data
+hN = 1/(N-1); x = 0:hN:1;
+dt = hN; t = 0:dt:1;
+%% Discretize
+G = glmatrix(N,alpha); Gt = glmatrix(N,alpha).';
+I = eye(N,N);
+% apply B.C.
+G(1,:) = -I(1,:); G(N,:) = -I(N,:);
+Gt(1,:) = -I(1,:); Gt(N,:) = -I(N,:);
+% Left-hand side
+A = I - dt/hN^alpha*(theta*G + (1-theta)*Gt);
+% Right-hand side
+w = w0(x).'; 
+\end{minted}
+\end{column}
+\begin{column}{0.4\columnwidth}
+\begin{itemize}
+\item Select $\theta = \nicefrac{1}{2}$, $\alpha = \nicefrac{3}{2}$, and $W_0(x) = 5 x(1-x)$,
+\item Discretize the interval $[0,1]$ on $N$ points,
+\item Build the $I$ and $G_N$ matrices,
+\item Apply the Dirichlet b.c.s,
+\item Assemble $A$ and $\mathbf{w}^0$.
+\end{itemize}
+
+\begin{onlyenv}<2->
+March the scheme in time:
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+for i=2:N
+  w = A\w;
+end
+\end{minted}
+\end{onlyenv}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}
+\begin{columns}
+\begin{column}{0.33\columnwidth}
+\centering	
+	
+\includegraphics[width=\columnwidth]{sol_alpha11.eps}
+
+$\alpha = 1.1$, $\theta = 0.5$
+\end{column}
+\begin{column}{0.33\columnwidth}
+\centering	
+
+\includegraphics[width=\columnwidth]{sol_alpha15.eps}
+ 
+$\alpha = 1.5$, $\theta = 0.5$
+\end{column}
+\begin{column}{0.33\columnwidth}
+\centering	
+
+\includegraphics[width=\columnwidth]{sol_alpha20.eps}
+
+$\alpha = 2.0$, $\theta = 0.5$
+\end{column}
+\end{columns}
+
+\begin{columns}
+\begin{column}{0.33\columnwidth}
+	\centering	
+	
+	\includegraphics[width=\columnwidth]{sol_alpha11_skew.eps}
+	
+	$\alpha = 1.1$, $\theta = 0.1$
+\end{column}
+\begin{column}{0.33\columnwidth}
+	\centering	
+	
+	\includegraphics[width=\columnwidth]{sol_alpha15_skew.eps}
+	
+	$\alpha = 1.5$, $\theta = 0.3$
+\end{column}
+\begin{column}{0.33\columnwidth}
+	\centering	
+	
+	\includegraphics[width=\columnwidth]{sol_alpha18_skew.eps}
+	
+	$\alpha = 1.8$, $\theta = 0.9$
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{The solution step}
+
+\begin{itemize}
+	\item[\faQuestionCircle] How can we \textbf{efficiently solve} the linear systems
+	\[
+	A \mathbf{w}^{n+1} = \mathbf{w}^n,
+	\]
+	needed for the time-stepping?
+	\item[\faQuestionCircle] Can we find a reliable procedure working also for \textbf{multi-dimensional cases}?
+	\item[\faQuestionCircle] Is \textbf{dense linear algebra} a compulsory choice?
+	
+	\begin{columns}
+	\begin{column}{0.6\columnwidth}
+	\onslide<2>{
+	\Large\centering
+	
+	These matrices have \alert{structure\textbf{s}} we can \textbf{exploit}!}
+	\end{column}
+	\begin{column}{0.4\columnwidth}
+	\onslide<2>{
+	\includegraphics[width=\columnwidth]{costruzioni.png}
+	}
+	\end{column}
+	\end{columns}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Toeplitz matrices}\vspace{-0.5em}
+
+\begin{block}{Toeplitz matrix}
+A \textbf{Toeplitz matrix} is a matrix whose entries are constant along the diagonals
+\begin{equation*}
+	T_n(f) = \begin{bmatrix}
+		t_0 & t_{-1} & \ldots & t_{2-n} & t_{1-n} \\
+		t_{1} & t_0 & t_{-1} & \ldots & t_{2-n}  \\
+		\vdots & t_1 & t_0 & \ddots &  \vdots \\
+		t_{n-2} & \ldots & \ddots & \ddots & t_{-1} \\
+		t_{n-1} & t_{n-2} & \ldots & t_1 & t_0
+	\end{bmatrix}.
+\end{equation*}
+\end{block}
+
+\begin{block}<2>{Generating function}
+$$
+f(x) = \sum_{k = -\infty}^{+\infty} t_k e^{i\cdot kx}, \quad t_k
+=\frac{1}{2\pi}\int_{-\pi}^{\pi} f(\theta) e^{-ik\theta}d\theta, \
+k=0,\pm 1, \pm 2, \ldots
+$$
+the $t_k$ are the Fourier coefficients is called
+a \textit{generating function} of the matrix $T_n(f)$.
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Circulant matrices}
+	\begin{block}{Circulant matrix}
+		A \textbf{Circulant matrix} $C_n \in \mathbb{R}^{n\times n}$ is a
+		Toeplitz matrix in which each row is a cyclic shift of the row above it, i.e.,
+		$(C_n)_{i,j} = c_{(j-i)\mod{n}}$:
+		\begin{equation*}
+			C_n = \begin{bmatrix}
+				c_0 & c_1 & c_2 & \ldots & \ldots & c_{n-1} \\
+				c_{n-1} & c_0 & c_1 & \ddots & & \vdots \\
+				c_{n-2} & c_{n-1} & c_0 & c_1 & \ddots & \vdots \\
+				\vdots & \ddots & \ddots & \ddots & \ddots & c_2 \\
+				\vdots &  & \ddots & \ddots & c_0 & c_1 \\
+				c_1 & \ldots & \ldots & c_{n-2} & c_{n-1} & c_0
+			\end{bmatrix}.
+		\end{equation*}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Toeplitz and Circulant matrices: some properties}
+\begin{alertblock}{Properties}
+\begin{enumerate}
+	\item The operator $T_n : \mathbb{L}^1[-\pi,\pi] \rightarrow
+	\mathbb{C}^{n\times n}$ defined by the Toeplitz matrix construction is linear and positive, i.e., if $f \geq 0$ then $T_n(f) = T_n(f)^H$
+	$\forall \, n$ and $\mathbf{x}^H T_n(f)
+	\mathbf{x} \geq 0$ $\forall \, \mathbf{x} \in \mathbb{C}^{n}$.
+	\item Given $f \in \mathbb{L}^{1}[-\pi,\pi]$ such that $m_f =
+	\operatorname{ess}\inf(f)$ and $M_f = \operatorname{ess}\sup(f)$. 
+	
+	If $m_f > -\infty$ then $m_f \leq \lambda_j(T_n(f))$ $\forall
+	j=1,\ldots,n$;
+	
+	If $M_f < \infty$ then $M_f \geq \lambda_j(T_n(f))$
+	$\forall j=1,\ldots,n$. 
+	
+	If $f$ is not identical to a real
+	constant and both the inequalities hold,
+	\begin{equation*}
+		m_f < \lambda_j(T_n(f)) < M_f \;\; \forall j=1,\ldots,n.
+	\end{equation*}
+	
+	\item Circulant matrices are simultaneously diagonalized by the unitary matrix $F_n$
+	\begin{equation*}
+		\left(F_n\right)_{j,k}=\frac{1}{\sqrt{n}}e^{\frac{-2\pi i\, j\,
+			k}{n}}, \mathcal{C} = \left\lbrace C_n\in \mathbb{C}^{n\times n} \mid C_n=F D F^H \;:\; D =
+		\operatorname{diag}(d_0,d_1,\ldots,d_{n-1}) \right\rbrace.
+	\end{equation*}
+\end{enumerate}
+\end{alertblock}
+\end{frame}
+
+
+
+\begin{frame}{Asymptotic distribution - I}
+\begin{block}{Asymptotic eigenvalue distribution}
+Given a sequence of matrices
+$\{X_n\}_n \in \mathbb{C}^{d_n\times d_n}$
+with $d_n = \{\dim X_n\}_n \overset{ n \rightarrow
+	+\infty}{\longrightarrow} \infty$ monotonically and a
+$\mu$-measurable function $f : D \rightarrow \mathbb{R}$, with
+$\mu(D) \in (0,\infty)$, we say that the sequence $\{X\}_n$ is
+distributed  in the sense of the eigenvalues as the function $f$ and
+write $\{X_n\}_n \sim_{\lambda} f$ if and only if,
+\begin{equation*}
+	\lim_{n \rightarrow \infty} \frac{1}{d_n} \sum_{j = 0}^{d_n}
+	F(\lambda_j(X_n)) = \frac{1}{\mu(D)} \int_{D}F(f(t))dt, \;\; \forall
+	\, F \in \mathcal{C}_c(D),
+\end{equation*}
+where $\lambda_j(\cdot)$ indicates the $j$-th eigenvalue.
+\end{block}
+\end{frame}
+
+\begin{frame}{Asymptotic distribution - II}
+
+\begin{block}{Asymptotic singular value distribution}
+    Given a sequence of matrices $\{X_n\}_n \in \mathbb{C}^{d_n \times
+	d_n}$
+with $d_n = \{\dim X_n\}_n \overset{ n \rightarrow
+	+\infty}{\longrightarrow} \infty$ monotonically and a $\mu$-measurable
+function $f : D \rightarrow \mathbb{R}$, with $\mu(D) \in (0,\infty)$,
+we say that the sequence $\{X\}_n$ is distributed
+in the sense of the singular values as the function $f$ and write
+$\{X_n\}_n \sim_{\sigma} f$ if and only if
+\begin{equation*}
+	\lim_{n \rightarrow \infty} \frac{1}{d_n} \sum_{j = 0}^{d_n}
+	F(\sigma_j(X_n)) = \frac{1}{\mu(D)} \int_{D}F(|f(t)|)dt, \;\; \forall
+	\, F \in \mathcal{C}_c(D),
+\end{equation*}
+where $\sigma_j(\cdot)$ is the $j$-th singular value.
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Asymptotic distribution - III}
+
+\begin{alertblock}{Theorem (Asymptotic distribution of Toeplitz matrices)}
+Given the generating function $f$, $T_n(f)$ is distributed in the sense of
+the eigenvalues as $f$, written also as $T_n(f)
+\sim_{\lambda} f$, if one of the following conditions hold:
+\begin{enumerate}
+	\item~\parencite{grenander2001toeplitz}: $f$ is real valued and $f
+	\in \mathbb{L}^{\infty}$,
+	\item~\parencite{tyrtyshnikov1996unifying}: $f$ is real valued and $f
+	\in \mathbb{L}^{2}$.
+\end{enumerate}
+Moreover, $T_n(f)$ is distributed in the sense of
+the singular values as $f$, written also as
+$T_n(f) \sim_{\sigma} f$, if one of the following conditions
+hold:
+\begin{enumerate}
+	\item~\parencite{avram1988bilinear,parter1986distribution}: $f \in
+	\mathbb{L}^{\infty}$,
+	\item~\parencite{tyrtyshnikov1996unifying}: $f \in \mathbb{L}^{2}$.
+\end{enumerate}
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{Singular value distribution of $G_N$}
+
+\begin{itemize}
+	\item[\faPuzzlePiece]<1-> The matrix $G_N$ is a \textbf{Toeplitz} and \textbf{Hessenberg} matrix,
+	\item[\faQuestionCircle]<2-> Does it have a \textbf{generating function}?
+	\item<3-> \alert{\textbf{Yes}!} And we have already computed it several times! The coefficients $\{g_k^{(\alpha)}\}_k$ where given by the \textbf{binomial expansion} of $(1+z)^\alpha$, and thus
+	\[
+	f(\theta) = e^{-i \theta} \left(1 + \exp(i(\theta+\pi))\right)^\alpha, \qquad \theta \in [0,2\pi)
+	\]
+\end{itemize}\vspace{-1.5em}
+\begin{columns}
+\begin{column}{0.5\columnwidth}
+\begin{onlyenv}<4->%
+\vspace{-0.5em}\definecolor{bg}{rgb}{0.95,0.95,0.95}
+\begin{minted}[bgcolor=bg,fontsize=\small,breaklines]{matlab}
+N = 100;
+alpha = 1.5;
+G = glmatrix(N,alpha);
+s = @(t) exp(-1i*t).*(1 + ...
+ exp(1i*(t+pi))).^alpha; 
+sv = svd(G);
+th = linspace(0,2*pi,N);
+plot(th,sv,'o',th,sort(abs(s(th)),...
+ 'descend'),'-','LineWidth',2);
+\end{minted}
+\end{onlyenv}
+\end{column}
+\begin{column}{0.5\columnwidth}
+\only<4>{
+\centering
+
+\includegraphics[width=\columnwidth]{svd.png}
+
+}
+\end{column}
+\end{columns}
+
+
+\end{frame}
+
+\section{Conclusion and summary}
+
+\begin{frame}{Conclusion and summary}
+\definecolor{success}{HTML}{4a934a}
+\definecolor{todo}{HTML}{0099cc}
+
+\begin{itemize}
+	\item[\textcolor{success}{\faCheckCircle}] We introduced \textbf{p}artial \textbf{d}ifferential \textbf{e}quations with \textbf{f}ractional (FPDE) derivative with respect to the space variables,
+	\item[\textcolor{success}{\faCheckCircle}] we connected \emph{fractional diffusion} and continuous time random walk using \emph{L\'evy flights},
+	\item[\textcolor{success}{\faCheckCircle}] we introduced the Gr\"unwald-Letnikov fractional derivative, highlighted the connection with the Riemann-Liouville derivative.
+	\item[\textcolor{success}{\faCheckCircle}] We introduced a \emph{stable discretization} of finite difference type,
+	\item[\textcolor{success}{\faCheckCircle}] and we started investigating the structure of the underlying matrices.
+\end{itemize}
+
+Next up
+\begin{itemize}
+	\item[\textcolor{todo}{\faClipboardList}] Investigating the structure of the underlying matrices for different FPDEs.
+	\item[\textcolor{todo}{\faClipboardList}] Looking into some preconditioners and solution strategies based on structured matrices.
+\end{itemize}
+
+\end{frame}
+
+\appendix
+
+\section*{Bibliography}
+{\unnumbered
+	\begin{frame}[allowframebreaks,noframenumbering]{Bibliography}
+	\small
+	\printbibliography
+	
+\end{frame}
+}
+
+\end{document}

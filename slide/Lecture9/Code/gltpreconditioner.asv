@@ -1,0 +1,51 @@
+%% TEST OF GLT PRECONDITIONER
+
+clear; close all; clc;
+
+index = 1;
+cval = [];
+k = 2;
+for N = 2.^(5:10)
+    alpha = 1.9;
+    hN = 1/(N-1);  x = 0:hN:1; dt = hN;
+    dplus=@(x)gamma(3-alpha).*x.^alpha;
+    dminus=@(x)gamma(3-alpha).*(1-x).^alpha;
+    G = glmatrix(N,alpha); % Discretize
+    Gr = G; Grt = G.'; I = eye(N,N);
+    Dplus = diag(dplus(x));
+    Dminus = diag(dminus(x));
+    nu = hN^alpha/dt;
+    A = nu*I -(Dplus*Gr + Dminus*Grt);
+    e = ones(N,1);
+    if k == 2
+        T = spdiags([-e,2*e,-e],-1:1,N,N);
+        P = nu*I + (Dplus*T + Dminus*T.');
+    elseif k == 1
+        T = spdiags([e,-e],-1:1,N,N);
+        P = nu*I + (Dplus*T + Dminus*T.');
+    end
+    evA = svd(A);
+    X = P\A;
+    evprec = svd(X);
+    cval = [cval,cond(X)];
+    figure(1)
+    hold on
+    semilogx(real(evA),index*e,'k+',...
+        real(evprec),(index+1)*e,'kx');
+    hold off
+    index = index+2;
+end
+yticks(1:2:index)
+yticklabels(2.^(5:10))
+set(gca,'XScale','log')
+ylabel('N')
+xlabel('Singular Values')
+
+figure(2)
+N = 2.^(5:10);
+fo = fitoptions('Method','NonlinearLeastSquares',...
+    'Lower',[0,0],...
+    'Upper',[Inf,Inf],...
+    'StartPoint',[1 abs(alpa-k)]);
+ft = fittype('a*(x-b)^n','problem','n','options',fo);
+plot(N,N.^abs(alpha-k),'--',N,cval,'o','LineWidth',2)

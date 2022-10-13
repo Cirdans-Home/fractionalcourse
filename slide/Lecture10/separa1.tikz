@@ -1,0 +1,38 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.7\columnwidth,
+height=0.9in,
+at={(0.758in,0.481in)},
+scale only axis,
+xmin=1,
+xmax=10,
+ymode=log,
+ymin=1e-20,
+ymax=100000,
+yminorticks=true,
+axis background/.style={fill=white}
+]
+\addplot [color=mycolor1, only marks, mark=o, mark options={solid, mycolor1}, forget plot]
+  table[row sep=crcr]{%
+1	4.9749371855331\\
+2	4.9749371855331\\
+3	8.42013570898238e-16\\
+4	6.78060181120481e-16\\
+5	4.37465944793928e-16\\
+6	3.68952230751576e-16\\
+7	2.3661953224555e-16\\
+8	1.11236235206283e-16\\
+9	6.38257827716023e-17\\
+10	5.68741578311535e-18\\
+};
+\end{axis}
+\end{tikzpicture}%

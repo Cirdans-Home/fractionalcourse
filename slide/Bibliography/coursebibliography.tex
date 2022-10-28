@@ -1,0 +1,74 @@
+\documentclass[10pt,a4paper]{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[LGR,T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{palatino}
+\usepackage[backend=biber,style=alphabetic,maxbibnames=9,maxcitenames=2,sorting=ynt,giveninits]{biblatex}
+\usepackage[polutonikogreek,english]{babel}
+\usepackage{epigraph}
+\usepackage[autostyle]{csquotes}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{xurl}
+\usepackage[colorlinks]{hyperref}
+\hypersetup{
+	linkcolor=BrickRed
+	,citecolor=Green
+	,filecolor=Mulberry
+	,urlcolor=NavyBlue
+	,menucolor=BrickRed
+	,runcolor=Mulberry
+	,linkbordercolor=BrickRed
+	,citebordercolor=Green
+	,filebordercolor=Mulberry
+	,urlbordercolor=NavyBlue
+	,menubordercolor=BrickRed
+	,runbordercolor=Mulberry
+}
+\usepackage{microtype}
+\usepackage{breakurl}
+
+\DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+\DeclareOldFontCommand{\rm}{\normalfont\rmfamily}{\mathrm}
+
+
+
+
+
+\addbibresource{../fracbiblio.bib}
+
+\title{An introduction to fractional calculus: fundamental ideas and numerics}
+\subtitle{-- Bibliography --}
+\author{Fabio Durastante}
+
+\begin{document}
+\maketitle
+
+\epigraph{\begin{greektext}
+	Βοιωτῶν μὲν Πηνέλεως καὶ Λήϊτος ἦρχον
+	Ἀρκεσίλαός τε Προθοήνωρ τε Κλονίος τε,
+	οἵ θ᾽ Ὑρίην ἐνέμοντο καὶ Αὐλίδα πετρήεσσαν
+	Σχοῖνόν τε Σκῶλόν τε πολύκνημόν τ᾽ Ἐτεωνόν,
+\end{greektext}}{Homer, Iliad II 494-497} 
+
+\nocite{*}
+\microtypesetup{protrusion=false}
+
+The bibliography is divided by subject, like all divisions it is arbitrary and some items may be in one category rather than another. We tried to keep the division as close as possible to the content of the slides. The works are sorted in ascending order by year of publication and then by author's name.
+
+\printbibliography[keyword=fode,title={Fractional Ordinary Differential Equations}]
+\printbibliography[keyword=fpde,title={Fractional Partial Differential Equations}]
+\printbibliography[keyword=randomwalk,title={Connection with random walks}]
+\printbibliography[keyword=mittagleffler,title={Mittag-Leffler function}]
+\printbibliography[keyword=toeplitz,title={Toeplitz, circulant and other structured matrices}]
+\printbibliography[keyword=separability,title={HODLR and other hierarchical matrices}]
+\printbibliography[keyword=matrixequation,title={Matrix equations: $AX + XB^T = C$, $AX + XA^T = C$}]
+\printbibliography[keyword=application,title={Applications}]
+\printbibliography[keyword=fundamentals,title={Toolbox}]
+
+%\printbibliography
+%\printbibliography[filter=booknotes, title={Books \& Lecture Notes}]
+%\printbibliography[keyword=article, title={Journal articles}]
+%\printbibliography[keyword=inproceedings, title={Proceedings}] 
+%\printbibliography[keyword=submitted, title={Preprints, Submitted and In Preparation}] 
+\end{document}
+              

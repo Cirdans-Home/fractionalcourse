@@ -1,0 +1,73 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.92900,0.69400,0.12500}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.75\columnwidth,
+height=1.5in,
+at={(0in,0in)},
+scale only axis,
+xmode=log,
+xmin=100,
+xmax=16384,
+xminorticks=true,
+xlabel style={font=\color{white!15!black}},
+xlabel={$N$},
+ymode=log,
+ymin=0.0001,
+ymax=10,
+yminorticks=true,
+ylabel style={font=\color{white!15!black}},
+ylabel={Time (second)},
+axis background/.style={fill=white},
+legend style={at={(3.5in,0.5in)}, legend cell align=left, align=left, draw=none, fill=none}
+]
+\addplot [color=mycolor1, line width=2.0pt, mark=square, mark options={solid, mycolor1}]
+  table[row sep=crcr]{%
+128	0.008958\\
+256	0.013521\\
+512	0.031421\\
+1024	0.072773\\
+2048	0.158879\\
+4096	0.38483\\
+8192	0.880753\\
+16384	2.190584\\
+};
+\addlegendentry{Build time (s)}
+
+\addplot [color=mycolor2, line width=2.0pt, mark=o, mark options={solid, mycolor2}]
+  table[row sep=crcr]{%
+128	0.0001437415\\
+256	0.0004628905\\
+512	0.0020548055\\
+1024	0.0062138055\\
+2048	0.0162558055\\
+4096	0.0433198055\\
+8192	0.1265308055\\
+16384	0.3733568055\\
+};
+\addlegendentry{LU time (s)}
+
+\addplot [color=mycolor3, line width=2.0pt, mark=x, mark options={solid, mycolor3}]
+  table[row sep=crcr]{%
+128	0.000292890625\\
+256	0.0003327421875\\
+512	0.000541173828125\\
+1024	0.000935428710937501\\
+2048	0.001751888671875\\
+4096	0.00367795141601563\\
+8192	0.00799334423828128\\
+16384	0.0155332114868165\\
+};
+\addlegendentry{Avg. solve time (s)}
+
+\end{axis}
+\end{tikzpicture}%
